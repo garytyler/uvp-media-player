@@ -6,6 +6,9 @@ verify_ssl = true
 [dev-packages]
 
 [packages]
+python-socketio = "*"
+pyqt5 = "*"
+urllib3 = "*"
 
 [requires]
 python_version = "3.7"
