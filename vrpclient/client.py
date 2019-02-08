@@ -1,4 +1,3 @@
-import sys
 import socketio
 
 sio = socketio.Client()
@@ -9,5 +8,5 @@ def receive_orientation(data):
     print(data)
 
 
-if __name__ == "__main__":
-    sio.connect("http://localhost:5000")
+def connect(host="localhost", port="5000"):
+    sio.connect(f"http://{host}:{port}")

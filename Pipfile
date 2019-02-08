@@ -9,6 +9,7 @@ verify_ssl = true
 python-socketio = "*"
 pyqt5 = "*"
 urllib3 = "*"
+click = "*"
 
 [requires]
 python_version = "3.7"
