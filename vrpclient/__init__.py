@@ -19,13 +19,14 @@ def cli(ctx, debug, verbose):
     """VRP Client"""
     ctx.ensure_object(dict)
     ctx.obj.update({"DEBUG": debug, "VERBOSE": verbose})
+    ctx.color = True
 
 
 @cli.command("connect")
 @click.pass_context
 def connect():
-    """Connect to a """
-    click.echo("VR Projector Client Connection...")
+    """Connect to a VRP Server instance."""
+    click.echo("VRP Client Connection...")
     sys.exit(client.connect())
 
 
@@ -50,15 +51,15 @@ def play(ctx, filepaths):
     verbose = ctx.obj["VERBOSE"] if not debug else debug
 
     if not debug and not filepaths:
-        raise click.UsageError('Error: Missing argument "FILEPATHS".')
+        raise click.UsageError('Missing argument "FILEPATHS".')
 
     if debug:
         click.echo("Debug is on")
-        if not filepaths:  # load a default video for debugging
+        if not filepaths:  # load a sample video for debugging
             filepaths = [SAMPLE_MEDIA["360video_2min.mp4"]]
 
-    click.echo("Media files:")
+    click.echo(click.style("Media files:", fg="bright_blue", underline=True))
     for p in filepaths:
-        is_sample = p in SAMPLE_MEDIA.values()
-        file_disp = click.format_filename(p, shorten=not verbose or is_sample)
-        click.echo(f'{file_disp}{" (sample media)" if is_sample else None}')
+        sample_flair = "(sample media)" if p in SAMPLE_MEDIA.values() else ""
+        file_disp = click.format_filename(p, shorten=not verbose or sample_flair)
+        click.echo(f"{file_disp} {click.style(sample_flair, fg='bright_red')}")

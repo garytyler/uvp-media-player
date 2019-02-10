@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2eda4ce458427ae07c52b314d38773e0ebc3e9fef0d04dde3b0fc2b084de80ea"
+            "sha256": "70ca33a94a10d912e338f873552273e8f00410ea692d6355da68324cef4699cb"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -23,6 +23,14 @@
             ],
             "index": "pypi",
             "version": "==7.0"
+        },
+        "colorama": {
+            "hashes": [
+                "sha256:05eed71e2e327246ad6b38c540c4a3117230b19679b875190486ddd2d721422d",
+                "sha256:f8ac84de7840f5b9c4e3347b3c1eaa50f7e49c2b07596221daec5edaabbd7c48"
+            ],
+            "index": "pypi",
+            "version": "==0.4.1"
         },
         "pyqt5": {
             "hashes": [
@@ -53,10 +61,10 @@
         },
         "python-engineio": {
             "hashes": [
-                "sha256:e4ac17c04c32ccca67287dfdbbe4ee1e9eec3a0a1a9a6070f3ab784db08407dd",
-                "sha256:ea4cf4ea0f19b65cedea83218e416a2c880c918ff91f64c604a034cd50110529"
+                "sha256:4c0861ba2c1a21ebe4a2b678ef059a70b35cbf92330475b7b06e79eab3186ea6",
+                "sha256:b7b5541e83e4e0aaf1b1bf79d090b2a85adb42800adc10599f017bb6c39b8dc3"
             ],
-            "version": "==3.3.0"
+            "version": "==3.3.1"
         },
         "python-socketio": {
             "hashes": [
