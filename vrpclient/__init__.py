@@ -2,13 +2,11 @@ import os
 import sys
 import click
 from . import client
+from . import player
 
-SAMPLE_MEDIA = {
-    name: os.path.abspath(name)
-    for name in os.listdir(
-        os.path.abspath(os.path.join(os.path.dirname(__file__), "media"))
-    )
-}
+
+MEDIA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "media"))
+SAMPLE_MEDIA = {name: os.path.join(MEDIA_DIR, name) for name in os.listdir(MEDIA_DIR)}
 
 
 @click.group()
@@ -59,7 +57,9 @@ def play(ctx, filepaths):
             filepaths = [SAMPLE_MEDIA["360video_2min.mp4"]]
 
     click.echo(click.style("Media files:", fg="bright_blue", underline=True))
-    for p in filepaths:
-        sample_flair = "(sample media)" if p in SAMPLE_MEDIA.values() else ""
-        file_disp = click.format_filename(p, shorten=not verbose or sample_flair)
+    for filepath in filepaths:
+        sample_flair = "(sample media)" if filepath in SAMPLE_MEDIA.values() else ""
+        file_disp = click.format_filename(filepath, shorten=not verbose or sample_flair)
         click.echo(f"{file_disp} {click.style(sample_flair, fg='bright_red')}")
+
+        player.autoplay(filepath)
