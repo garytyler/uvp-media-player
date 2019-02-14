@@ -62,4 +62,4 @@ def play(ctx, filepaths):
         file_disp = click.format_filename(filepath, shorten=not verbose or sample_flair)
         click.echo(f"{file_disp} {click.style(sample_flair, fg='bright_red')}")
 
-        player.autoplay(filepath)
+        player.play(filepath)

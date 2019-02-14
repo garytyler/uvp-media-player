@@ -1,11 +1,13 @@
 import sys
+import time
 import vlc
 import platform
 from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtCore import Qt, QSize, QTimer
+from . import client
 
 
-class PlayerGUI(QtWidgets.QMainWindow):
+class MediaPlayer(QtWidgets.QMainWindow):
     instance = vlc.Instance()
 
     def __init__(self, videofile, parent=None):
@@ -14,6 +16,7 @@ class PlayerGUI(QtWidgets.QMainWindow):
         # State vars
         self.is_paused = False
         self.media = None
+        self._data = None
 
         self.create_mediaplayer(videofile)
         self.create_videoframe()
@@ -213,43 +216,27 @@ class PlayerGUI(QtWidgets.QMainWindow):
             self.playtimer.start()
             self.is_paused = False
 
-    def set_viewpoint_by_viewpoint(self, viewpoint):
-        self.vp = viewpoint
-        try:
-            errorcode = self.mediaplayer.video_update_viewpoint(
-                p_viewpoint=self.vp, b_absolute=True
-            )
-        except Exception as e:
-            print(e)
-            raise KeyboardInterrupt
-        finally:
-            if errorcode != 0:
-                raise RuntimeError("Error setting viewpoint")
-
-    def set_viewpoint_by_data(self, yaw, pitch, roll, fov=80):
+    def set_viewpoint(self, data, coordtype="native_euler"):
         """
-        NOTE: Default field of view in VLC-iOS is 80 degrees
-
-        view point yaw in degrees  ]-180;180]
-        view point pitch in degrees  ]-90;90]
-        view point roll in degrees ]-180;180]
-        field of view in degrees ]0;180[ (default 80)
-
         # Free C++ pointer func
         vlc.libvlc_free(self.vp)
         """
+        if data == self._data:
+            return
+        else:
+            self._data = data
 
         # # Class instatiation
         # self.vp = vlc.VideoViewpoint()
         # self.vp.field_of_view = 80
-        # self.vp.yaw, self.vp.pitch, self.vp.roll, = (-y, -p, -r)
+        # self.vp.yaw, self.vp.pitch, self.vp.roll, = (alpha, beta, gamma)
 
         # Recommended instatiation
         self.vp = vlc.libvlc_video_new_viewpoint()
-        self.vp.contents.field_of_view = fov
-        self.vp.contents.yaw = yaw
-        self.vp.contents.pitch = pitch
-        self.vp.contents.roll = roll
+        self.vp.contents.field_of_view = 80
+        self.vp.contents.yaw = data[coordtype]["alpha"]
+        self.vp.contents.pitch = data[coordtype]["beta"]
+        self.vp.contents.roll = data[coordtype]["gamma"]
 
         errorcode = self.mediaplayer.video_update_viewpoint(
             p_viewpoint=self.vp, b_absolute=True
@@ -258,9 +245,28 @@ class PlayerGUI(QtWidgets.QMainWindow):
             raise RuntimeError("Error setting viewpoint")
 
 
-def autoplay(media_path):
+class ClientPlayer(MediaPlayer):
+    def __init__(self, videofile):
+        MediaPlayer.__init__(self, videofile)
+        self.show()
+        self.set_volume(0)
+
+        self.viewpoint_update_timer = QTimer()
+        self.viewpoint_update_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
+        self.viewpoint_update_timer.setInterval(1000 / 29.97)  # TODO Use media rate
+        self.viewpoint_update_timer.timeout.connect(self.update_viewpoint)
+        self.viewpoint_update_timer.start()
+
+        self.play_pause_button()
+
+    def update_viewpoint(self):
+        data = client.get_latest_orientation_data()
+        if data:
+            self.set_viewpoint(data, coordtype="native_euler")
+
+
+def play(media_path):
     app = QtWidgets.QApplication(sys.argv)
-    playergui = PlayerGUI(media_path)
-    playergui.show()
-    playergui.play_pause_button()
+    p = ClientPlayer(media_path)
+    client.connect()
     sys.exit(app.exec_())
