@@ -6,8 +6,38 @@ from PyQt5.QtCore import Qt, QSize
 
 
 class PlayerGUI(QtWidgets.QMainWindow):
+    instance = vlc.Instance()
+
     def __init__(self, videofile, parent=None):
         QtWidgets.QMainWindow.__init__(self, parent)
+
+        # State vars
+        self.is_paused = False
+        self.media = None
+
+        self.create_mediaplayer(videofile)
+        self.create_videoframe()
+        self.create_gui()
+
+    def create_mediaplayer(self, videofile):
+
+        # VLC setup
+        self.mediaplayer = self.instance.media_player_new()
+        self.media = self.instance.media_new(videofile)
+        self.media.parse()
+
+        # Get video track dimensions
+        videotrack = [t for t in self.media.tracks_get()][0].video
+        self.track_framerate = videotrack.contents.frame_rate_num
+        self.track_width, self.track_height = (
+            videotrack.contents.width,
+            videotrack.contents.height,
+        )
+        self.track_aspectratio = self.track_width / self.track_height
+
+        # Add media to mediaplayer
+        self.mediaplayer.set_media(self.media)
+
         self.setWindowTitle("Media Player")
 
         self.widget = QtWidgets.QWidget(self)
@@ -15,10 +45,10 @@ class PlayerGUI(QtWidgets.QMainWindow):
         self.widget.setLayout(self.layout)
         self.setCentralWidget(self.widget)
 
-        # State vars
-        self.is_paused = False
-        self.media = None
+        # Set track title as window title
+        self.setWindowTitle(self.media.get_meta(0))
 
+    def create_videoframe(self):
         # Video frame
         if platform.system() == "Darwin":  # for MacOS
             self.videoframe = QtWidgets.QMacCocoaViewContainer(0)
@@ -30,34 +60,6 @@ class PlayerGUI(QtWidgets.QMainWindow):
         self.videoframe.setPalette(self.palette)
         self.videoframe.setAutoFillBackground(True)
 
-        # VLC setup
-        self.instance = vlc.Instance()
-        self.mediaplayer = self.instance.media_player_new()
-        self.media = self.instance.media_new(videofile)
-        # mrl = self.media.get_mrl()
-        # print(mrl)
-        self.media.parse()
-
-        # Get video track dimensions
-        videotrack = [t for t in self.media.tracks_get()][0].video
-        self.track_framerate = videotrack.contents.frame_rate_num
-        # print(videotrack.frame_rate_num)
-        self.track_width, self.track_height = (
-            videotrack.contents.width,
-            videotrack.contents.height,
-        )
-        self.track_aspectratio = self.track_width / self.track_height
-
-        # Put the media in the media player
-        self.mediaplayer.set_media(self.media)
-
-        # Set the title of the track as window title
-        self.setWindowTitle(self.media.get_meta(0))
-
-        # The media player has to be 'connected' to the QFrame (otherwise the
-        # video would be displayed in it's own window). This is platform
-        # specific, so we must give the ID of the QFrame (or similar object) to
-        # vlc. Different platforms have different functions for this
         if platform.system() == "Linux":  # for Linux using the X Server
             self.mediaplayer.set_xwindow(int(self.videoframe.winId()))
         elif platform.system() == "Windows":  # for Windows
@@ -65,6 +67,7 @@ class PlayerGUI(QtWidgets.QMainWindow):
         elif platform.system() == "Darwin":  # for MacOS
             self.mediaplayer.set_nsobject(int(self.videoframe.winId()))
 
+    def create_gui(self):
         # Menu bars
         menubar = self.menuBar()
         filemenu = menubar.addMenu("File")
