@@ -6,6 +6,6 @@ setup(
     version="0.1",
     packages=["vrpclient"],
     include_package_data=True,
-    install_requires=["click", "python-socketio", "urllib3"],
+    install_requires=["click", "python-socketio", "urllib3", "pyqt5", "python-vlc"],
     entry_points={"console_scripts": ["vrpclient=vrpclient:cli"]},
 )

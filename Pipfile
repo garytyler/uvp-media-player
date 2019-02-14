@@ -7,11 +7,11 @@ verify_ssl = true
 
 [packages]
 python-socketio = "*"
-pyqt5 = "*"
 urllib3 = "*"
+pyqt5 = "*"
 click = "*"
 colorama = "*"
-vlc = "*"
+python-vlc = "*"
 
 [requires]
 python_version = "3.7"
