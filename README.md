@@ -3,6 +3,6 @@
 ## Dev setup (Windows)
 
 ```powershell
-mkdir .\.venv
-python3.exe -m pipenv install
+python3.exe -m pipenv install .
+pipenv run -e .
 ```
