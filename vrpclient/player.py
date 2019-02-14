@@ -1,5 +1,4 @@
 import sys
-import time
 import vlc
 import platform
 from PyQt5 import QtWidgets, QtGui, QtCore
@@ -231,12 +230,12 @@ class MediaPlayer(QtWidgets.QMainWindow):
         # self.vp.field_of_view = 80
         # self.vp.yaw, self.vp.pitch, self.vp.roll, = (alpha, beta, gamma)
 
-        # Recommended instatiation
+        # Recommended instantiation
         self.vp = vlc.libvlc_video_new_viewpoint()
         self.vp.contents.field_of_view = 80
-        self.vp.contents.yaw = data[coordtype]["alpha"]
-        self.vp.contents.pitch = data[coordtype]["beta"]
-        self.vp.contents.roll = data[coordtype]["gamma"]
+        self.vp.contents.yaw = -data[coordtype]["alpha"]
+        self.vp.contents.pitch = -data[coordtype]["beta"]
+        self.vp.contents.roll = -data[coordtype]["gamma"]
 
         errorcode = self.mediaplayer.video_update_viewpoint(
             p_viewpoint=self.vp, b_absolute=True
