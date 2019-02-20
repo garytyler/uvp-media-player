@@ -52,8 +52,29 @@ def get_current_qscreens() -> list:
         return sorted(app.screens(), key=qscreen_area, reverse=True)
 
 
+def move_to_qscreen(qwindow, qscreen=None):
+    """Move qwindow to given qscreen. If not qscreen is given, try to move it to the
+    largest qscreen that is not it's current active qscreen. Call after show()
+    method.
+    """
+    wingeo = qwindow.geometry()
+    if qscreen:
+        targscreen = qscreen
+    elif system.num_screens() <= 1:
+        return
+    else:
+        currscreen = app.screenAt(wingeo.center())
+        for s in system.get_current_qscreens():
+            if s is not currscreen:
+                targscreen = s
+    targpos = targscreen.geometry().center()
+    wingeo.moveCenter(targpos)
+    qwindow.setGeometry(wingeo)
+
+
 if __name__ == "__main__":
     app = QApplication()
     win = QMainWindow()
     win.show()
+    move_to_qscreen(win)
     sys.exit(app.exec_())

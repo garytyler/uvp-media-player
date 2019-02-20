@@ -3,6 +3,7 @@ import sys
 import click
 from . import client
 from . import player
+from . import viewer
 
 
 MEDIA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "media"))
@@ -62,4 +63,4 @@ def play(ctx, filepaths):
         file_disp = click.format_filename(filepath, shorten=not verbose or sample_flair)
         click.echo(f"{file_disp} {click.style(sample_flair, fg='bright_red')}")
 
-        player.play(filepath)
+        viewer.play(filepath)

@@ -8,11 +8,12 @@ verify_ssl = true
 [packages]
 python-socketio = "*"
 urllib3 = "*"
-pyqt5 = "*"
 click = "*"
 colorama = "*"
 python-vlc = "*"
 pyside2 = "*"
+vrpclient = {editable = true,path = "."}
+requests = "*"
 
 [requires]
 python_version = "3.7"

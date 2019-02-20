@@ -1,9 +1,9 @@
 import sys
 import vlc
 import platform
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QSize, QTimer
-from . import client
+from PySide2 import QtWidgets, QtGui, QtCore
+from PySide2.QtCore import Qt, QSize, QTimer
+from vrpclient import client
 
 
 class MediaPlayer(QtWidgets.QMainWindow):
@@ -269,3 +269,14 @@ def play(media_path):
     p = ClientPlayer(media_path)
     client.connect()
     sys.exit(app.exec_())
+
+
+if __name__ == "__main__":
+    import os
+
+    MEDIA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "media"))
+    SAMPLE_MEDIA = {
+        name: os.path.join(MEDIA_DIR, name) for name in os.listdir(MEDIA_DIR)
+    }
+    path = SAMPLE_MEDIA["360video_2min.mp4"]
+    play(path)
