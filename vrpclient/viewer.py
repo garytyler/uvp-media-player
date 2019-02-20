@@ -3,19 +3,23 @@ import os
 import sys
 import vlc
 from PySide2.QtWidgets import *
-from PySide2.QtCore import Qt
+from PySide2.QtCore import Qt, QSize, QTimer
 from PySide2 import QtGui
 
 
-class Viewer(QMainWindow):
-    def __init__(self, vlc_media_player):
+class VRPWindow(QMainWindow):
+    def __init__(self, application_name="VRP Viewer"):
         QMainWindow.__init__(self)
-        self.player = vlc_media_player
+        self.application_name = application_name
+        self.setWindowTitle(self.application_name)
 
         self.create_shortcuts()
-        self.create_menubar()
-        self.create_videoframe()
-        self.setCentralWidget(self.videoframe)
+        # self.create_menubar()
+
+    def set_window_subtitle(self, subtitle):
+        if not subtitle.strip():
+            raise ValueError("set_window_subtitle() requires a str value")
+        self.setWindowTitle(f"{self.application_name} - {subtitle}")
 
     def create_menubar(self):
         self.menubar = QMenuBar()
@@ -40,6 +44,22 @@ class Viewer(QMainWindow):
         self.shortcut_exit = QShortcut("Ctrl+W", self, self.close)
         self.shortcut_fullscreen = QShortcut("Ctrl+F", self, self.toggle_fullscreen)
 
+    def toggle_fullscreen(self):
+        raise NotImplementedError
+
+
+class Viewer(VRPWindow):
+    def __init__(self, vlc_media_player):
+        VRPWindow.__init__(self)
+        self.player = vlc_media_player
+
+        self.create_videoframe()
+        self.setCentralWidget(self.videoframe)
+
+        # self.videoframe.sizeHint = lambda: QSize(
+        #     self.videoframe.width() * self.track_aspectratio, self.videowidget.width()
+        # )
+
     def create_videoframe(self):
         if sys.platform == "darwin":  # for MacOS
             self.videoframe = QMacCocoaViewContainer(0)
@@ -60,11 +80,17 @@ class Viewer(QMainWindow):
         return self.videoframe
 
     def enter_fullscreen(self):
-        self.menubar.setVisible(False)
+        try:
+            self.menubar.setVisible(False)
+        except AttributeError:
+            pass
         self.setWindowState(Qt.WindowFullScreen)
 
     def exit_fullscreen(self):
-        self.menubar.setVisible(True)
+        try:
+            self.menubar.setVisible(True)
+        except AttributeError:
+            pass
         self.setWindowState(Qt.WindowNoState)
 
     def toggle_fullscreen(self, value=None):
