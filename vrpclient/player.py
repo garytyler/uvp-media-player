@@ -261,7 +261,8 @@ class ClientPlayer(MediaPlayer):
     def update_viewpoint(self):
         data = client.get_latest_orientation_data()
         if data:
-            self.set_viewpoint(data, coordtype="native_euler")
+            # self.set_viewpoint(data, coordtype="native_euler")
+            self.set_viewpoint(data, coordtype="gn_euler")
 
 
 def play(media_path):
