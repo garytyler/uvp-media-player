@@ -12,8 +12,8 @@ click = "*"
 colorama = "*"
 python-vlc = "*"
 pyside2 = "*"
-vrpclient = {editable = true,path = "."}
 requests = "*"
+vrpclient = {editable = true,path = "."}
 
 [requires]
 python_version = "3.7"

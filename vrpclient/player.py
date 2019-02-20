@@ -265,9 +265,12 @@ class ClientPlayer(MediaPlayer):
 
 
 def play(media_path):
+    try:
+        client.connect()
+    except Exception as e:
+        print(e)
     app = QtWidgets.QApplication(sys.argv)
     p = ClientPlayer(media_path)
-    client.connect()
     sys.exit(app.exec_())
 
 

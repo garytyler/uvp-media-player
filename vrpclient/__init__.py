@@ -30,6 +30,7 @@ def connect():
 
 
 @cli.command("play")
+@click.option("-f", "--fullscreen", is_flag=True)
 @click.argument(
     "filepaths",
     nargs=-1,
@@ -43,7 +44,7 @@ def connect():
     ),
 )
 @click.pass_context
-def play(ctx, filepaths):
+def play(ctx, fullscreen, filepaths):
     """Play media files using VLC."""
 
     debug = ctx.obj["DEBUG"]
@@ -63,4 +64,7 @@ def play(ctx, filepaths):
         file_disp = click.format_filename(filepath, shorten=not verbose or sample_flair)
         click.echo(f"{file_disp} {click.style(sample_flair, fg='bright_red')}")
 
-        viewer.play(filepath)
+        if fullscreen:
+            viewer.play(filepath)
+        else:
+            player.play(filepath)
