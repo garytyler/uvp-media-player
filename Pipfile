@@ -12,6 +12,7 @@ pyqt5 = "*"
 click = "*"
 colorama = "*"
 python-vlc = "*"
+pyside2 = "*"
 
 [requires]
 python_version = "3.7"

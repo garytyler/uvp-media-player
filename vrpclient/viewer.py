@@ -5,13 +5,17 @@ import vlc
 from PySide2.QtWidgets import *
 from PySide2.QtCore import Qt, QSize, QTimer
 from PySide2 import QtGui
+from vrpclient import system
 
 
 class VRPWindow(QMainWindow):
-    def __init__(self, application_name="VRP Viewer"):
+    def __init__(self):
         QMainWindow.__init__(self)
-        self.application_name = application_name
-        self.setWindowTitle(self.application_name)
+
+        # Set window title
+        qapp = QApplication.instance()
+        self.app_display_name = qapp.applicationDisplayName().strip()
+        self.setWindowTitle(self.app_display_name)
 
         self.create_shortcuts()
         # self.create_menubar()
@@ -19,7 +23,10 @@ class VRPWindow(QMainWindow):
     def set_window_subtitle(self, subtitle):
         if not subtitle.strip():
             raise ValueError("set_window_subtitle() requires a str value")
-        self.setWindowTitle(f"{self.application_name} - {subtitle}")
+        if self.app_display_name and bool("python" != self.app_display_name):
+            self.setWindowTitle(f"{self.app_display_name} - {subtitle}")
+        else:
+            self.setWindowTitle(subtitle)
 
     def create_menubar(self):
         self.menubar = QMenuBar()
@@ -44,6 +51,28 @@ class VRPWindow(QMainWindow):
         self.shortcut_exit = QShortcut("Ctrl+W", self, self.close)
         self.shortcut_fullscreen = QShortcut("Ctrl+F", self, self.toggle_fullscreen)
 
+    def move_to_qscreen(self, qscreen=None):
+        """Move qwindow to given qscreen. If not qscreen is given, try to move it to the
+        largest qscreen that is not it's current active qscreen. Call after show()
+        method.
+        """
+        wingeo = self.geometry()
+        if qscreen:
+            targscreen = qscreen
+        elif system.num_screens() <= 1:
+            return
+        else:
+            currscreen = app.screenAt(wingeo.center())
+            for s in system.get_current_qscreens():
+                if s is not currscreen:
+                    targscreen = s
+        targpos = targscreen.geometry().center()
+        wingeo.moveCenter(targpos)
+        self.setGeometry(wingeo)
+
+    def showEvent(self, event):
+        self.move_to_qscreen()
+
     def toggle_fullscreen(self):
         raise NotImplementedError
 
@@ -53,11 +82,20 @@ class Viewer(VRPWindow):
         VRPWindow.__init__(self)
         self.player = vlc_media_player
 
+        # Create videowidget
+        self.videowidget = QWidget(self)
+        self.setCentralWidget(self.videowidget)
+
+        # Create videolayout
+        self.videolayout = QVBoxLayout()
+        self.videowidget.setLayout(self.videolayout)
+
+        # Create videoframe
         self.create_videoframe()
-        self.setCentralWidget(self.videoframe)
+        self.videolayout.addWidget(self.videoframe, 0)
 
         # self.videoframe.sizeHint = lambda: QSize(
-        #     self.videoframe.width() * self.track_aspectratio, self.videowidget.width()
+        #     self.videowidget.width() * self.track_aspectratio, self.videowidget.width()
         # )
 
     def create_videoframe(self):
@@ -113,6 +151,16 @@ def quick_play(path):
     media = videolan.media_new(path)
     mediaplayer.set_media(media)
     mediaplayer.play()
+
+
+def get_media_info(self, media: vlc.Media) -> dict:
+    track = [t for t in media.tracks_get()][0].video
+    return {
+        "framerate": track.contents.frame_rate_num,
+        "width": track.contents.width,
+        "height": track.contents.height,
+        "aspect_ratio": track.contents.width / track.contents.height,
+    }
 
 
 if __name__ == "__main__":
