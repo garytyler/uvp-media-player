@@ -4,6 +4,9 @@ tempCodeRunnerFile*
 .vscode/tags
 .vscode
 
+# Pipenv
+Pipfile.lock
+
 # Pytest
 .pytest_cache
 .hypothesis/

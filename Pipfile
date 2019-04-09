@@ -4,6 +4,7 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
+vrpclient = {editable = true,path = "."}
 
 [packages]
 python-socketio = "*"
@@ -13,7 +14,7 @@ colorama = "*"
 python-vlc = "*"
 pyside2 = "*"
 requests = "*"
-vrpclient = {editable = true,path = "."}
+
 
 [requires]
 python_version = "3.7"
