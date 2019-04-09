@@ -9,7 +9,71 @@ from vrpclient import system
 from vrpclient import client
 
 
-class VRPWindow(QMainWindow):
+class ViewpointManager(object):
+    def __init__(self, media_player):
+        self.player = media_player
+
+        try:
+            client.connect()
+        except Exception as e:
+            print(e)
+
+        self.viewpoint_update_timer = QTimer()
+        self.viewpoint_update_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
+        self.viewpoint_update_timer.setInterval(1000 / 29.97)  # TODO Use media rate
+        self.viewpoint_update_timer.timeout.connect(self.new_frame)
+        self.viewpoint_update_timer.start()
+
+        self._data = None
+
+    def parse_values_from_data(self, data, coordtype="native_euler"):
+        """
+        # Free C++ pointer func
+        vlc.libvlc_free(self.vp)
+        """
+
+    def parse_coordinate_data(self, data, coordtype="native_euler"):
+        return {
+            "yaw": -data[coordtype]["alpha"],
+            "pitch": -data[coordtype]["beta"],
+            "roll": -data[coordtype]["gamma"],
+        }
+
+    def new_frame(self, data):
+        if data == self._data:
+            return
+        self._data = data
+        values = self.parse_coordinate_data(data)
+        self.new_viewpoint(
+            yaw=values["yaw"], pitch=values["pitch"], roll=values["roll"]
+        )
+
+    def new_viewpoint(self, yaw, pitch, roll, coordtype="native_euler"):
+
+        # # Class instatiation
+        # self.vp = vlc.VideoViewpoint()
+        # self.vp.field_of_view = 80
+        # self.vp.yaw, self.vp.pitch, self.vp.roll, = (alpha, beta, gamma)
+
+        # Recommended instantiation
+        self.vp = vlc.libvlc_video_new_viewpoint()
+        self.vp.contents.field_of_view = 80
+        self.vp.contents.yaw = yaw
+        self.vp.contents.pitch = pitch
+        self.vp.contents.roll = roll
+        errorcode = self.player.video_update_viewpoint(
+            p_viewpoint=self.vp, b_absolute=True
+        )
+        if errorcode != 0:
+            raise RuntimeError("Error setting viewpoint")
+
+    def update_viewpoint(self):
+        data = client.get_latest_orientation_data()
+        if data:
+            self.set_viewpoint(data, coordtype="gn_euler")
+
+
+class VRPWindowContext(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
@@ -59,7 +123,7 @@ class VRPWindow(QMainWindow):
         self.shortcut_fullscreen = QShortcut("Ctrl+F", self, self.toggle_fullscreen)
 
     def move_to_qscreen(self, qscreen=None):
-        """Move qwindow to given qscreen. If not qscreen is given, try to move it to the
+        """Move qwindow to given qscreen. If no qscreen is given, try to move it to the
         largest qscreen that is not it's current active qscreen. Call after show()
         method.
         """
@@ -118,10 +182,12 @@ class MediaFrame(QFrame):
         return self.current_screen_size()
 
 
-class Viewer(VRPWindow):
+class ViewerWindow(VRPWindowContext):
     def __init__(self, vlc_media_player, fullscreen=True):
-        VRPWindow.__init__(self)
+        VRPWindowContext.__init__(self)
         self.player = vlc_media_player
+
+        self.vpmanager = ViewpointManager(player)
 
         self.videolayout = QVBoxLayout()
         self.videolayout.setContentsMargins(0, 0, 0, 0)
@@ -134,6 +200,7 @@ class Viewer(VRPWindow):
         self.videolayout.addWidget(self.frame, 0)
 
         self.toggle_fullscreen(value=fullscreen)
+        self.enter_fullscreen()
 
     def enter_fullscreen(self):
         try:
@@ -141,6 +208,7 @@ class Viewer(VRPWindow):
         except AttributeError:
             pass
         self.setWindowState(Qt.WindowFullScreen)
+        self.vpmanager
 
     def exit_fullscreen(self):
         try:
@@ -175,14 +243,14 @@ def get_media_details(media: vlc.Media) -> dict:
 
 
 def play(path):
-    try:
-        client.connect()
-    except Exception as e:
-        print(e)
     app = QApplication(sys.argv)
+
     videolan = vlc.Instance()
     player = videolan.media_player_new()
-    viewer = Viewer(vlc_media_player=player)
+
+    #
+
+    viewer = ViewerWindow(vlc_media_player=player)
     viewer.show()
     player.set_mrl(path)
     player.play()
