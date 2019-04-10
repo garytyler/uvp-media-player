@@ -24,6 +24,14 @@ dt = QDesktopWidget()
 
 """
 
+"""
+def current_screen_size(self):
+    wincenter = self.geometry().center()
+    curscreen = QApplication.instance().screenAt(wincenter)
+    screengeo = curscreen.geometry()
+    return screengeo.size()
+"""
+
 
 @contextmanager
 def qapp():
