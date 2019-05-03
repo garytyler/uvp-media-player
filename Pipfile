@@ -4,7 +4,15 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-vrpclient = {editable = true,path = "."}
+<<<<<<< HEAD
+<<<<<<< HEAD
+seevr_player = {editable = true,path = "."}
+=======
+seevrplayer = {editable = true,path = "."}
+>>>>>>> 39d3b3b... Change name to seevr
+=======
+seevrplayer = {editable = true,path = "."}
+>>>>>>> 39d3b3bea4b6b4f4768be8d3e22c7a07116c7e0e
 
 [packages]
 python-socketio = "*"
