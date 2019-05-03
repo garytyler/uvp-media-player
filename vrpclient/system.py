@@ -1,6 +1,6 @@
 import sys
-from PySide2.QtWidgets import *
-from PySide2.QtGui import QWindow
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QWindow
 from contextlib import contextmanager
 
 """
@@ -12,8 +12,8 @@ app.primaryScreen()
 app.platformName()
 
 app.screenAt(point)
-Parameters:	point  PySide2.QtCore.QPoint
-Return type:	PySide2.QtGui.QScreen
+Parameters:	point  PyQt5.QtCore.QPoint
+Return type:	PyQt5.QtGui.QScreen
 
 # Events
 app.screenAdded(screen)

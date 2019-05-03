@@ -12,9 +12,9 @@ urllib3 = "*"
 click = "*"
 colorama = "*"
 python-vlc = "*"
-pyside2 = "*"
+PyQt5 = "*"
 requests = "*"
-
+pyqt5 = "*"
 
 [requires]
 python_version = "3.7"

@@ -2,11 +2,12 @@
 import os
 import sys
 import vlc
-from PySide2.QtWidgets import *
-from PySide2.QtCore import Qt, QSize, QTimer
-from PySide2 import QtGui
+from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt, QSize, QTimer
+from PyQt5 import QtGui
 from vrpclient import system
 from vrpclient import client
+from vrpclient.comm import ClientConnectionBase
 
 """
 player.get_state()
@@ -41,67 +42,54 @@ def get_media_details(media: vlc.Media) -> dict:
     }
 
 
-class ViewpointManager(object):
-    def __init__(self, player):
-        self.player = player
+class ViewpointManager(ClientConnectionBase):
+    def __init__(self, mediaplayer):
 
-        try:
-            client.connect()
-        except Exception as e:
-            print(e)
-        else:
-            self.viewpoint_update_timer = QTimer()
-            self.viewpoint_update_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
-            self.viewpoint_update_timer.setInterval(1000 / 29.97)  # TODO Use media rate
-            self.viewpoint_update_timer.timeout.connect(self.new_stream_frame)
-            self.viewpoint_update_timer.start()
+        ClientConnectionBase.__init__(self, url="wss://seevr.herokuapp.com/player")
+        self.mediaplayer = mediaplayer
 
-        # self.curr_vp_vals = (0, 0, 0)
-        self.curr_yaw = 0
-        self.curr_pitch = 0
-        self.curr_roll = 0
+        self.curr_yaw = self.curr_pitch = self.curr_roll = 0
+        self.latest_data = None
 
-    def parse_values_from_data(self, data, coordtype="native_euler"):
-        """
-        # Free C++ pointer func
-        vlc.libvlc_free(self.vp)
-        """
+        self.frame_timer = QTimer()
+        self.frame_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
+        self.frame_timer.setInterval(1000 / 29.97)  # TODO Use media rate
+        self.frame_timer.timeout.connect(self.on_new_frame)
 
-    def new_stream_frame(self, data, coordtype="native_euler"):
-        self.set_new_viewpoint(
-            yaw=-data[coordtype]["alpha"],
-            pitch=-data[coordtype]["beta"],
-            roll=-data[coordtype]["gamma"],
-        )
+    def received(self, data):
+        print(f"Latest: {data}", flush=True)
+        self.latest_data = data
 
-    def set_new_viewpoint(self, yaw, pitch, roll, coordtype="native_euler"):
+    def connected(self):
+        self.connect_timer.stop()
+        self.frame_timer.start()
+
+    def disconnected(self):
+        self.frame_timer.stop()
+
+    def on_new_frame(self, coordtype="gn_euler"):
+        if self.latest_data:
+            self.set_new_viewpoint(
+                yaw=-self.latest_data[coordtype]["alpha"],
+                pitch=-self.latest_data[coordtype]["beta"],
+                roll=-self.latest_data[coordtype]["gamma"],
+            )
+
+    def set_new_viewpoint(self, yaw, pitch, roll, coordtype="gn_euler"):
         if (yaw, pitch, roll) == (self.curr_yaw, self.curr_pitch, self.curr_roll):
             return
 
-        """
-        # Class instatiation
         self.vp = vlc.VideoViewpoint()
         self.vp.field_of_view = 80
-        self.vp.yaw, self.vp.pitch, self.vp.roll, = (alpha, beta, gamma)
-        """
-
-        # Recommended instantiation
-        self.vp = vlc.libvlc_video_new_viewpoint()
-        self.vp.contents.field_of_view = 80
-        self.vp.contents.yaw = self.curr_yaw = yaw
-        self.vp.contents.pitch = self.curr_pitch = pitch
-        self.vp.contents.roll = self.curr_roll = roll
-        errorcode = self.player.video_update_viewpoint(
+        self.vp.yaw = self.curr_yaw = yaw
+        self.vp.pitch = self.curr_pitch = pitch
+        self.vp.roll = self.curr_roll = roll
+        errorcode = self.mediaplayer.video_update_viewpoint(
             p_viewpoint=self.vp, b_absolute=True
         )
         if errorcode != 0:
             raise RuntimeError("Error setting viewpoint")
         return errorcode
-
-    def update_viewpoint(self):
-        data = client.get_latest_orientation_data()
-        if data:
-            self.set_viewpoint(data, coordtype="gn_euler")
 
 
 class MediaFrame(QFrame):
@@ -208,9 +196,6 @@ class _ViewerWindow(QMainWindow):
     def showEvent(self, event):
         self.move_to_qscreen()
 
-    def toggle_fullscreen(self):
-        raise NotImplementedError
-
     def enter_fullscreen(self):
         try:
             self.menubar.setVisible(False)
@@ -271,11 +256,11 @@ class VRPViewer(_ViewerWindow):
         self.update_360_aspect_ratio()
 
 
-def main(path, args=["--no-qt-privacy-ask"]):
+def play(path, args=["--no-qt-privacy-ask"]):
     app = QApplication(sys.argv)
 
-    player = vlc.MediaPlayer(path)
-    viewer = VRPViewer(player)
+    mediaplayer = vlc.MediaPlayer(path)
+    viewer = VRPViewer(mediaplayer)
     viewer.play()
 
     sys.exit(app.exec_())
@@ -288,4 +273,4 @@ if __name__ == "__main__":
     }
     path = SAMPLE_MEDIA["360video_2min.mp4"]
     # path = SAMPLE_MEDIA["regvid_5sec.mp4"]
-    main(path)
+    play(path)

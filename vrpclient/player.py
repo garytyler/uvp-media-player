@@ -1,8 +1,8 @@
 import sys
 import vlc
 import platform
-from PySide2 import QtWidgets, QtGui, QtCore
-from PySide2.QtCore import Qt, QSize, QTimer
+from PyQt5 import QtWidgets, QtGui, QtCore
+from PyQt5.QtCore import Qt, QSize, QTimer
 from vrpclient import client
 
 
@@ -266,10 +266,10 @@ class ClientPlayer(MediaPlayer):
 
 
 def play(media_path):
-    try:
-        client.connect()
-    except Exception as e:
-        print(e)
+    # try:
+    #     client.connect()
+    # except Exception as e:
+    #     print(e)
     app = QtWidgets.QApplication(sys.argv)
     p = ClientPlayer(media_path)
     sys.exit(app.exec_())
