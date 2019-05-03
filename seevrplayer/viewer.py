@@ -5,9 +5,9 @@ import vlc
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5 import QtGui
-from vrpclient import system
-from vrpclient import client
-from vrpclient.comm import ClientConnectionBase
+from seevrplayer import system
+from seevrplayer import client
+from seevrplayer.comm import ClientConnectionBase
 
 """
 player.get_state()
@@ -44,7 +44,6 @@ def get_media_details(media: vlc.Media) -> dict:
 
 class ViewpointManager(ClientConnectionBase):
     def __init__(self, mediaplayer):
-
         ClientConnectionBase.__init__(self, url="wss://seevr.herokuapp.com/player")
         self.mediaplayer = mediaplayer
 
