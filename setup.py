@@ -6,6 +6,6 @@ setup(
     version="0.1",
     packages=["seevr_player"],
     include_package_data=True,
-    install_requires=["click", "python-socketio", "urllib3", "PyQt5", "python-vlc"],
+    install_requires=["click", "PyQt5", "python-vlc"],
     entry_points={"console_scripts": ["seevrplayer=seevr_player:cli"]},
 )

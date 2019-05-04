@@ -55,7 +55,7 @@ class ViewpointManager(comm.ClientConnectionBase):
         self.frame_timer.timeout.connect(self.on_new_frame)
 
     def received(self, data):
-        # print(f"Latest: {data}", flush=True)
+        print(f"Latest: {data}", flush=True)
         self.latest_data = data
 
     def connected(self):
