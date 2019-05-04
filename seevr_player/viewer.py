@@ -5,7 +5,8 @@ import vlc
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5 import QtGui
-import system, comm
+from seevr_player import system
+from seevr_player import comm
 
 """
 player.get_state()
@@ -54,7 +55,7 @@ class ViewpointManager(comm.ClientConnectionBase):
         self.frame_timer.timeout.connect(self.on_new_frame)
 
     def received(self, data):
-        print(f"Latest: {data}", flush=True)
+        # print(f"Latest: {data}", flush=True)
         self.latest_data = data
 
     def connected(self):

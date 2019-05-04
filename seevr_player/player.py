@@ -3,7 +3,6 @@ import vlc
 import platform
 from PyQt5 import QtWidgets, QtGui, QtCore
 from PyQt5.QtCore import Qt, QSize, QTimer
-from seevr_player import client
 
 
 class MediaPlayer(QtWidgets.QMainWindow):

@@ -15,7 +15,7 @@ def rand_id(size=6):
 class ClientSocket(QWebSocket):
     def __init__(self):
         QWebSocket.__init__(
-            self, origin="", version=QWebSocketProtocol.VersionLatest, parent=None
+            self, origin="", version=QWebSocketProtocol.Version13, parent=None
         )
 
     def _pong(self, elapsed_time, payload):

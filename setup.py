@@ -7,5 +7,5 @@ setup(
     packages=["seevr_player"],
     include_package_data=True,
     install_requires=["click", "python-socketio", "urllib3", "PyQt5", "python-vlc"],
-    # entry_points={"console_scripts": ["seevr_player=seevr_player:cli"]},
+    entry_points={"console_scripts": ["seevrplayer=seevr_player:cli"]},
 )
