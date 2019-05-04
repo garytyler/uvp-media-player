@@ -5,8 +5,10 @@ import vlc
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5 import QtGui
-from seevr_player import system
-from seevr_player import comm
+
+# from .seevr_player import system
+# from .seevr_player import comm
+import system, comm
 
 """
 player.get_state()
@@ -270,6 +272,6 @@ if __name__ == "__main__":
         name: os.path.join(MEDIA_DIR, name) for name in os.listdir(MEDIA_DIR)
     }
     path = SAMPLE_MEDIA["360video_2min.mp4"]
-    url = "wss://seevr.herokuapp.com/player"
-    # url = "ws://127.0.0.1:5000/player"
+    # url = "wss://seevr.herokuapp.com/player"
+    url = "ws://127.0.0.1:8000/player"
     play(path, url)
