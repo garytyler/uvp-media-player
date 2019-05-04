@@ -2,6 +2,7 @@ import sys
 from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QWindow
 from contextlib import contextmanager
+import system
 
 """
 QApplication screen related
