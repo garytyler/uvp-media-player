@@ -18,17 +18,17 @@ class ClientSocket(QWebSocket):
             self, origin="", version=QWebSocketProtocol.Version13, parent=None
         )
 
-    def _pong(self, elapsed_time, payload):
-        if not str(payload) == str(self.__payload):
-            raise RuntimeError("Ping payload mismatch")
-        else:
-            print("pong time: {}".format(elapsed_time))
-            self.__payload = None
+    # def _pong(self, elapsed_time, payload):
+    #     if not str(payload) == str(self.__payload):
+    #         raise RuntimeError("Ping payload mismatch")
+    #     else:
+    #         print("pong time: {}".format(elapsed_time))
+    #         self.__payload = None
 
-    def do_ping(self):
-        self.__payload = rand_id().encode()
-        self.pong.connect(self._pong)
-        self.ping(self.__payload)
+    # def do_ping(self):
+    #     self.__payload = rand_id().encode()
+    #     self.pong.connect(self._pong)
+    #     self.ping(self.__payload)
 
     def error(self, error_code):
         print("error code: {}".format(error_code))
@@ -61,7 +61,7 @@ class ClientConnectionBase:
         print(e, flush=True)
 
     def _attempt_connect(self):
-        print("attempt", flush=True)
+        print(f"Attempt connect: {self.url}")
         self.sock.open(QUrl(self.url))
 
     def send(self, data):
@@ -84,6 +84,7 @@ class ClientConnectionBase:
     def _disconnected(self):
         print("DISCONNECTED")
         self._connected = False
+
         # print(f"Disconnected ({self.localaddr}) from {self.peername} ({self.peeraddr})")
         self.localaddr = None
         self.peername = None

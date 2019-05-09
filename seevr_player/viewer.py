@@ -6,9 +6,11 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5 import QtGui
 
-# from .seevr_player import system
-# from .seevr_player import comm
-import system, comm
+# import time
+from seevr_player import system
+from seevr_player import comm
+
+# import system, comm
 
 """
 player.get_state()
@@ -59,6 +61,7 @@ class ViewpointManager(comm.ClientConnectionBase):
     def received(self, data):
         print(f"Latest: {data}", flush=True)
         self.latest_data = data
+        self.send({"text": "value"})
 
     def connected(self):
         self.connect_timer.stop()
@@ -233,8 +236,6 @@ class VRPViewer(_ViewerWindow):
         self.frame = MediaFrame(player=self.player, parent=self.widget)
         self.videolayout.addWidget(self.frame, 0)
 
-        self.show()
-
     def update_360_aspect_ratio(self):
         """Force an if-needed reset of the pixel aspect ratio of a 360 video frame.
 
@@ -256,22 +257,26 @@ class VRPViewer(_ViewerWindow):
         self.update_360_aspect_ratio()
 
 
-def play(path, url, args=["--no-qt-privacy-ask"]):
-    app = QApplication(sys.argv)
-
-    mediaplayer = vlc.MediaPlayer(path)
-    viewer = VRPViewer(mediaplayer, url)
-    viewer.play()
-
-    sys.exit(app.exec_())
-
-
-if __name__ == "__main__":
+def play():
     MEDIA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "media"))
     SAMPLE_MEDIA = {
         name: os.path.join(MEDIA_DIR, name) for name in os.listdir(MEDIA_DIR)
     }
+
     path = SAMPLE_MEDIA["360video_2min.mp4"]
     # url = "wss://seevr.herokuapp.com/player"
     url = "ws://127.0.0.1:8000/player"
-    play(path, url)
+
+    app = QApplication([])
+
+    mediaplayer = vlc.MediaPlayer(path)
+    viewer = VRPViewer(mediaplayer, url)
+    viewer.show()
+    viewer.play()
+    app.exec_()
+    viewer.vpmanager.sock.close()
+    sys.exit()
+
+
+# if __name__ == "__main__":
+#     main()
