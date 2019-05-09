@@ -61,7 +61,7 @@ class ClientConnectionBase:
         print(e, flush=True)
 
     def _attempt_connect(self):
-        print(f"Attempt connect: {self.url}")
+        print(f"ATTEMPT CONNECT ({self.url})")
         self.sock.open(QUrl(self.url))
 
     def send(self, data):

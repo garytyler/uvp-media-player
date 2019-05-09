@@ -7,8 +7,8 @@ from PyQt5.QtCore import Qt, QSize, QTimer
 from PyQt5 import QtGui
 
 # import time
-from seevr_player import system
-from seevr_player import comm
+from eventvr_player import system
+from eventvr_player import comm
 
 # import system, comm
 
@@ -264,7 +264,7 @@ def play():
     }
 
     path = SAMPLE_MEDIA["360video_2min.mp4"]
-    # url = "wss://seevr.herokuapp.com/player"
+    # url = "wss://eventvr.herokuapp.com/player"
     url = "ws://127.0.0.1:8000/player"
 
     app = QApplication([])
@@ -273,9 +273,7 @@ def play():
     viewer = VRPViewer(mediaplayer, url)
     viewer.show()
     viewer.play()
-    app.exec_()
-    viewer.vpmanager.sock.close()
-    sys.exit()
+    sys.exit(app.exec_())
 
 
 # if __name__ == "__main__":

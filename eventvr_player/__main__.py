@@ -1,5 +1,5 @@
 import os
-from seevr_player import viewer
+from eventvr_player import viewer
 
 
 # def main():
@@ -9,7 +9,7 @@ from seevr_player import viewer
 #     }
 
 #     path = SAMPLE_MEDIA["360video_2min.mp4"]
-#     # url = "wss://seevr.herokuapp.com/player"
+#     # url = "wss://eventvr.herokuapp.com/player"
 #     url = "ws://127.0.0.1:8000/example/player"
 
 
