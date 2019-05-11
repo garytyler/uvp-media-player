@@ -1,0 +1,13 @@
+repos:
+  - repo: https://github.com/ambv/black
+    rev: a2f6706a1ea026cbe0e7d83caffa6c13c463bfe1
+    hooks:
+      - id: black
+        language_version: python3
+    stages: [commit]
+  - repo: https://github.com/doublify/pre-commit-isort
+    rev: 3770f8607eabfbafb5a618cbceb63cf19fded9fd
+    hooks:
+      - id: isort
+        language_version: python3
+    stages: [commit]
