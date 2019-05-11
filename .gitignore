@@ -5,7 +5,7 @@ tempCodeRunnerFile*
 .vscode
 
 # Pipenv
-Pipfile.lock
+#Pipfile.lock
 
 # Pytest
 .pytest_cache

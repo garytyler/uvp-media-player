@@ -1,16 +1,13 @@
 """Viewer class for playing full screen video"""
 import os
 import sys
+
 import vlc
-from PyQt5.QtWidgets import *
-from PyQt5.QtCore import Qt, QSize, QTimer
+from eventvr_player import comm, system
 from PyQt5 import QtGui
+from PyQt5.QtCore import QSize, Qt, QTimer
+from PyQt5.QtWidgets import QApplication, QFrame, QMainWindow, QMenuBar
 
-# import time
-from eventvr_player import system
-from eventvr_player import comm
-
-# import system, comm
 
 """
 player.get_state()

@@ -1,8 +1,9 @@
-import sys
-import vlc
 import platform
-from PyQt5 import QtWidgets, QtGui, QtCore
-from PyQt5.QtCore import Qt, QSize, QTimer
+import sys
+
+import vlc
+from PyQt5 import QtCore, QtGui, QtWidgets
+from PyQt5.QtCore import QSize, Qt, QTimer
 
 
 class MediaPlayer(QtWidgets.QMainWindow):

@@ -1,9 +1,10 @@
+import json
 import random
 import string
-import json
-from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
-from PyQt5.QtCore import Qt, QUrl, QTimer
+
+from PyQt5.QtCore import Qt, QTimer, QUrl
 from PyQt5.QtNetwork import QAbstractSocket
+from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
 
 
 def rand_id(size=6):
