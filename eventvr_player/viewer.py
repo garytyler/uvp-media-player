@@ -59,9 +59,9 @@ class ViewpointManager(comm.ClientConnectionBase):
         self.frame_timer.timeout.connect(self.on_new_frame)
 
     def received(self, data):
-        print(f"Latest: {data}", flush=True)
         self.latest_data = data
-        self.send({"text": "value"})
+        print(f"Latest: {str(data)}")
+        # self.send({"text": "value"})
 
     def connected(self):
         self.connect_timer.stop()
@@ -70,7 +70,7 @@ class ViewpointManager(comm.ClientConnectionBase):
     def disconnected(self):
         self.frame_timer.stop()
 
-    def on_new_frame(self, coordtype="gn_euler"):
+    def on_new_frame(self, coordtype="native_euler"):
         if self.latest_data:
             self.set_new_viewpoint(
                 yaw=-self.latest_data[coordtype]["alpha"],
@@ -257,24 +257,10 @@ class VRPViewer(_ViewerWindow):
         self.update_360_aspect_ratio()
 
 
-def play():
-    MEDIA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "media"))
-    SAMPLE_MEDIA = {
-        name: os.path.join(MEDIA_DIR, name) for name in os.listdir(MEDIA_DIR)
-    }
-
-    path = SAMPLE_MEDIA["360video_2min.mp4"]
-    # url = "wss://eventvr.herokuapp.com/player"
-    url = "ws://127.0.0.1:8000/player"
-
+def play(media_path, socket_url):
     app = QApplication([])
-
-    mediaplayer = vlc.MediaPlayer(path)
-    viewer = VRPViewer(mediaplayer, url)
+    mediaplayer = vlc.MediaPlayer(media_path)
+    viewer = VRPViewer(mediaplayer, socket_url)
     viewer.show()
     viewer.play()
     sys.exit(app.exec_())
-
-
-# if __name__ == "__main__":
-#     main()
