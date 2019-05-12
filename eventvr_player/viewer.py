@@ -6,7 +6,16 @@ import vlc
 from eventvr_player import comm, system
 from PyQt5 import QtGui
 from PyQt5.QtCore import QSize, Qt, QTimer
-from PyQt5.QtWidgets import QApplication, QFrame, QMainWindow, QMenuBar
+from PyQt5.QtWidgets import (
+    QAction,
+    QApplication,
+    QFrame,
+    QMainWindow,
+    QMenuBar,
+    QShortcut,
+    QVBoxLayout,
+    QWidget,
+)
 
 
 """
