@@ -4,6 +4,13 @@
 # from . import player
 # from . import viewer
 
+import logging
+
+logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
+
+
+# format=%(asctime)s - %(name)s - %(levelname)s - %(message)s
+# datefmt=%Y-%m-%d %H:%M:%S
 
 # MEDIA_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "media"))
 # SAMPLE_MEDIA = {name: os.path.join(MEDIA_DIR, name) for name in os.listdir(MEDIA_DIR)}

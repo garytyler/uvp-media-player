@@ -1,9 +1,10 @@
 """Viewer class for playing full screen video"""
+import logging
 import os
 import sys
 
 import vlc
-from eventvr_player import comm, system
+from eventvr_player import comm
 from PyQt5 import QtGui
 from PyQt5.QtCore import QSize, Qt, QTimer
 from PyQt5.QtWidgets import (
@@ -16,7 +17,6 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-
 
 """
 player.get_state()
@@ -31,6 +31,9 @@ player.get_state()
  7: 'Error'}
 
 """
+
+
+log = logging.getLogger(__name__)
 
 
 def get_media_size(media: vlc.Media) -> QSize:
@@ -51,54 +54,36 @@ def get_media_details(media: vlc.Media) -> dict:
     }
 
 
-class ViewpointManager(comm.ClientConnectionBase):
+class ViewpointManager:
     def __init__(self, mediaplayer, url):
-        comm.ClientConnectionBase.__init__(self, url)
         self.mediaplayer = mediaplayer
-
-        self.curr_yaw = self.curr_pitch = self.curr_roll = 0
-        self.latest_data = None
 
         self.frame_timer = QTimer()
         self.frame_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
         self.frame_timer.setInterval(1000 / 30)  # TODO Use media rate
         self.frame_timer.timeout.connect(self.on_new_frame)
 
-    def received(self, data):
-        self.latest_data = data
-        print(f"Latest: {str(data)}")
-        # self.send({"text": "value"})
+        self.client = comm.RemoteInputClient(url=url)
+        self.client.socket.connected.connect(self.frame_timer.start)
+        self.client.socket.disconnected.connect(self.frame_timer.stop)
 
-    def connected(self):
-        self.connect_timer.stop()
-        self.frame_timer.start()
+        self.curr_yaw = self.curr_pitch = self.curr_roll = 0
 
-    def disconnected(self):
-        self.frame_timer.stop()
+    def on_new_frame(self):
+        new_motion_state = self.client.get_new_motion_state()
+        if new_motion_state:
+            log.debug(f"NEW MOTION STATE [new_motion_state:'{new_motion_state}'")
+            self.set_new_viewpoint(*new_motion_state)
 
-    def on_new_frame(self, coordtype="native_euler"):
-        if self.latest_data:
-            self.set_new_viewpoint(
-                yaw=-self.latest_data[coordtype]["alpha"],
-                pitch=-self.latest_data[coordtype]["beta"],
-                roll=-self.latest_data[coordtype]["gamma"],
-            )
-
-    def set_new_viewpoint(self, yaw, pitch, roll, coordtype="gn_euler"):
-        if (yaw, pitch, roll) == (self.curr_yaw, self.curr_pitch, self.curr_roll):
-            return
-
+    def set_new_viewpoint(self, yaw, pitch, roll):
         self.vp = vlc.VideoViewpoint()
         self.vp.field_of_view = 80
-        self.vp.yaw = self.curr_yaw = yaw
-        self.vp.pitch = self.curr_pitch = pitch
-        self.vp.roll = self.curr_roll = roll
+        self.vp.yaw, self.vp.pitch, self.vp.roll = yaw, pitch, roll
         errorcode = self.mediaplayer.video_update_viewpoint(
             p_viewpoint=self.vp, b_absolute=True
         )
         if errorcode != 0:
-            raise RuntimeError("Error setting viewpoint")
-        return errorcode
+            log.error("Error setting viewpoint")
 
 
 class MediaFrame(QFrame):

@@ -1,9 +1,9 @@
 import sys
 
-from eventvr_player import viewer
-
 
 def main():
+    from eventvr_player import viewer
+
     viewer.play(media_path=sys.argv[1], socket_url=sys.argv[2])
 
 
