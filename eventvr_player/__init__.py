@@ -1,12 +1,18 @@
+from importlib import import_module
+
+try:
+    import_module("settings")
+except ModuleNotFoundError:
+    pass
+
+
+# import ..settings
+
 # import os
 # import sys
 # import click
 # from . import player
 # from . import viewer
-
-import logging
-
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s %(levelname)s %(message)s")
 
 
 # format=%(asctime)s - %(name)s - %(levelname)s - %(message)s

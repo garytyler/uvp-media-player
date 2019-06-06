@@ -247,7 +247,7 @@ class MediaPlayer(QtWidgets.QMainWindow):
 class ClientPlayer(MediaPlayer):
     def __init__(self, videofile):
         MediaPlayer.__init__(self, videofile)
-        self.show()
+
         self.set_volume(0)
 
         self.viewpoint_update_timer = QTimer()
@@ -263,16 +263,6 @@ class ClientPlayer(MediaPlayer):
         if data:
             # self.set_viewpoint(data, coordtype="native_euler")
             self.set_viewpoint(data, coordtype="gn_euler")
-
-
-def play(media_path):
-    # try:
-    #     client.connect()
-    # except Exception as e:
-    #     print(e)
-    app = QtWidgets.QApplication(sys.argv)
-    p = ClientPlayer(media_path)
-    sys.exit(app.exec_())
 
 
 if __name__ == "__main__":

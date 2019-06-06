@@ -1,6 +1,5 @@
 """Viewer class for playing full screen video"""
 import logging
-import os
 import sys
 
 import vlc
@@ -55,8 +54,9 @@ def get_media_details(media: vlc.Media) -> dict:
 
 
 class ViewpointManager:
-    def __init__(self, mediaplayer, url):
-        self.mediaplayer = mediaplayer
+    def __init__(self, vlcmediaplayer, url):
+
+        self.vlcmediaplayer = vlcmediaplayer
 
         self.frame_timer = QTimer()
         self.frame_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
@@ -79,7 +79,7 @@ class ViewpointManager:
         self.vp = vlc.VideoViewpoint()
         self.vp.field_of_view = 80
         self.vp.yaw, self.vp.pitch, self.vp.roll = yaw, pitch, roll
-        errorcode = self.mediaplayer.video_update_viewpoint(
+        errorcode = self.vlcmediaplayer.video_update_viewpoint(
             p_viewpoint=self.vp, b_absolute=True
         )
         if errorcode != 0:
@@ -87,11 +87,11 @@ class ViewpointManager:
 
 
 class MediaFrame(QFrame):
-    def __init__(self, player, parent):
+    def __init__(self, vlcmediaplayer, parent):
         self.parent = parent
         super().__init__(parent=self.parent)
 
-        self.player = player
+        self.vlcmediaplayer = vlcmediaplayer
 
         self.palette = self.palette()
         self.palette.setColor(QtGui.QPalette.Window, QtGui.QColor(0, 0, 0))
@@ -99,19 +99,19 @@ class MediaFrame(QFrame):
         self.setAutoFillBackground(True)
 
         if sys.platform.startswith("linux"):  # for Linux X Server
-            self.player.set_xwindow(self.winId())
+            self.vlcmediaplayer.set_xwindow(self.winId())
         elif sys.platform == "win32":  # for Windows
-            self.player.set_hwnd(self.winId())
+            self.vlcmediaplayer.set_hwnd(self.winId())
         elif sys.platform == "darwin":  # for MacOS
-            self.player.set_nsobject(int(self.winId()))
+            self.vlcmediaplayer.set_nsobject(int(self.winId()))
 
     def sizeHint(self, *args, **kwargs):
-        media = self.player.get_media()
+        media = self.vlcmediaplayer.get_media()
         details = get_media_details(media)
         return QSize(details["width"], details["height"])
 
 
-class _ViewerWindow(QMainWindow):
+class PlayerWindow(QMainWindow):
     def __init__(self):
         QMainWindow.__init__(self)
 
@@ -212,19 +212,19 @@ class _ViewerWindow(QMainWindow):
             self.exit_fullscreen()
 
 
-class VRPViewer(_ViewerWindow):
-    """Incorporates a player object and implements methods that depend on it"""
+class PlayerGUI(PlayerWindow):
+    """Incorporates a vlcmediaplayer object and implements methods that depend on it"""
 
     """Facade for VLC and Qt objects"""
 
-    def __init__(self, player, url):
-        _ViewerWindow.__init__(self)
+    def __init__(self, vlcmediaplayer, url):
+        PlayerWindow.__init__(self)
 
-        self.player = player
-        self.vpmanager = ViewpointManager(self.player, url)
+        self.vlcmediaplayer = vlcmediaplayer
+        self.vpmanager = ViewpointManager(self.vlcmediaplayer, url)
 
         # Create videoframe add add to video layout
-        self.frame = MediaFrame(player=self.player, parent=self.widget)
+        self.frame = MediaFrame(vlcmediaplayer=self.vlcmediaplayer, parent=self.widget)
         self.videolayout.addWidget(self.frame, 0)
 
     def update_360_aspect_ratio(self):
@@ -244,14 +244,5 @@ class VRPViewer(_ViewerWindow):
         self.update_360_aspect_ratio()
 
     def play(self):
-        self.player.play()
+        self.vlcmediaplayer.play()
         self.update_360_aspect_ratio()
-
-
-def play(media_path, socket_url):
-    app = QApplication([])
-    mediaplayer = vlc.MediaPlayer(media_path)
-    viewer = VRPViewer(mediaplayer, socket_url)
-    viewer.show()
-    viewer.play()
-    sys.exit(app.exec_())

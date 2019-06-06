@@ -7,6 +7,8 @@ import string
 from PyQt5.QtCore import QByteArray, Qt, QTimer, QUrl
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
 
+from . import comm
+
 log = logging.getLogger(__name__)
 
 
@@ -99,7 +101,6 @@ class RemoteInputClient:
         self._curr_motion_state = QByteArray()
         self._last_motion_state = QByteArray()
 
-        self.socket.textMessageReceived.connect(self.received_text)
         self.socket.binaryMessageReceived.connect(self.received_bytes)
 
         # TODO Call this later to not risk a connection before all signals are connected
