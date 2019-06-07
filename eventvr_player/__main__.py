@@ -14,8 +14,8 @@ def main():
     mediaplayer = vlc.MediaPlayer(media_path)
 
     player = PlayerFactory(mediaplayer=mediaplayer, url=ws_url)
+    # player = PlayerFactory(url=ws_url)
     player.show()
-    # player.play()
 
     sys.exit(app.exec_())
 

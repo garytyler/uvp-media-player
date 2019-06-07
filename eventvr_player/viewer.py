@@ -7,7 +7,7 @@ import vlc
 from eventvr_player import comm
 from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, QSize, Qt, QTimer, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QResizeEvent
+from PyQt5.QtGui import QBrush, QColor, QPalette, QResizeEvent
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
@@ -101,26 +101,30 @@ class ViewpointManager:
 
 
 class MediaFrame(QFrame, QObject):
-    mediaplayer: Optional[vlc.MediaPlayer] = None
+    mediaplayer: vlc.MediaPlayer = None
 
     def __init__(self, parent):
         self.parent = parent
         super().__init__(parent=self.parent)
-
-        self.palette = self.palette()
-        self.palette.setColor(QtGui.QPalette.Window, QtGui.QColor(0, 0, 0))
-        self.setPalette(self.palette)
         self.setAutoFillBackground(True)
+        self.set_fill_color(150, 150, 150)
+        self.adjustSize()
+
+    def set_fill_color(self, r, g, b):
+        p = self.palette()
+        p.setColor(QtGui.QPalette.Window, QtGui.QColor(r, g, b))
+        self.setPalette(p)
 
     def sizeHint(self, *args, **kwargs):
-        if not self.mediaplayer:
+        if self.mediaplayer:
+            return self.get_current_media_size()
+        w, h = self.width(), self.height()
+        if w >= 200:
+            return QSize(w, w / 1.77)
+        elif h >= 100:
+            return QSize(h, h * 1.77)
+        else:
             return QSize(640, 360)
-        media = self.mediaplayer.get_media()
-        # if not media.is_parsed():
-        # x = media.parse()
-        # print(x)
-        track = [t for t in media.tracks_get()][0]
-        return QSize(track.video.contents.width, track.video.contents.height)
 
     def get_current_media_size(self) -> QSize:
         media = self.mediaplayer.get_media()
@@ -137,8 +141,10 @@ class MediaFrame(QFrame, QObject):
             self.mediaplayer.set_hwnd(self.winId())
         elif sys.platform == "darwin":  # for MacOS
             self.mediaplayer.set_nsobject(int(self.winId()))
+        else:
+            raise EnvironmentError("Could not determine platform")
 
-        self.sizeHint = self.get_current_media_size
+        self.set_fill_color(0, 0, 0)
 
         # TODO Move to a button
         self.mediaplayer.play()
@@ -162,7 +168,7 @@ class PlayerWindow(QMainWindow):
 
         # Set video layout
         self.videolayout = QVBoxLayout()
-        self.videolayout.setContentsMargins(0, 0, 0, 0)
+        # self.videolayout.setContentsMargins(0, 0, 0, 0)
         self.videowidget = QWidget(self)
         self.videowidget.setLayout(self.videolayout)
         self.layout.addWidget(self.videowidget)
@@ -250,14 +256,17 @@ class PlayerFactory(PlayerWindow):
 
     """Facade for VLC and Qt objects"""
 
+    vpmanager: ViewpointManager = None
+
     def __init__(self, mediaplayer=None, url=None):
-        self.vpmanager = ViewpointManager(mediaplayer, url)
         PlayerWindow.__init__(self)
         self.frame = MediaFrame(parent=self)
         self.videolayout.addWidget(self.frame, 0)
 
         if mediaplayer:
+            self.vpmanager = ViewpointManager(mediaplayer, url)
             self.frame.set_vlc_mediaplayer(mediaplayer)
 
     def resizeEvent(self, event):
-        self.vpmanager.trigger_redraw()
+        if self.vpmanager:
+            self.vpmanager.trigger_redraw()
