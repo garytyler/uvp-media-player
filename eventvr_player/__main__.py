@@ -1,7 +1,7 @@
 import sys
 
 import vlc
-from eventvr_player.viewer import PlayerGUI
+from eventvr_player.viewer import PlayerFactory
 from PyQt5.QtWidgets import QApplication
 
 
@@ -11,11 +11,11 @@ def main():
     media_path = sys.argv[1]
     ws_url = sys.argv[2]
 
-    vlcmediaplayer = vlc.MediaPlayer(media_path)
+    mediaplayer = vlc.MediaPlayer(media_path)
 
-    player = PlayerGUI(vlcmediaplayer=vlcmediaplayer, url=ws_url)
+    player = PlayerFactory(mediaplayer=mediaplayer, url=ws_url)
     player.show()
-    player.play()
+    # player.play()
 
     sys.exit(app.exec_())
 

@@ -67,29 +67,13 @@ logging.config.dictConfig(
                     "dim": logging_color_styles["dim"],
                     "reset": logging_color_styles["uncolored"],
                 },
-            },
-            "colored_liblogs_formatter": {
-                "()": "colorlog.ColoredFormatter",
-                "style": "{",
-                "format": logging_format_string,
-                "log_colors": logging_color_styles["dull"],
-                "secondary_log_colors": {
-                    "primary": logging_color_styles["dull"],
-                    "emphasis": logging_color_styles["dull"],
-                    "dim": logging_color_styles["dim"],
-                    "reset": logging_color_styles["uncolored"],
-                },
-            },
+            }
         },
         "handlers": {
             "colored_applogs_console": {
                 "formatter": "colored_applogs_formatter",
                 "class": "logging.StreamHandler",
-            },
-            "colored_liblogs_console": {
-                "formatter": "colored_liblogs_formatter",
-                "class": "logging.StreamHandler",
-            },
+            }
         },
         "loggers": {
             "eventvr_player": {

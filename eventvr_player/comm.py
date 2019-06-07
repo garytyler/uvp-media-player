@@ -1,5 +1,4 @@
 import array
-import json
 import logging
 import random
 import string
@@ -32,16 +31,15 @@ class ClientSocketBase(QWebSocket):
     def __connected(self):
         self.connect_timer.stop()
         self.peeraddr = self.peerAddress().toString()
-        log.info(f"CONNECTED to [{self.peeraddr}]")
+        log.info(f"CONNECTED peer_address={self.peeraddr}")
 
     def __disconnected(self):
         self.connect_timer.start()
-        log.info(f"DISCONNECTED from ({self.peeraddr})")
+        log.info(f"DISCONNECTED peer_address={self.peeraddr}")
         self.peeraddr = None
 
-    def __textMessageReceived(self, data):
-        log.debug(f"RECEIVED TEXT [{data}]")
-        self.received_text(data)
+    def __textMessageReceived(self, text_data):
+        log.debug(f"RECEIVED TEXT DATA, text_data={text_data}]")
 
     def __binaryMessageReceived(self, qbytearray):
         log.debug(f"RECEIVED BYTES")
@@ -86,7 +84,10 @@ class AutoConnectSocket(ClientSocketBase):
         self._set_url(url)
         self.open(self.qurl)
 
-    def attempt_open_at_interval(self, interval=1000, url=None):
+    def attempt_open_on_interval(self, interval=1000, url=None):
+        log.info(
+            f"ATTEMPT SOCKET OPEN ON INTERVAL interval={interval}, url={self.url}]"
+        )
         self._set_url(url)
         self.connect_timer.setInterval(interval)
         QTimer.singleShot(0, self.connect_timer.start)
@@ -104,15 +105,18 @@ class RemoteInputClient:
         self.socket.binaryMessageReceived.connect(self.received_bytes)
 
         # TODO Call this later to not risk a connection before all signals are connected
-        self.socket.attempt_open_at_interval()
+        self.socket.attempt_open_on_interval()
 
     def received_bytes(self, qbytearray):
         self._curr_motion_state = qbytearray
 
     def get_new_motion_state(self):
-        if not self._curr_motion_state.compare(self._last_motion_state):
-            return None
-        values = (y, p, r) = array.array("d", self._curr_motion_state.data())
-        self._last_motion_state = self._curr_motion_state
-        log.debug(values)
-        return values
+        if self._curr_motion_state == self._last_motion_state:
+            return
+        motion_state_array = array.array("d", self._curr_motion_state.data())
+        log.debug(
+            f"RECEIVED NEW REMOTE MOTION STATE {0:+f},{1:+f},{2:+f}".format(
+                motion_state_array
+            )
+        )
+        return motion_state_array

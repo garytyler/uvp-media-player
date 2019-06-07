@@ -1,11 +1,13 @@
 """Viewer class for playing full screen video"""
 import logging
 import sys
+from typing import Optional
 
 import vlc
 from eventvr_player import comm
 from PyQt5 import QtGui
-from PyQt5.QtCore import QSize, Qt, QTimer
+from PyQt5.QtCore import QObject, QSize, Qt, QTimer, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QResizeEvent
 from PyQt5.QtWidgets import (
     QAction,
     QApplication,
@@ -35,13 +37,7 @@ player.get_state()
 log = logging.getLogger(__name__)
 
 
-def get_media_size(media: vlc.Media) -> QSize:
-    details = get_media_details(media)
-    if details:
-        return QSize(details["width"], details["height"])
-
-
-def get_media_details(media: vlc.Media) -> dict:
+def get_media_dimensions(media: vlc.Media) -> dict:
     if not media.is_parsed():
         media.parse()
     track = [t for t in media.tracks_get()][0]
@@ -53,10 +49,18 @@ def get_media_details(media: vlc.Media) -> dict:
     }
 
 
-class ViewpointManager:
-    def __init__(self, vlcmediaplayer, url):
+def get_media_size(media: vlc.Media) -> QSize:
+    details = get_media_dimensions(media)
+    if details:
+        return QSize(details["width"], details["height"])
 
-        self.vlcmediaplayer = vlcmediaplayer
+
+class ViewpointManager:
+    """Handles setting viewpoint in VLC media player object. Uses Qt only for timer."""
+
+    def __init__(self, mediaplayer, url):
+
+        self.mediaplayer = mediaplayer
 
         self.frame_timer = QTimer()
         self.frame_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
@@ -72,43 +76,72 @@ class ViewpointManager:
     def on_new_frame(self):
         new_motion_state = self.client.get_new_motion_state()
         if new_motion_state:
-            log.debug(f"NEW MOTION STATE [new_motion_state:'{new_motion_state}'")
             self.set_new_viewpoint(*new_motion_state)
 
     def set_new_viewpoint(self, yaw, pitch, roll):
         self.vp = vlc.VideoViewpoint()
         self.vp.field_of_view = 80
         self.vp.yaw, self.vp.pitch, self.vp.roll = yaw, pitch, roll
-        errorcode = self.vlcmediaplayer.video_update_viewpoint(
+        errorcode = self.mediaplayer.video_update_viewpoint(
             p_viewpoint=self.vp, b_absolute=True
         )
         if errorcode != 0:
             log.error("Error setting viewpoint")
 
+    def trigger_redraw(self):
+        """Force an if-needed reset of the pixel aspect ratio of a 360 video frame.
 
-class MediaFrame(QFrame):
-    def __init__(self, vlcmediaplayer, parent):
+        This is triggered by a hacky solution of setting a new viewpoint that has an
+        unobservably minimal value differential.
+        """
+        differential = 0.01 ** 20  # (0.01 ** 22) is max effective differential
+        self.set_new_viewpoint(
+            self.curr_yaw + differential, self.curr_pitch, self.curr_roll
+        )
+
+
+class MediaFrame(QFrame, QObject):
+    mediaplayer: Optional[vlc.MediaPlayer] = None
+
+    def __init__(self, parent):
         self.parent = parent
         super().__init__(parent=self.parent)
-
-        self.vlcmediaplayer = vlcmediaplayer
 
         self.palette = self.palette()
         self.palette.setColor(QtGui.QPalette.Window, QtGui.QColor(0, 0, 0))
         self.setPalette(self.palette)
         self.setAutoFillBackground(True)
 
-        if sys.platform.startswith("linux"):  # for Linux X Server
-            self.vlcmediaplayer.set_xwindow(self.winId())
-        elif sys.platform == "win32":  # for Windows
-            self.vlcmediaplayer.set_hwnd(self.winId())
-        elif sys.platform == "darwin":  # for MacOS
-            self.vlcmediaplayer.set_nsobject(int(self.winId()))
-
     def sizeHint(self, *args, **kwargs):
-        media = self.vlcmediaplayer.get_media()
-        details = get_media_details(media)
-        return QSize(details["width"], details["height"])
+        if not self.mediaplayer:
+            return QSize(640, 360)
+        media = self.mediaplayer.get_media()
+        # if not media.is_parsed():
+        # x = media.parse()
+        # print(x)
+        track = [t for t in media.tracks_get()][0]
+        return QSize(track.video.contents.width, track.video.contents.height)
+
+    def get_current_media_size(self) -> QSize:
+        media = self.mediaplayer.get_media()
+        if not media.is_parsed():
+            media.parse()
+        track = [t for t in media.tracks_get()][0]
+        return QSize(track.video.contents.width, track.video.contents.height)
+
+    def set_vlc_mediaplayer(self, mediaplayer):
+        self.mediaplayer = mediaplayer
+        if sys.platform.startswith("linux"):  # for Linux X Server
+            self.mediaplayer.set_xwindow(self.winId())
+        elif sys.platform == "win32":  # for Windows
+            self.mediaplayer.set_hwnd(self.winId())
+        elif sys.platform == "darwin":  # for MacOS
+            self.mediaplayer.set_nsobject(int(self.winId()))
+
+        self.sizeHint = self.get_current_media_size
+
+        # TODO Move to a button
+        self.mediaplayer.play()
 
 
 class PlayerWindow(QMainWindow):
@@ -212,37 +245,19 @@ class PlayerWindow(QMainWindow):
             self.exit_fullscreen()
 
 
-class PlayerGUI(PlayerWindow):
-    """Incorporates a vlcmediaplayer object and implements methods that depend on it"""
+class PlayerFactory(PlayerWindow):
+    """Incorporates a mediaplayer object and implements methods that depend on it"""
 
     """Facade for VLC and Qt objects"""
 
-    def __init__(self, vlcmediaplayer, url):
+    def __init__(self, mediaplayer=None, url=None):
+        self.vpmanager = ViewpointManager(mediaplayer, url)
         PlayerWindow.__init__(self)
-
-        self.vlcmediaplayer = vlcmediaplayer
-        self.vpmanager = ViewpointManager(self.vlcmediaplayer, url)
-
-        # Create videoframe add add to video layout
-        self.frame = MediaFrame(vlcmediaplayer=self.vlcmediaplayer, parent=self.widget)
+        self.frame = MediaFrame(parent=self)
         self.videolayout.addWidget(self.frame, 0)
 
-    def update_360_aspect_ratio(self):
-        """Force an if-needed reset of the pixel aspect ratio of a 360 video frame.
-
-        This is triggered by a hacky solution of setting a new viewpoint that has an
-        unobservably minimal value differential.
-        """
-        differential = 0.01 ** 20  # (0.01 ** 22) is max effective differential
-        self.vpmanager.set_new_viewpoint(
-            self.vpmanager.curr_yaw + differential,
-            self.vpmanager.curr_pitch,
-            self.vpmanager.curr_roll,
-        )
+        if mediaplayer:
+            self.frame.set_vlc_mediaplayer(mediaplayer)
 
     def resizeEvent(self, event):
-        self.update_360_aspect_ratio()
-
-    def play(self):
-        self.vlcmediaplayer.play()
-        self.update_360_aspect_ratio()
+        self.vpmanager.trigger_redraw()
