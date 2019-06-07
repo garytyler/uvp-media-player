@@ -152,25 +152,6 @@ class MediaPlayer(QtWidgets.QMainWindow):
         height = self.mediaplayer.video_get_height()
         return QSize(width, height)
 
-    def update_ui(self):
-        """Updates the user interface"""
-
-        # Set the slider's position to its corresponding media position
-        # Note that the setValue function only takes values of type int,
-        # so we must first convert the corresponding media position.
-        media_pos = int(self.mediaplayer.get_position() * 1000)
-        self.positionslider.setValue(media_pos)
-
-        # No need to call this function if nothing is played
-        if not self.mediaplayer.is_playing():
-            self.playtimer.stop()
-
-            # After the video finished, the play button stills shows "Pause",
-            # which is not the desired behavior of a media player.
-            # This fixes that "bug".
-            if not self.is_paused:
-                self.stop()
-
     def set_position(self):
         """Set the movie position according to the position slider.
         """
@@ -184,12 +165,6 @@ class MediaPlayer(QtWidgets.QMainWindow):
         pos = self.positionslider.value()
         self.mediaplayer.set_position(pos / 1000.0)
         self.playtimer.start()
-
-    def stop(self):
-        """Stop player
-        """
-        self.mediaplayer.stop()
-        self.playbutton.setText("Play")
 
     def set_volume(self, value):
         """Set the volume

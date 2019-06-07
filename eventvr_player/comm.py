@@ -31,11 +31,11 @@ class ClientSocketBase(QWebSocket):
     def __connected(self):
         self.connect_timer.stop()
         self.peeraddr = self.peerAddress().toString()
-        log.info(f"CONNECTED peer_address={self.peeraddr}")
+        log.info(f"CONNECTED peer_address={getattr(self, 'peeraddr', '')}")
 
     def __disconnected(self):
         self.connect_timer.start()
-        log.info(f"DISCONNECTED peer_address={self.peeraddr}")
+        log.info(f"DISCONNECTED peer_address={getattr(self, 'peeraddr', '')}")
         self.peeraddr = None
 
     def __textMessageReceived(self, text_data):

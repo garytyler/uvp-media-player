@@ -12,9 +12,13 @@ from PyQt5.QtWidgets import (
     QAction,
     QApplication,
     QFrame,
+    QHBoxLayout,
+    QLabel,
     QMainWindow,
     QMenuBar,
+    QPushButton,
     QShortcut,
+    QSlider,
     QVBoxLayout,
     QWidget,
 )
@@ -108,7 +112,7 @@ class MediaFrame(QFrame, QObject):
         super().__init__(parent=self.parent)
         self.setAutoFillBackground(True)
         self.set_fill_color(150, 150, 150)
-        self.adjustSize()
+        # self.adjustSize()
 
     def set_fill_color(self, r, g, b):
         p = self.palette()
@@ -146,8 +150,129 @@ class MediaFrame(QFrame, QObject):
 
         self.set_fill_color(0, 0, 0)
 
-        # TODO Move to a button
-        self.mediaplayer.play()
+
+class PositionSlider(QSlider):
+    def __init__(self, mediaplayer, parent=None):
+        QSlider.__Init__(Qt.Horizontal, parent)
+
+        self.setToolTip("Position")
+        self.setMaximum(1000)
+        self.sliderMoved.connect(self.set_position)
+        self.sliderPressed.connect(self.set_position)
+
+
+class VideoControls(QWidget):
+    def __init__(self, parent=None):
+        QWidget.__init__(self, parent)
+        self.layout = QVBoxLayout()
+        # self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.layout)
+
+        self.playtimer = QTimer(self)
+        self.playtimer.setInterval(100)
+        self.playtimer.timeout.connect(self.update_ui)
+
+        # Controls
+        self.position_slider = QSlider(Qt.Horizontal, self)
+        self.position_slider.setToolTip("Position")
+        self.position_slider.setMaximum(1000)
+        self.position_slider.sliderMoved.connect(self.set_position)
+        self.position_slider.sliderPressed.connect(self.set_position)
+        self.layout.addWidget(self.position_slider, stretch=0)
+
+        # Player buttons
+        self.play_buttons_layout = QHBoxLayout()
+        self.layout.addLayout(self.play_buttons_layout, stretch=0)
+
+        self.play_button = QPushButton("Play", self)
+        self.play_button.setToolTip("Play")
+        self.play_button.clicked.connect(self.play_pause_button)
+
+        self.stop_button = QPushButton("Stop", self)
+        self.stop_button.setToolTip("Stop")
+        self.stop_button.clicked.connect(self.stop)
+
+        self.volume_slider = QSlider(Qt.Horizontal, self)
+        self.volume_slider.setToolTip("Volume")
+        self.volume_slider.setMaximum(100)
+        self.volume_slider.setMinimumWidth(100)
+        self.volume_slider.setMaximumWidth(400)
+
+        self.play_buttons_layout.addWidget(self.play_button)
+        self.play_buttons_layout.addWidget(self.stop_button)
+        self.play_buttons_layout.addStretch(2)
+        self.play_buttons_layout.addWidget(QLabel("Volume"))
+        self.play_buttons_layout.addWidget(self.volume_slider, stretch=1)
+
+    def set_vlc_media_player(self, mediaplayer):
+        self.mediaplayer = mediaplayer
+        self.position_slider.mediaplayer = self.mediaplayer
+        self.volume_slider.setValue(self.mediaplayer.audio_get_volume())
+
+    def set_position(self):
+        """Set the movie position according to the position slider.
+
+        The vlc MediaPlayer needs a float value between 0 and 1, Qt uses
+        integer variables, so you need a factor; the higher the factor, the
+        more precise are the results (1000 should suffice).
+        """
+        self.playtimer.stop()
+        pos = self.position_slider.value()
+        self.mediaplayer.set_position(pos / 1000.0)
+        self.playtimer.start()
+
+        self.eventmanager = self.mediaplayer.event_manager()
+        self.eventmanager.event_attach(
+            vlc.EventType.MediaPlayerEndReached, self.on_end_reached, self.playtimer
+        )
+
+    def on_end_reached(self, e, timer):
+        self.mediaplayer.set_position(0)
+        self.play_button.setText("Play")
+        self.is_paused = True
+
+    def update_ui(self):
+        """Updates the user interface"""
+
+        # Set the slider's position to its corresponding media position
+        # Note that the setValue function only takes values of type int,
+        # so we must first convert the corresponding media position.
+        media_pos = int(self.mediaplayer.get_position() * 1000)
+        self.position_slider.setValue(media_pos)
+
+        # No need to call this function if nothing is played
+        if not self.mediaplayer.is_playing():
+            self.playtimer.stop()
+
+            # After the video finished, the play button stills shows "Pause",
+            # which is not the desired behavior of a media player.
+            # This fixes that "bug".
+            if not self.is_paused:
+                self.stop()
+
+    def stop(self):
+        """Stop player
+        """
+        self.mediaplayer.stop()
+        self.play_button.setText("Play")
+
+    def play_pause_button(self):
+        """Toggle play/pause status
+        """
+        if self.mediaplayer.is_playing():
+            self.mediaplayer.pause()
+            self.play_button.setText("Play")
+            self.is_paused = True
+            self.playtimer.stop()
+        else:
+            if self.mediaplayer.play() == -1:
+                # Not sure what this does, but I removed open_file() so disabled it for now
+                # self.open_file()
+                return
+            self.mediaplayer.play()
+            self.play_button.setText("Pause")
+            self.playtimer.start()
+            self.is_paused = False
 
 
 class PlayerWindow(QMainWindow):
@@ -159,96 +284,26 @@ class PlayerWindow(QMainWindow):
         self.app_display_name = self.qapplication.applicationDisplayName().strip()
         self.setWindowTitle(self.app_display_name)
 
-        # Set main layout
-        self.widget = QWidget(self)
-        self.layout = QVBoxLayout()
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.widget.setLayout(self.layout)
-        self.setCentralWidget(self.widget)
+        # Main layout
+        self.central_widget = QWidget(self)
+        self.central_layout = QVBoxLayout()
+        self.central_layout.setContentsMargins(0, 0, 0, 0)
+        self.central_widget.setLayout(self.central_layout)
+        self.setCentralWidget(self.central_widget)
 
-        # Set video layout
-        self.videolayout = QVBoxLayout()
-        # self.videolayout.setContentsMargins(0, 0, 0, 0)
-        self.videowidget = QWidget(self)
-        self.videowidget.setLayout(self.videolayout)
-        self.layout.addWidget(self.videowidget)
+        # Video layout
+        self.video_layout = QVBoxLayout()
+        # self.video_layout.setContentsMargins(0, 0, 0, 0)
+        self.video_widget = QWidget(self)
+        self.video_widget.setLayout(self.video_layout)
+        self.central_layout.addWidget(self.video_widget)
 
-        self.create_shortcuts()
-        self.create_menubar()
-
-    def set_window_subtitle(self, subtitle):
-        if not subtitle.strip():
-            raise ValueError("set_window_subtitle() requires a str value")
-        if self.app_display_name and bool("python" != self.app_display_name):
-            self.setWindowTitle(f"{self.app_display_name} - {subtitle}")
-        else:
-            self.setWindowTitle(subtitle)
-
-    def create_menubar(self):
-        self.menubar = QMenuBar()
-        self.setMenuBar(self.menubar)
-        self.menu_file = self.menubar.addMenu("File")
-
-        # Exit menu action
-        self.action_exit = QAction("Exit", self)
-        self.action_exit.triggered.connect(self.close)
-        self.action_exit.setShortcut("Ctrl+W")
-        self.action_exit.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        self.menu_file.addAction(self.action_exit)
-
-        # Fullscreen menu action
-        self.action_fullscreen = QAction("Fullscreen", self)
-        self.action_fullscreen.triggered.connect(self.toggle_fullscreen)
-        self.action_fullscreen.setShortcut("Ctrl+F")
-        self.action_fullscreen.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        self.menu_file.addAction(self.action_fullscreen)
-
-    def create_shortcuts(self):
-        self.shortcut_exit = QShortcut("Ctrl+W", self, self.close)
-        self.shortcut_fullscreen = QShortcut("Ctrl+F", self, self.toggle_fullscreen)
-
-    def move_to_qscreen(self, qscreen=None):
-        """Move qwindow to given qscreen. If no qscreen is given, try to move it to the
-        largest qscreen that is not it's current active qscreen. Call after show()
-        method.
-        """
-        wingeo = self.geometry()
-        if qscreen:
-            targscreen = qscreen
-        elif len(self.qapplication.screens()) <= 1:
-            return
-        else:
-            currscreen = self.qapplication.screenAt(wingeo.center())
-            for s in self.qapplication.screens():
-                if s is not currscreen:
-                    targscreen = s
-        targpos = targscreen.geometry().center()
-        wingeo.moveCenter(targpos)
-        self.setGeometry(wingeo)
-
-    def showEvent(self, event):
-        self.move_to_qscreen()
-
-    def enter_fullscreen(self):
-        try:
-            self.menubar.setVisible(False)
-        except AttributeError:
-            pass
-        self.setWindowState(Qt.WindowFullScreen)
-
-    def exit_fullscreen(self):
-        try:
-            self.menubar.setVisible(True)
-        except AttributeError:
-            pass
-        self.setWindowState(Qt.WindowNoState)
-
-    def toggle_fullscreen(self, value=None):
-        is_fullscreen = bool(Qt.WindowFullScreen == self.windowState())
-        if value or not is_fullscreen:
-            self.enter_fullscreen()
-        else:
-            self.exit_fullscreen()
+        # Controls layout
+        self.time_controls_layout = QVBoxLayout()
+        # self.time_controls_layout.setContentsMargins(0, 0, 0, 0)
+        self.time_controls_widget = VideoControls()
+        self.time_controls_widget.setLayout(self.time_controls_layout)
+        self.central_layout.addWidget(self.time_controls_widget)
 
 
 class PlayerFactory(PlayerWindow):
@@ -258,15 +313,120 @@ class PlayerFactory(PlayerWindow):
 
     vpmanager: ViewpointManager = None
 
-    def __init__(self, mediaplayer=None, url=None):
+    def __init__(self, media_path=None, url=None):
         PlayerWindow.__init__(self)
-        self.frame = MediaFrame(parent=self)
-        self.videolayout.addWidget(self.frame, 0)
 
-        if mediaplayer:
-            self.vpmanager = ViewpointManager(mediaplayer, url)
-            self.frame.set_vlc_mediaplayer(mediaplayer)
+        self.frame = MediaFrame(parent=self)
+        self.video_layout.addWidget(self.frame, 0)
+        # self.layout().addWidget(self.frame)
+        # self.setCentralWidget(self.frame)
+
+        if media_path:
+            self.mediaplayer = vlc.MediaPlayer(media_path)
+            self.vpmanager = ViewpointManager(self.mediaplayer, url)
+            self.frame.set_vlc_mediaplayer(self.mediaplayer)
+            self.time_controls_widget.set_vlc_media_player(self.mediaplayer)
 
     def resizeEvent(self, event):
         if self.vpmanager:
             self.vpmanager.trigger_redraw()
+
+
+# class PlayerWindow(QMainWindow):
+#     def __init__(self):
+#         QMainWindow.__init__(self)
+
+#         # Set window title
+#         self.qapplication = QApplication.instance()
+#         self.app_display_name = self.qapplication.applicationDisplayName().strip()
+#         self.setWindowTitle(self.app_display_name)
+
+#         # Set main layout
+#         self.widget = QWidget(self)
+#         self.layout = QVBoxLayout()
+#         self.layout.setContentsMargins(0, 0, 0, 0)
+#         self.widget.setLayout(self.layout)
+#         self.setCentralWidget(self.widget)
+
+#         # Set video layout
+#         self.videolayout = QVBoxLayout()
+#         self.videowidget = QWidget(self)
+#         self.videowidget.setLayout(self.videolayout)
+#         self.layout.addWidget(self.videowidget)
+
+#         self.create_shortcuts()
+#         self.create_menubar()
+
+#     def set_window_subtitle(self, subtitle):
+#         if not subtitle.strip():
+#             raise ValueError("set_window_subtitle() requires a str value")
+#         if self.app_display_name and bool("python" != self.app_display_name):
+#             self.setWindowTitle(f"{self.app_display_name} - {subtitle}")
+#         else:
+#             self.setWindowTitle(subtitle)
+
+#     def create_menubar(self):
+#         self.menubar = QMenuBar()
+#         self.setMenuBar(self.menubar)
+#         self.menu_file = self.menubar.addMenu("File")
+
+#         # Exit menu action
+#         self.action_exit = QAction("Exit", self)
+#         self.action_exit.triggered.connect(self.close)
+#         self.action_exit.setShortcut("Ctrl+W")
+#         self.action_exit.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+#         self.menu_file.addAction(self.action_exit)
+
+#         # Fullscreen menu action
+#         self.action_fullscreen = QAction("Fullscreen", self)
+#         self.action_fullscreen.triggered.connect(self.toggle_fullscreen)
+#         self.action_fullscreen.setShortcut("Ctrl+F")
+#         self.action_fullscreen.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+#         self.menu_file.addAction(self.action_fullscreen)
+
+#     def create_shortcuts(self):
+#         self.shortcut_exit = QShortcut("Ctrl+W", self, self.close)
+#         self.shortcut_fullscreen = QShortcut("Ctrl+F", self, self.toggle_fullscreen)
+
+#     def move_to_qscreen(self, qscreen=None):
+#         """Move qwindow to given qscreen. If no qscreen is given, try to move it to the
+#         largest qscreen that is not it's current active qscreen. Call after show()
+#         method.
+#         """
+#         wingeo = self.geometry()
+#         if qscreen:
+#             targscreen = qscreen
+#         elif len(self.qapplication.screens()) <= 1:
+#             return
+#         else:
+#             currscreen = self.qapplication.screenAt(wingeo.center())
+#             for s in self.qapplication.screens():
+#                 if s is not currscreen:
+#                     targscreen = s
+#         targpos = targscreen.geometry().center()
+#         wingeo.moveCenter(targpos)
+#         self.setGeometry(wingeo)
+
+#     def showEvent(self, event):
+#         self.move_to_qscreen()
+
+#     def enter_fullscreen(self):
+#         try:
+#             self.menubar.setVisible(False)
+#         except AttributeError:
+#             pass
+#         self.setWindowState(Qt.WindowFullScreen)
+
+#     def exit_fullscreen(self):
+#         try:
+#             self.menubar.setVisible(True)
+#         except AttributeError:
+#             pass
+#         self.setWindowState(Qt.WindowNoState)
+
+#     def toggle_fullscreen(self, value=None):
+#         is_fullscreen = bool(Qt.WindowFullScreen == self.windowState())
+#         if value or not is_fullscreen:
+#             self.enter_fullscreen()
+#         else:
+#             self.exit_fullscreen()
