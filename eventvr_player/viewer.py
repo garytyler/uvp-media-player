@@ -3,8 +3,8 @@ import logging
 import sys
 from typing import Optional
 
+import comm
 import vlc
-from eventvr_player import comm
 from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, QSize, Qt, QTimer, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QBrush, QColor, QPalette, QResizeEvent
@@ -121,7 +121,9 @@ class MediaFrame(QFrame, QObject):
 
     def sizeHint(self, *args, **kwargs):
         if self.mediaplayer:
-            return self.get_current_media_size()
+            media_size = self.get_current_media_size()
+            if media_size:
+                return media_size
         w, h = self.width(), self.height()
         if w >= 200:
             return QSize(w, w / 1.77)
@@ -130,11 +132,17 @@ class MediaFrame(QFrame, QObject):
         else:
             return QSize(640, 360)
 
-    def get_current_media_size(self) -> QSize:
+    def get_current_media_size(self) -> Optional[QSize]:
         media = self.mediaplayer.get_media()
+        # if not media:
+        #     return None
+        # el
         if not media.is_parsed():
             media.parse()
-        track = [t for t in media.tracks_get()][0]
+        media_tracks = media.tracks_get()
+        if not media_tracks:
+            return None
+        track = [t for t in media_tracks][0]
         return QSize(track.video.contents.width, track.video.contents.height)
 
     def set_vlc_mediaplayer(self, mediaplayer):
@@ -299,10 +307,10 @@ class PlayerWindow(QMainWindow):
         self.central_layout.addWidget(self.video_widget)
 
         # Controls layout
-        self.time_controls_layout = QVBoxLayout()
+        # self.time_controls_layout = QVBoxLayout()
         # self.time_controls_layout.setContentsMargins(0, 0, 0, 0)
         self.time_controls_widget = VideoControls()
-        self.time_controls_widget.setLayout(self.time_controls_layout)
+        # self.time_controls_widget.setLayout(self.time_controls_layout)
         self.central_layout.addWidget(self.time_controls_widget)
 
 

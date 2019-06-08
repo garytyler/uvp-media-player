@@ -3,10 +3,9 @@ import logging
 import random
 import string
 
+import comm
 from PyQt5.QtCore import QByteArray, Qt, QTimer, QUrl
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
-
-from . import comm
 
 log = logging.getLogger(__name__)
 
@@ -75,6 +74,8 @@ class AutoConnectSocket(ClientSocketBase):
         if url:
             self.url = url
             self.qurl = QUrl(self.url)
+        else:
+            log.debug(f"Socket instantiated without a '{url}' value")
 
     def _on_attempt_interval(self):
         self.open(self.qurl)
@@ -85,10 +86,13 @@ class AutoConnectSocket(ClientSocketBase):
         self.open(self.qurl)
 
     def attempt_open_on_interval(self, interval=1000, url=None):
+        if url:  # TODO If old url exists, override it and log a warning
+            self._set_url(url)
+        elif not self.url:
+            raise ValueError("Socket has no configured url")
         log.info(
             f"ATTEMPT SOCKET OPEN ON INTERVAL interval={interval}, url={self.url}]"
         )
-        self._set_url(url)
         self.connect_timer.setInterval(interval)
         QTimer.singleShot(0, self.connect_timer.start)
 
