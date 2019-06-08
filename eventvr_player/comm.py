@@ -39,7 +39,7 @@ class ClientSocketBase(QWebSocket):
         self.peeraddr = None
 
     def __textMessageReceived(self, text_data):
-        log.debug(f"RECEIVED TEXT DATA, text_data={text_data}]")
+        log.debug(f"RECEIVED TEXT DATA, text_data={text_data}")
 
     def __binaryMessageReceived(self, qbytearray):
         log.debug(f"RECEIVED BYTES")
@@ -72,7 +72,7 @@ class AutoConnectSocket(ClientSocketBase):
 
     def _on_attempt_interval(self):
         self.open(self.qurl)
-        log.info(f"No connection found [{self.qurl}] {self.closeCode()}")
+        log.info(f"No connection found qurl={self.qurl}, exit_code{self.closeCode()}")
 
     def attempt_open_once(self, url):
         # if not url:
@@ -85,7 +85,7 @@ class AutoConnectSocket(ClientSocketBase):
         #     raise ValueError(f"Socket received invalid url value '{url}'")
         self.qurl = QUrl(url)
         log.info(
-            f"ATTEMPT SOCKET OPEN ON INTERVAL interval={interval}, url={self.qurl}]"
+            f"ATTEMPT SOCKET OPEN ON INTERVAL interval={interval}, url={self.qurl}"
         )
         self.connect_timer.setInterval(interval)
         QTimer.singleShot(0, self.connect_timer.start)
