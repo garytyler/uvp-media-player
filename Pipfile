@@ -8,6 +8,7 @@ flake8 = "*"
 pre-commit = "*"
 isort = {extras = ["pipfile"],version = "*"}
 colorlog = "*"
+pyinstaller = "*"
 
 [packages]
 click = "*"

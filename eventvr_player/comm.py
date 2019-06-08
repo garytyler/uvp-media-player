@@ -3,9 +3,10 @@ import logging
 import random
 import string
 
-import comm
 from PyQt5.QtCore import QByteArray, Qt, QTimer, QUrl
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
+
+from . import comm
 
 log = logging.getLogger(__name__)
 
@@ -57,9 +58,8 @@ class ClientSocketBase(QWebSocket):
 
 
 class AutoConnectSocket(ClientSocketBase):
-    def __init__(self, url=None):
+    def __init__(self):
         ClientSocketBase.__init__(self)
-        self._set_url(url)
 
         # Timer for connection attempts
         self.connect_timer = QTimer()
@@ -70,28 +70,22 @@ class AutoConnectSocket(ClientSocketBase):
         self.connected.connect(self.connect_timer.stop)
         self.disconnected.connect(self.connect_timer.start)
 
-    def _set_url(self, url):
-        if url:
-            self.url = url
-            self.qurl = QUrl(self.url)
-        else:
-            log.debug(f"Socket instantiated without a '{url}' value")
-
     def _on_attempt_interval(self):
         self.open(self.qurl)
-        log.info(f"No connection found [{self.url}] {self.closeCode()}")
+        log.info(f"No connection found [{self.qurl}] {self.closeCode()}")
 
-    def attempt_open_once(self, url=None):
-        self._set_url(url)
+    def attempt_open_once(self, url):
+        # if not url:
+        #     raise ValueError(f"Socket received invalid url value '{url}'")
+        self.qurl = QUrl(url)
         self.open(self.qurl)
 
-    def attempt_open_on_interval(self, interval=1000, url=None):
-        if url:  # TODO If old url exists, override it and log a warning
-            self._set_url(url)
-        elif not self.url:
-            raise ValueError("Socket has no configured url")
+    def attempt_open_on_interval(self, url, interval=1000):
+        # if not url:
+        #     raise ValueError(f"Socket received invalid url value '{url}'")
+        self.qurl = QUrl(url)
         log.info(
-            f"ATTEMPT SOCKET OPEN ON INTERVAL interval={interval}, url={self.url}]"
+            f"ATTEMPT SOCKET OPEN ON INTERVAL interval={interval}, url={self.qurl}]"
         )
         self.connect_timer.setInterval(interval)
         QTimer.singleShot(0, self.connect_timer.start)
@@ -101,7 +95,7 @@ class RemoteInputClient:
     def __init__(self, url):
         self.motion_state = None
         self.state_changed = False
-        self.socket = comm.AutoConnectSocket(url)
+        self.socket = comm.AutoConnectSocket()
 
         self._curr_motion_state = QByteArray()
         self._last_motion_state = QByteArray()
@@ -109,7 +103,7 @@ class RemoteInputClient:
         self.socket.binaryMessageReceived.connect(self.received_bytes)
 
         # TODO Call this later to not risk a connection before all signals are connected
-        self.socket.attempt_open_on_interval()
+        self.socket.attempt_open_on_interval(url=url)
 
     def received_bytes(self, qbytearray):
         self._curr_motion_state = qbytearray

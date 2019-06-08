@@ -3,7 +3,6 @@ import logging
 import sys
 from typing import Optional
 
-import comm
 import vlc
 from PyQt5 import QtGui
 from PyQt5.QtCore import QObject, QSize, Qt, QTimer, pyqtSignal, pyqtSlot
@@ -22,6 +21,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from . import comm
 
 """
 player.get_state()
@@ -63,8 +64,9 @@ class ViewpointManager:
     """Handles setting viewpoint in VLC media player object. Uses Qt only for timer."""
 
     def __init__(self, mediaplayer, url):
-
         self.mediaplayer = mediaplayer
+
+        self.curr_yaw = self.curr_pitch = self.curr_roll = 0
 
         self.frame_timer = QTimer()
         self.frame_timer.setTimerType(Qt.PreciseTimer)  # Qt.CoarseTimer
@@ -75,7 +77,7 @@ class ViewpointManager:
         self.client.socket.connected.connect(self.frame_timer.start)
         self.client.socket.disconnected.connect(self.frame_timer.stop)
 
-        self.curr_yaw = self.curr_pitch = self.curr_roll = 0
+        # self.client.attempt_open_on_interval(url=url)
 
     def on_new_frame(self):
         new_motion_state = self.client.get_new_motion_state()
@@ -315,9 +317,7 @@ class PlayerWindow(QMainWindow):
 
 
 class PlayerFactory(PlayerWindow):
-    """Incorporates a mediaplayer object and implements methods that depend on it"""
-
-    """Facade for VLC and Qt objects"""
+    """Temp facade for VLC and Qt objects"""
 
     vpmanager: ViewpointManager = None
 
@@ -326,8 +326,6 @@ class PlayerFactory(PlayerWindow):
 
         self.frame = MediaFrame(parent=self)
         self.video_layout.addWidget(self.frame, 0)
-        # self.layout().addWidget(self.frame)
-        # self.setCentralWidget(self.frame)
 
         if media_path:
             self.mediaplayer = vlc.MediaPlayer(media_path)
