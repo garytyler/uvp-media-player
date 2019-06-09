@@ -7,7 +7,7 @@ from PyQt5.QtWidgets import QApplication
 
 
 def main():
-    initialize_logging()
+    initialize_logging(level="DEBUG", color=True)
 
     app = QApplication([])
     player = PlayerFactory(
