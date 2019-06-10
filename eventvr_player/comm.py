@@ -24,25 +24,15 @@ class ClientSocketBase(QWebSocket):
         )
         # Connect base methods to signals
         self.connected.connect(self.__connected)
-        self.textMessageReceived.connect(self.__textMessageReceived)
-        self.binaryMessageReceived.connect(self.__binaryMessageReceived)
         self.disconnected.connect(self.__disconnected)
 
     def __connected(self):
-        self.connect_timer.stop()
         self.peeraddr = self.peerAddress().toString()
         log.info(f"CONNECTED peer_address={getattr(self, 'peeraddr', '')}")
 
     def __disconnected(self):
-        self.connect_timer.start()
         log.info(f"DISCONNECTED peer_address={getattr(self, 'peeraddr', '')}")
         self.peeraddr = None
-
-    def __textMessageReceived(self, text_data):
-        log.debug(f"RECEIVED TEXT DATA, text_data={text_data}")
-
-    def __binaryMessageReceived(self, qbytearray):
-        log.debug(f"RECEIVED BYTES")
 
     def _pong(self, elapsed_time, payload):
         if not str(payload) == str(self.__payload):
@@ -75,14 +65,10 @@ class AutoConnectSocket(ClientSocketBase):
         log.info(f"No connection found qurl={self.qurl}, exit_code{self.closeCode()}")
 
     def attempt_open_once(self, url):
-        # if not url:
-        #     raise ValueError(f"Socket received invalid url value '{url}'")
         self.qurl = QUrl(url)
         self.open(self.qurl)
 
     def attempt_open_on_interval(self, url, interval=1000):
-        # if not url:
-        #     raise ValueError(f"Socket received invalid url value '{url}'")
         self.qurl = QUrl(url)
         log.info(
             f"ATTEMPT SOCKET OPEN ON INTERVAL interval={interval}, url={self.qurl}"
@@ -112,9 +98,4 @@ class RemoteInputClient:
         if self._curr_motion_state == self._last_motion_state:
             return
         motion_state_array = array.array("d", self._curr_motion_state.data())
-        log.debug(
-            f"RECEIVED NEW REMOTE MOTION STATE {0:+f},{1:+f},{2:+f}".format(
-                motion_state_array
-            )
-        )
         return motion_state_array

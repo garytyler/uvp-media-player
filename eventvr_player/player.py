@@ -1,5 +1,4 @@
 import platform
-import sys
 
 import vlc
 from PyQt5 import QtCore, QtGui, QtWidgets

@@ -1,6 +1,8 @@
 import logging
 import os
 
+import vlc
+
 try:
     import colorlog
 except ImportError:
@@ -10,13 +12,15 @@ else:
 
 
 def initialize_logging(level="INFO", color=color_available):
+    vlc.logger.setLevel(0)
+
     level = os.getenv("LOG_LEVEL", level)
     handler = logging.StreamHandler()
     handler.setFormatter(get_formatter(color))
     logger = logging.getLogger()
     logger.addHandler(handler)
     logger.setLevel(level)
-    logger.info(f"CONFIGURED DEFAULT LOGGING level={level}, color={color}")
+    logger.info(f"CONFIGURED LOGGING level={level}, color={color}")
 
 
 def get_formatter(color):
@@ -32,7 +36,6 @@ def get_formatter(color):
             ),
             style="{",
         )
-
     return colorlog.ColoredFormatter(
         fmt=" ".join(
             [
