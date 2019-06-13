@@ -2,22 +2,21 @@ import logging
 import sys
 from typing import Optional
 
-import vlc
 from PyQt5.QtCore import QObject, QSize
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QFrame
+
+from . import vlc_objects
 
 log = logging.getLogger(__name__)
 
 
 class DisplayFrame(QFrame, QObject):
-    media_player: vlc.MediaListPlayer = None
-
     def __init__(self, parent):
         super().__init__(parent)
         self.setAutoFillBackground(True)
         self.set_fill_color(150, 150, 150)
-        # self.adjustSize()
+        self.set_media_player(media_player=vlc_objects.media_player)
 
     def set_fill_color(self, r, g, b):
         p = self.palette()
@@ -62,3 +61,4 @@ class DisplayFrame(QFrame, QObject):
             raise EnvironmentError("Could not determine platform")
 
         self.set_fill_color(0, 0, 0)
+        self.adjustSize()

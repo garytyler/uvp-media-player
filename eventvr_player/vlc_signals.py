@@ -3,6 +3,8 @@ import logging
 import vlc
 from PyQt5.QtCore import QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 
+from . import util
+
 log = logging.getLogger(__name__)
 
 
@@ -201,7 +203,6 @@ class MediaPlayerVlclibSignals(QObject):
 
 class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
     newframe = pyqtSignal()
-    mediachangedinfo = pyqtSignal(dict)
 
     def __init__(self, vlc_media_player: vlc.MediaPlayer):
         super().__init__(vlc_media_player=vlc_media_player)
@@ -215,40 +216,15 @@ class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
         self.paused.connect(self.timer.stop)
 
         self.mediachanged.connect(self.on_mediachanged)
-        # self.mediachangedinfo.connect(self.on_mediachangedinfo)
-        self.interval = 0.0
 
     def on_timeout(self):
         self.newframe.emit()
 
     def on_mediachanged(self, e):
         media = self._vlc_obj.get_media()
-        media_fps = self.get_media_fps(media)
+        media_fps = util.get_media_fps(media)
         playback_fps = media_fps * self.get_rate()
         self.timer.setInterval(1000 / playback_fps)
-        self.mediachangedinfo.emit(
-            {
-                "media": media,
-                "media_fps": media_fps,
-                "duration_ms": media.get_duration(),
-            }
-        )
-
-    # def on_mediachangedinfo(self, info):
-    # # Set timer interval to media fps
-    # play_rate = self.get_rate()
-    # fps = self.get_media_fps(self._vlc_obj.get_media())
-    # self.interval = 1000 / (fps * play_rate)
-    # self.timer.setInterval(self.interval)
-
-    @staticmethod
-    def get_media_fps(media: vlc.Media) -> float:
-        if not media:
-            return None
-        if not media.is_parsed():
-            media.parse()
-        track = [t for t in media.tracks_get()][0]
-        return track.video.contents.frame_rate_num
 
 
 MediaPlayerSignals = MediaPlayerCustomSignals
