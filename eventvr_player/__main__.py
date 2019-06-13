@@ -1,9 +1,9 @@
-import os
 import sys
 
-from eventvr_player.logs import initialize_logging
-from eventvr_player.window import PlayerFactory
 from PyQt5.QtWidgets import QApplication
+
+from .factory import PlayerFactory
+from .logs import initialize_logging
 
 
 def main():
@@ -14,7 +14,12 @@ def main():
     media_paths = ["media/360video_5sec.mp4" for i in range(5)]
     url = "wss://eventvr.herokuapp.com/mediaplayer"
 
-    player_factory = PlayerFactory(media_paths=media_paths, url=url)
+    player_factory = PlayerFactory(
+        # media_paths=media_paths, url=url, vlc_args=["--verbose=2"]
+        media_paths=media_paths,
+        url=url,
+        vlc_args=[],
+    )
     player_factory.player_win.show()
 
     sys.exit(app.exec_())

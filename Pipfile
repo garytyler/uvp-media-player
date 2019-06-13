@@ -9,6 +9,7 @@ pre-commit = "*"
 isort = {extras = ["pipfile"],version = "*"}
 colorlog = "*"
 pyinstaller = "*"
+pytest = "*"
 
 [packages]
 click = "*"
