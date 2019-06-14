@@ -3,7 +3,7 @@ import logging
 import vlc
 from PyQt5.QtCore import QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 
-from . import util
+from .. import util
 
 log = logging.getLogger(__name__)
 

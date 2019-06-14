@@ -1,13 +1,13 @@
 import sys
 
-from player import factory, logs
+from player import factory, logs, style
 from PyQt5.QtWidgets import QApplication
 
 
 def main():
     logs.initialize_logging(level="DEBUG", color=True)
 
-    app = QApplication([])
+    qapp = QApplication([])
 
     media_paths = ["media/360video_5sec.mp4" for i in range(5)]
     url = "wss://eventvr.herokuapp.com/mediaplayer"
@@ -20,7 +20,7 @@ def main():
     )
     player_factory.player_win.show()
 
-    sys.exit(app.exec_())
+    sys.exit(qapp.exec_())
 
 
 if __name__ == "__main__":

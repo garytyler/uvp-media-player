@@ -1,8 +1,8 @@
 import sys
 from contextlib import contextmanager
 
-from PyQt5.QtGui import QWindow
-from PyQt5.QtWidgets import *
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QApplication, QMainWindow
 
 
 """
@@ -70,16 +70,33 @@ def move_to_qscreen(qwindow, qscreen=None):
     wingeo = qwindow.geometry()
     if qscreen:
         targscreen = qscreen
-    elif system.num_screens() <= 1:
+    elif num_screens() <= 1:
         return
     else:
         currscreen = app.screenAt(wingeo.center())
-        for s in system.get_current_qscreens():
+        for s in get_current_qscreens():
             if s is not currscreen:
                 targscreen = s
     targpos = targscreen.geometry().center()
     wingeo.moveCenter(targpos)
     qwindow.setGeometry(wingeo)
+
+
+class ScreenManager:
+    def enter_fullscreen(self):
+        self.menubar.setVisible(False)
+        self.setWindowState(Qt.WindowFullScreen)
+
+    def exit_fullscreen(self):
+        self.menubar.setVisible(True)
+        self.setWindowState(Qt.WindowNoState)
+
+    def toggle_fullscreen(self, value=None):
+        is_fullscreen = bool(Qt.WindowFullScreen == self.windowState())
+        if value or not is_fullscreen:
+            self.enter_fullscreen()
+        else:
+            self.exit_fullscreen()
 
 
 if __name__ == "__main__":
