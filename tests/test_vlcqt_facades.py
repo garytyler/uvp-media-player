@@ -1,4 +1,4 @@
-from eventvr_player.vlc_facades import Instance, MediaListPlayer, MediaPlayer
+from player.vlc_facades import Instance, MediaListPlayer, MediaPlayer
 
 
 def instance_is_singleton():

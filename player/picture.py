@@ -11,7 +11,7 @@ from . import vlc_objects
 log = logging.getLogger(__name__)
 
 
-class DisplayFrame(QFrame, QObject):
+class MediaFrame(QFrame, QObject):
     def __init__(self, parent):
         super().__init__(parent)
         self.setAutoFillBackground(True)

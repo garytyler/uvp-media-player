@@ -1,5 +1,5 @@
 
-$target_name = 'eventvr_player'
+$target_name = 'player'
 $project_root = $PSScriptRoot
 
 if (!(Test-Path -Path "$project_root\$target_name")) {
@@ -21,13 +21,13 @@ Write-Output "Building `'$target_name`' with script `'$script_path`'"
 
 Invoke-Command { pyinstaller @args } -args @(
     # '--windowed'
+    '--debug'
+    '--log-level=DEBUG'
+    '--console'
     '--noconfirm'
     '--clean'
-    '--console'
     '--onedir'
-    '--debug'
     '--name=player'
-    '--log-level=DEBUG'
     '--hidden-import=PyQt5.QtNetwork'
     "--paths=${env:PROGRAMFILES}/VideoLAN/VLC/"
     "--add-data=./media/*;media"

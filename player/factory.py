@@ -1,7 +1,7 @@
 import vlc
 from PyQt5.QtCore import Qt
 
-from . import display, viewpoint, vlc_facades, vlc_objects, window
+from . import picture, viewpoint, vlc_facades, vlc_objects, window
 
 
 class PlayerFactory:
@@ -17,7 +17,7 @@ class PlayerFactory:
         self.player_win = window.PlayerWindow(
             flags=Qt.WindowFlags(Qt.WindowStaysOnTopHint)
         )
-        # self.video_frame = display.DisplayFrame(parent=self.player_win)
+        # self.video_frame = picture.MediaFrame(parent=self.player_win)
         # self.player_win.video_layout.addWidget(self.video_frame, 0)
         vlc_facades.Instance(self.vlc_args)
 

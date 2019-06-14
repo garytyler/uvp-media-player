@@ -17,6 +17,7 @@ colorama = "*"
 python-vlc = "*"
 pyqt5 = "*"
 python-dotenv = "*"
+qtawesome = "*"
 
 [requires]
 python_version = "3.7"

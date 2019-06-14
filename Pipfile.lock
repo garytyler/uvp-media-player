@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "2ab64104cf30a920ad457850ddaa0e334d108c5bbe2d4017a3894f296c57deb9"
+            "sha256": "0ba9c5b959ddcd65bcd9e0e107719399c37f307c3403ecf1498b3fb7c038b007"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -74,6 +74,28 @@
             ],
             "index": "pypi",
             "version": "==3.0.6109"
+        },
+        "qtawesome": {
+            "hashes": [
+                "sha256:510972e327a6013f962b41cc14d27cff2689fbd8d38bb0816bc4b890d699e0b0",
+                "sha256:cf221d54ccdc3eb6c34728f26aea409633d043360640ffff0db791c11a852c5c"
+            ],
+            "index": "pypi",
+            "version": "==0.5.7"
+        },
+        "qtpy": {
+            "hashes": [
+                "sha256:9a5e67e7f66452a2cf4700865deaa2c2df57f5086f9c41f251b9c406efdaf626",
+                "sha256:eb66998a9049d276c75f26fc31554666504a7c1732cc3edd42a434c1fed01c92"
+            ],
+            "version": "==1.8.0"
+        },
+        "six": {
+            "hashes": [
+                "sha256:3350809f0555b11f552448330d0b52d5f24c91a322ea4a15ef22629740f3761c",
+                "sha256:d16a0141ec1a18405cd4ce8b4613101da75da0e9a7aec5bdd4fa804d0e0eba73"
+            ],
+            "version": "==1.12.0"
         }
     },
     "develop": {
