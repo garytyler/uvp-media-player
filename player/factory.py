@@ -1,7 +1,6 @@
-import vlc
 from PyQt5.QtCore import Qt
 
-from . import picture, viewpoint, vlc_facades, vlc_objects, window
+from . import viewpoint, vlc_objects, window
 
 
 class PlayerFactory:
@@ -10,20 +9,17 @@ class PlayerFactory:
     vpmanager: viewpoint.ViewpointManager = None
 
     def __init__(self, media_paths=None, url=None, vlc_args=[]):
-        # self.vlc_facades.instantiate_vlc(vlc_args)
         self.media_paths = media_paths
         self.url = url
         self.vlc_args = vlc_args
+
         self.player_win = window.PlayerWindow(
             flags=Qt.WindowFlags(Qt.WindowStaysOnTopHint)
         )
-        # self.video_frame = picture.MediaFrame(parent=self.player_win)
-        # self.player_win.video_layout.addWidget(self.video_frame, 0)
-        vlc_facades.Instance(self.vlc_args)
+
+        vlc_objects.Instance(self.vlc_args)
 
         if media_paths:
             self.media_player = vlc_objects.media_player
             self.media_player.set_mrl(media_paths[0])
-            # self.video_frame.set_media_player(media_player=self.media_player)
-
             # self.vpmanager = viewpoint.ViewpointManager(self.media_player, self.url)

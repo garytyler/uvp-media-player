@@ -1,64 +1,62 @@
 import logging
 import sys
-from typing import Optional
 
-from PyQt5.QtCore import QObject, QSize
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import QFrame
+from PyQt5.QtWidgets import QFrame, QSizePolicy
 
-from . import vlc_objects
+from . import util, vlc_objects
 
 log = logging.getLogger(__name__)
 
 
-class MediaFrame(QFrame, QObject):
+class MediaFrame(QFrame):
+    view_scale = 1
+
     def __init__(self, parent):
-        super().__init__(parent)
-        self.setAutoFillBackground(True)
-        self.set_fill_color(150, 150, 150)
-        self.set_media_player(media_player=vlc_objects.media_player)
+        super().__init__(parent=parent)
+        self.media = None
+        self.new_media_size = True
+        self.media_qsize = QSize(600, 360)
+        self.set_fill_color(175, 175, 175)
+
+        self.setAttribute(Qt.WA_OpaquePaintEvent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.mp = vlc_objects.media_player
+        if sys.platform.startswith("linux"):  # for Linux X Server
+            self.mp.set_xwindow(self.winId())
+        elif sys.platform == "win32":  # for Windows
+            self.mp.set_hwnd(self.winId())
+        elif sys.platform == "darwin":  # for MacOS
+            self.mp.set_nsobject(int(self.winId()))
+        else:
+            raise EnvironmentError("Could not determine platform")
+
+        self.mp.mediachanged.connect(self.on_mediachanged)
+
+    def get_media_qsize(self):
+        if self.new_media_size and self.media:
+            w, h = util.get_media_dimensions(self.media)
+            self.media_qsize.setWidth(float(w * self.view_scale))
+            self.media_qsize.setHeight(float(h * self.view_scale))
+            self.new_media_size = False
+        return self.media_qsize
+
+    def sizeHint(self):
+        """TODO:
+        Have given size adhere and adjust to these rules in such a way that the window is not restricted to the '2/3 of screen size' limit. This will involve attaining the current screen size and calculating a given frame size from that?
+
+        https://doc-snapshots.qt.io/qtforpython/PySide2/QtWidgets/QWidget.html?highlight=adjustsize#PySide2.QtWidgets.PySide2.QtWidgets.QWidget.adjustSize
+        """
+        return self.get_media_qsize()
 
     def set_fill_color(self, r, g, b):
         p = self.palette()
         p.setColor(QPalette.Window, QColor(r, g, b))
         self.setPalette(p)
 
-    def sizeHint(self, *args, **kwargs):
-        if self.media_player:
-            media_size = self.get_current_media_size()
-            if media_size:
-                return media_size
-        w, h = self.width(), self.height()
-        if w >= 200:
-            return QSize(w, w / 1.77)
-        elif h >= 100:
-            return QSize(h, h * 1.77)
-        else:
-            return QSize(640, 360)
-
-    def get_current_media_size(self) -> Optional[QSize]:
-        media = self.media_player.get_media()
-        if not media:
-            return None
-        if not media.is_parsed():
-            media.parse()
-        media_tracks = media.tracks_get()
-        if not media_tracks:  # Possibly not necessary. Does all media have a track?
-            return None
-        track = [t for t in media_tracks][0]
-        return QSize(track.video.contents.width, track.video.contents.height)
-
-    def set_media_player(self, media_player):
-        self.media_player = media_player
-
-        if sys.platform.startswith("linux"):  # for Linux X Server
-            self.media_player.set_xwindow(self.winId())
-        elif sys.platform == "win32":  # for Windows
-            self.media_player.set_hwnd(self.winId())
-        elif sys.platform == "darwin":  # for MacOS
-            self.media_player.set_nsobject(int(self.winId()))
-        else:
-            raise EnvironmentError("Could not determine platform")
-
-        self.set_fill_color(0, 0, 0)
+    def on_mediachanged(self):
+        self.media = self.mp.get_media()
+        self.new_media_size = True
         self.adjustSize()

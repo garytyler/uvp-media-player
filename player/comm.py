@@ -53,7 +53,7 @@ class AutoConnectSocket(ClientSocketBase):
 
         # Timer for connection attempts
         self.connect_timer = QTimer()
-        self.connect_timer.setTimerType(Qt.CoarseTimer)
+        self.connect_timer.setTimerType(Qt.VeryCoarseTimer)
         self.connect_timer.timeout.connect(self._on_attempt_interval)
         self.connect_timer.setInterval(1000)
 

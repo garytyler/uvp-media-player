@@ -3,7 +3,9 @@ import logging
 import vlc
 from PyQt5.QtCore import QObject, Qt, QTimer, pyqtSignal
 
-from . import comm, vlc_facades
+from . import comm
+
+# from .vlc_objects import vlc_facades
 
 # from PyQt5.QtGui import QColor, QPalette
 # from PyQt5.QtWidgets import QFrame

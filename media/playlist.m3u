@@ -1,5 +1,9 @@
 #EXTM3U
-#EXTINF:5,360video_5sec.mp4
-360video_5sec.mp4
-#EXTINF:120,360video_2min.mp4
-360video_2min.mp4
+#EXTINF:5,360vid_5sec.mp4
+360vid_5sec.mp4
+#EXTINF:5,regvid_5sec.mp4
+regvid_5sec.mp4
+#EXTINF:5,360vid_5sec.mp4
+360vid_5sec.mp4
+#EXTINF:5,regvid_5sec.mp4
+regvid_5sec.mp4
