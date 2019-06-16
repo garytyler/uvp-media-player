@@ -1,3 +1,5 @@
+from os.path import abspath, dirname, join
+
 import qtawesome
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QColor, QPalette
@@ -5,8 +7,11 @@ from PyQt5.QtWidgets import QApplication
 
 # from qtawesome import iconic_font
 
-NATIVE_PALETTE = None
+LIGHT_PALETTE = None
 DARK_PALETTE = None
+
+LIGHT_STYLESHEET = None
+DARK_STYLESHEET = join(dirname(abspath(__file__)), "resources/style.qss")
 
 QTA_DEFAULTS_LIGHT = {
     "color": QColor(50, 50, 50),
@@ -20,18 +25,20 @@ QTA_DEFAULTS_DARK = {
 
 
 def set_color_theme(name):
-    global NATIVE_PALETTE
+    global LIGHT_PALETTE, LIGHT_STYLESHEET
+
     qapp = QApplication.instance()
-    NATIVE_PALETTE = NATIVE_PALETTE if NATIVE_PALETTE else qapp.palette()
+    LIGHT_PALETTE = LIGHT_PALETTE if LIGHT_PALETTE else qapp.palette()
+    LIGHT_STYLESHEET = qapp.styleSheet()
 
     if name == "light":
-        # qtawesome.set_global_defaults(**QTA_DEFAULTS_LIGHT)
-        qapp.setPalette(NATIVE_PALETTE)
-    # elif name == "dark":
-    # qtawesome.set_global_defaults(**QTA_DEFAULTS_DARK)
-    # qapp.setPalette(p())
-    # qapp.setPalette(_get_dark_palette())
-    # set_test_theme(qapp)
+        qtawesome.set_global_defaults(**QTA_DEFAULTS_LIGHT)
+        qapp.setPalette(LIGHT_PALETTE)
+    elif name == "dark":
+        qtawesome.set_global_defaults(**QTA_DEFAULTS_DARK)
+        qapp.setPalette(_get_dark_palette())
+        with open(DARK_STYLESHEET) as stylesheet:
+            qapp.setStyleSheet(stylesheet.read())
     else:
         raise ValueError("Available themes are 'light' or 'dark'")
 

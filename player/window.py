@@ -270,7 +270,7 @@ class FrameResPositionSlider(QSlider):
         return pos_as_proportion, pos_as_slider_val
 
 
-class PlaybackSliderComponents(QWidget):
+class PlaybackSlider(QWidget):
     def __init__(self, parent):
         super().__init__(parent)
         self.layout = QVBoxLayout(self)
@@ -317,14 +317,14 @@ class VolumeButton(SideButton):
 
 
 class MainMenuButton(SideButton):
-    def __init__(self, main_menu: QMenu, parent):
-        super().__init__(parent=parent)
+    def __init__(self, main_win):
+        super().__init__(parent=main_win)
         self.setIcon(
             qtawesome.icon(
                 "mdi.dots-vertical", color_active="orange", active="mdi.dots-vertical"
             )
         )
-        self.main_menu = main_menu
+        self.main_win = main_win
         self.clicked.connect(self.open_menu)
         # self.animateClick(1)
         # self.initStyleOption(QStyleOptionButton.None)
@@ -406,7 +406,7 @@ class PlayerWindow(QMainWindow):
 
         # Create app widgets
         self.media_frame = picture.MediaFrame(parent=self)
-        self.time_slider = PlaybackSliderComponents(parent=self)
+        self.time_slider = PlaybackSlider(parent=self)
         self.left_corner = ButtonSet(self)
         self.time_buttons = ButtonSet(
             parent=self,
@@ -418,14 +418,7 @@ class PlayerWindow(QMainWindow):
         )
         self.right_corner = ButtonSet(
             parent=self,
-            buttons=(
-                VolumeButton(parent=self),
-                MainMenuButton(
-                    main_menu=MainMenu(main_win=self),
-                    media_frame=self.media_frame,
-                    parent=self,
-                ),
-            ),
+            buttons=(VolumeButton(parent=self), MainMenuButton(main_win=self)),
         )
 
         # Create window widgets
@@ -435,7 +428,7 @@ class PlayerWindow(QMainWindow):
         self.setCentralWidget(self.widget)
 
         # Add media frame
-        self.layout.addWidget(self.media_frame, 0, 0, 1, -1, Qt.AlignCenter)
+        self.layout.addWidget(self.media_frame, 0, 0, 1, -1)
         self.layout.setRowStretch(0, 1)
 
         # Playback slider
