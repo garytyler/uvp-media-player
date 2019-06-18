@@ -7,3 +7,6 @@
 ## Environment Variables
 
 - LOG_LEVEL
+- VR_PLAYER_CONFIG
+- VR_PLAYER_COLOR_THEME (overridden by setting in config file)
+- VR_PLAYER_REMOTE_URL (overridden by setting in config file)

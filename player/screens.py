@@ -5,36 +5,6 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QMainWindow
 
 
-"""
-QApplication screen related
-
-# Methods
-app.screens()
-app.primaryScreen()
-app.platformName()
-
-app.screenAt(point)
-Parameters:	point  PyQt5.QtCore.QPoint
-Return type:	PyQt5.QtGui.QScreen
-
-# Events
-app.screenAdded(screen)
-app.screenRemoved(screen)
-
-Also:
-dt = QDesktopWidget()
-
-"""
-
-"""
-def current_screen_size(self):
-    wincenter = self.geometry().center()
-    curscreen = QApplication.instance().screenAt(wincenter)
-    screengeo = curscreen.geometry()
-    return screengeo.size()
-"""
-
-
 @contextmanager
 def qapp():
     _qapplication = QApplication.instance()
@@ -58,6 +28,7 @@ def qscreen_area(qscreen) -> int:
 
 def get_current_qscreens() -> list:
     """Return screens sorted largest to smallest"""
+    app = qapp()
     with qapp() as app:
         return sorted(app.screens(), key=qscreen_area, reverse=True)
 
@@ -82,7 +53,7 @@ def move_to_qscreen(qwindow, qscreen=None):
     qwindow.setGeometry(wingeo)
 
 
-class ScreenManager:
+class FullscreenManager:
     def enter_fullscreen(self):
         self.menubar.setVisible(False)
         self.setWindowState(Qt.WindowFullScreen)
@@ -97,6 +68,14 @@ class ScreenManager:
             self.enter_fullscreen()
         else:
             self.exit_fullscreen()
+
+
+class ScreenManager:
+    def __init__(self):
+        self.qapp = QApplication.instance()
+
+    def get_screens(self):
+        return qapp.screens()
 
 
 if __name__ == "__main__":

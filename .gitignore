@@ -1,3 +1,6 @@
+# Project
+.user_config*
+
 # VSCode
 .cache/
 tempCodeRunnerFile*

@@ -1,7 +1,7 @@
 import logging
 import sys
 
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QFrame, QSizePolicy
 
@@ -10,20 +10,24 @@ from . import util, vlc_objects
 log = logging.getLogger(__name__)
 
 
-class MediaFrame(QFrame):
-    view_scale = 1
+class MediaFrame(QFrame, QObject):
+    mediachanged = pyqtSignal()
 
-    def __init__(self, parent):
-        super().__init__(parent=parent)
-        self.media = None
-        self.new_media_size = True
-        self.media_qsize = QSize(600, 360)
-        self.set_fill_color(175, 175, 175)
+    _default_media_h = media_h = 360
+    _default_media_w = media_w = 600
+
+    def __init__(self, main_win):
+        super().__init__(parent=main_win)
+        self.main_win = main_win
 
         self.setAttribute(Qt.WA_OpaquePaintEvent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.setAutoFillBackground(True)
 
+        self.media = None
+        self.media_qsize = QSize(self.media_h, self.media_w)
         self.mp = vlc_objects.media_player
+
         if sys.platform.startswith("linux"):  # for Linux X Server
             self.mp.set_xwindow(self.winId())
         elif sys.platform == "win32":  # for Windows
@@ -33,30 +37,33 @@ class MediaFrame(QFrame):
         else:
             raise EnvironmentError("Could not determine platform")
 
-        self.mp.mediachanged.connect(self.on_mediachanged)
+        self.conform_to_current_media()
 
-    def get_media_qsize(self):
-        if self.new_media_size and self.media:
-            w, h = util.get_media_dimensions(self.media)
-            self.media_qsize.setWidth(float(w * self.view_scale))
-            self.media_qsize.setHeight(float(h * self.view_scale))
-            self.new_media_size = False
+        self.mp.mediachanged.connect(self.on_mp_mediachanged)
+
+    def on_mp_mediachanged(self):
+        self.conform_to_current_media()
+
+    def conform_to_current_media(self):
+        self.media = self.mp.get_media()
+        if self.media:
+            _dimensions = util.get_media_size(self.media)
+        else:
+            self.media = None
+            _dimensions = self._default_media_w, self._default_media_h
+        self.media_w, self.media_h = _dimensions
+        self.mediachanged.emit()
+
+    def get_media_size(self, zoom: int = 1):
+        return self.media_w * zoom, self.media_h * zoom
+
+    def get_media_qsize(self, zoom: int = 1):
+        w, h = self.get_media_size(zoom=zoom)
+        self.media_qsize.setWidth(w)
+        self.media_qsize.setHeight(h)
         return self.media_qsize
-
-    def sizeHint(self):
-        """TODO:
-        Have given size adhere and adjust to these rules in such a way that the window is not restricted to the '2/3 of screen size' limit. This will involve attaining the current screen size and calculating a given frame size from that?
-
-        https://doc-snapshots.qt.io/qtforpython/PySide2/QtWidgets/QWidget.html?highlight=adjustsize#PySide2.QtWidgets.PySide2.QtWidgets.QWidget.adjustSize
-        """
-        return self.get_media_qsize()
 
     def set_fill_color(self, r, g, b):
         p = self.palette()
         p.setColor(QPalette.Window, QColor(r, g, b))
         self.setPalette(p)
-
-    def on_mediachanged(self):
-        self.media = self.mp.get_media()
-        self.new_media_size = True
-        self.adjustSize()

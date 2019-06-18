@@ -28,9 +28,12 @@ class MediaPlayerFacade(vlc_signals.MediaPlayerSignals):
         return getattr(self._vlc_obj, attribute)
 
 
-def vlcqtsetter(f):
-    def wrapper(self, *args):
-        obj = getattr(args[0], "_vlc_obj", args[0])
-        f(self, obj)
+class MediaListPlayerFacade(vlc_signals.MediaListPlayerVlclibSignals):
+    _vlc_obj: vlc.MediaListPlayer = None
 
-    return wrapper
+    def __init__(self):
+        self._vlc_obj = vlc.MediaListPlayer(Instance())
+        super().__init__(vlc_media_list_player=self._vlc_obj)
+
+    def __getattr__(self, attribute):
+        return getattr(self._vlc_obj, attribute)

@@ -7,9 +7,7 @@ def get_media_fps(vlc_media) -> float:
     return track.video.contents.frame_rate_num
 
 
-def get_media_dimensions(vlc_media) -> (int, int):
-    if not vlc_media:
-        return None
+def get_media_size(vlc_media):
     if not vlc_media.is_parsed():
         vlc_media.parse()
     media_tracks = vlc_media.tracks_get()
@@ -17,3 +15,7 @@ def get_media_dimensions(vlc_media) -> (int, int):
         return None
     track = [t for t in media_tracks][0]
     return track.video.contents.width, track.video.contents.height
+
+
+def rotate_list(l, n):
+    l[:] = l[n:] + l[:n]
