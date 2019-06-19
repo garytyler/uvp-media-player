@@ -15,23 +15,10 @@ class MediaZoomController(QObject):
 
     def __init__(self):
         super().__init__()
-        self.option_enum_map = {}
-        for index, option in enumerate(sorted(config.options.zoom)):
-            self.option_enum_map[option] = index
 
-    def set_zoom(self, value):
+    def set_zoom(self, value) -> float:
         config.state.zoom = value
         self.zoomrequest.emit(value)
-
-    def zoom_in(self):
-        current_enum = self.option_enum_map[config.state.zoom]
-        next_val = config.options.zoom[current_enum + 1]
-        self.set_zoom(next_val)
-
-    def zoom_out(self):
-        current_enum = self.option_enum_map[config.state.zoom]
-        next_val = config.options.zoom[current_enum - 1]
-        self.set_zoom(next_val)
 
 
 media_zoomer = MediaZoomController()
@@ -79,22 +66,20 @@ class MediaFrame(QFrame, QObject):
     def conform_to_current_media(self):
         self.media = self.mp.get_media()
         if self.media:
-            _dimensions = util.get_media_size(self.media)
+            self.media_w, self.media_h = util.get_media_size(self.media)
         else:
             self.media = None
             self.media_w, self.media_h = self._default_media_w, self._default_media_h
 
         _zoom = config.state.zoom
-        self.media_w, self.media_h = _dimensions
         self.explicitresize.emit(self.media_w * _zoom, self.media_h * _zoom)
 
     def sizeHint(self):
         return self.get_zoomed_media_qsize()
 
     def get_zoomed_media_size(self):
-        print("HAS MEDIA", self.mp.has_media)
-        # _zoom = config.state.zoom if self.mp.has_media else 1
-        _zoom = config.state.zoom
+        _zoom = config.state.zoom if self.mp.has_media else 1
+        # _zoom = config.state.zoom
         zoomed_size = self.media_w * _zoom, self.media_h * _zoom
         # print("zoomed_size", zoomed_size)
         return zoomed_size

@@ -1,7 +1,11 @@
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QActionGroup, QApplication, QFileDialog
+import logging
 
-from . import config, picture, window
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QActionGroup, QApplication, QFileDialog, QMenu
+
+from . import config, picture, vlc_objects, window
+
+log = logging.getLogger(__name__)
 
 
 class ExitApp(QAction):
@@ -16,60 +20,122 @@ class StayOnTop(QAction):
         super().__init__(text="Stay on top", parent=main_win)
         self.main_win = main_win
         self.setCheckable(True)
-        self.setChecked(config.state.stay_on_top)
-        self.triggered.connect(self._on_triggered)
+        self.triggered.connect(self.on_triggered)
+        self.main_win.initialized.connect(
+            lambda: self.triggered.emit(config.state.stay_on_top)
+        )
 
-    def _on_triggered(self, checked):
+    def on_triggered(self, checked):
         if checked:
-            _args = self.main_win.windowFlags() | Qt.WindowStaysOnTopHint
-            self.main_win.setWindowFlags(_args)
-            self.main_win.show()
+            self._enable()
         else:
-            _args = self.main_win.windowFlags() & ~Qt.WindowStaysOnTopHint
-            self.main_win.setWindowFlags(_args)
+            self._disable()
+        # Sync state
         config.state.stay_on_top = checked
+        self.setChecked(checked)
+
+    def _enable(self):
+        _args = self.main_win.windowFlags() | Qt.WindowStaysOnTopHint
+        self.main_win.setWindowFlags(_args)
+        self.main_win.show()
+
+    def _disable(self):
+        _args = self.main_win.windowFlags() & ~Qt.WindowStaysOnTopHint
+        self.main_win.setWindowFlags(_args)
 
 
-class ZoomMenu(window.MenuBase):
+class ZoomMenu(QMenu):
     def __init__(self, main_win):
         super().__init__(parent=main_win)
         self.main_win = main_win
 
         self.setTitle("Zoom")
 
-        self.action_group = QActionGroup(self)
-        self.action_group.setExclusive(True)
+        self.quarter = QAction("1:4 Quarter", self)
+        self.quarter.triggered.connect(lambda: self.set_zoom(0.25))
+        self.quarter.setCheckable(True)
 
-        quarter = QAction("1:4 Quarter", self)
-        quarter.triggered.connect(lambda: self._set_zoom(0.25))
-        quarter.setCheckable(True)
+        self.half = QAction("1:2 Half", self)
+        self.half.triggered.connect(lambda: self.set_zoom(0.5))
+        self.half.setCheckable(True)
 
-        half = QAction("1:2 Half", self)
-        half.triggered.connect(lambda: self._set_zoom(0.5))
-        half.setCheckable(True)
+        self.original = QAction("1:1 Original", self)
+        self.original.triggered.connect(lambda: self.set_zoom(1))
+        self.original.setCheckable(True)
 
-        original = QAction("1:1 Original", self)
-        original.triggered.connect(lambda: self._set_zoom(1))
-        original.setCheckable(True)
+        self.double = QAction("1:2 Double", self)
+        self.double.triggered.connect(lambda: self.set_zoom(2))
+        self.double.setCheckable(True)
 
-        double = QAction("1:2 Double", self)
-        double.triggered.connect(lambda: self._set_zoom(2))
-        double.setCheckable(True)
+        self.zoom_in = QAction("Zoom In", self)
+        self.zoom_in.triggered.connect(self._zoom_in)
 
-        self.action_group.addAction(quarter)
-        self.action_group.addAction(half)
-        self.action_group.addAction(original)
-        self.action_group.addAction(double)
-        self.addActions(self.action_group.actions())
+        self.zoom_out = QAction("Zoom Out", self)
+        self.zoom_out.triggered.connect(self._zoom_out)
+
+        self.explicit_zooms = QActionGroup(self)
+        self.explicit_zooms.addAction(self.quarter)
+        self.explicit_zooms.addAction(self.half)
+        self.explicit_zooms.addAction(self.original)
+        self.explicit_zooms.addAction(self.double)
+        self.explicit_zooms.setExclusive(True)
+
+        self.addActions(self.explicit_zooms.actions())
+        self.addAction(self.zoom_in)
+        self.addAction(self.zoom_out)
 
         for a in self.actions():
-            a.setEnabled(self.mp.has_media)
+            a.setEnabled(vlc_objects.media_player.has_media)
 
-        self.mp.mediachanged.connect(self._on_mediachanged)
+        self.option_enum_map = {}
+        for index, option in enumerate(sorted(config.options.zoom)):
+            self.option_enum_map[option] = index
 
-    def _set_zoom(self, value):
+        self.option_action_map = {
+            0.25: self.quarter,
+            0.5: self.half,
+            1: self.original,
+            2: self.double,
+        }
+
+        self.option_action_map[config.state.zoom].trigger()
+        vlc_objects.media_player.mediachanged.connect(self.on_mediachanged)
+
+    def set_zoom(self, value):
         picture.media_zoomer.set_zoom(value)
+        sorted_values = sorted(config.options.zoom)
+        if value == sorted_values[0]:
+            log.warning(f"'{value}' is the minimum configured value for 'Zoom In'")
+            self.zoom_in.setEnabled(True)
+            self.zoom_out.setEnabled(False)
+        elif value == sorted_values[-1]:
+            log.warning(f"'{value}' is the maximum configured value for 'Zoom In'")
+            self.zoom_in.setEnabled(False)
+            self.zoom_out.setEnabled(True)
+        else:
+            self.zoom_in.setEnabled(True)
+            self.zoom_out.setEnabled(True)
 
-    def _on_mediachanged(self):
+    def _zoom_in(self):
+        index = self.option_enum_map[config.state.zoom] + 1
+        try:
+            value = config.options.zoom[index]
+        except IndexError as e:
+            log.error(e)
+        else:
+            self.set_zoom(value)
+
+    def _zoom_out(self, value):
+        index = self.option_enum_map[config.state.zoom] - 1
+        try:
+            value = config.options.zoom[index]
+        except IndexError as e:
+            log.error(e)
+        else:
+            self.set_zoom(value)
+
+    def on_mediachanged(self):
+        has_media = vlc_objects.media_player.has_media
         for a in self.actions():
-            a.setEnabled(self.mp.has_media)
+            a.setEnabled(has_media)
+        self.option_action_map[config.state.zoom].trigger()

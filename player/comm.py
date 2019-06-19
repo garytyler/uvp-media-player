@@ -11,12 +11,6 @@ from . import comm
 log = logging.getLogger(__name__)
 
 
-def rand_id(size=6):
-    return "".join(
-        random.choice(string.ascii_uppercase + string.digits) for _ in range(size)
-    )
-
-
 class ClientSocketBase(QWebSocket):
     def __init__(self):
         QWebSocket.__init__(

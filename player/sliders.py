@@ -77,6 +77,7 @@ class FrameResPositionSlider(QSlider):
         self.mp_pos = None
         self.mouse_down = False
 
+        # # Might be useful for playlist
         # self.proportion_per_frame = self.default_values["proportion_per_frame"]
         # self.length = self.default_values["length"]
 
@@ -86,7 +87,7 @@ class FrameResPositionSlider(QSlider):
 
         self.mp.mediachanged.connect(self.on_mediachanged)
         self.mp.positionchanged.connect(self.on_positionchanged)
-        # self.mp.endreached.connect(self.on_endreached)
+        # self.mp.endreached.connect(self.on_endreached) # Might be useful for playlist
 
         self.newframe_conn = self.mp.newframe.connect(self.on_newframe)
 

@@ -55,7 +55,7 @@ class MainMenu(MenuBase):
         self.open_file.setShortcutVisibleInContextMenu(True)
 
         self.addAction(self.open_file)
-        self.addMenu(ZoomMenu(main_win=main_win))
+        self.addMenu(actions.ZoomMenu(main_win=main_win))
         self.addAction(actions.StayOnTop(main_win=main_win))
 
     def _open_file(self):
@@ -65,6 +65,8 @@ class MainMenu(MenuBase):
 
 
 class AppWindow(QMainWindow):
+    initialized = pyqtSignal()
+
     def __init__(self, flags=None):
         QMainWindow.__init__(self, flags=flags if flags else Qt.WindowFlags())
         self.qapp = QApplication.instance()
@@ -80,6 +82,8 @@ class AppWindow(QMainWindow):
 
         self.media_frame.explicitresize.connect(self.on_explicitresize)
 
+        self.initialized.emit()
+
     def create_components(self):
         self.media_frame = picture.MediaFrame(main_win=self)
         self.time_slider = sliders.PlaybackSlider(parent=self)
@@ -88,17 +92,17 @@ class AppWindow(QMainWindow):
         self.time_buttons = ButtonBunch(
             parent=self,
             buttons=(
-                buttons.SkipBackwardButton(parent=self),
-                buttons.PlayPauseButton(parent=self),
-                buttons.SkipForwardButton(parent=self),
+                buttons.SkipBackwardButton(parent=self, size=48),
+                buttons.PlayPauseButton(parent=self, size=48),
+                buttons.SkipForwardButton(parent=self, size=48),
             ),
         )
         self.main_buttons = ButtonBunch(
             parent=self,
             buttons=(
-                buttons.PlaybackModeButton(parent=self),
-                buttons.VolumeButton(parent=self),
-                buttons.MainMenuButton(parent=self, main_menu=self.main_menu),
+                buttons.PlaybackModeButton(parent=self, size=32),
+                buttons.VolumeButton(parent=self, size=32),
+                buttons.MainMenuButton(parent=self, size=48, main_menu=self.main_menu),
             ),
         )
 
@@ -146,6 +150,11 @@ class AppWindow(QMainWindow):
             self.setWindowTitle(f"{self.app_display_name} - {subtitle}")
         else:
             self.setWindowTitle(subtitle)
+
+    def set_stay_on_top(self):
+        _args = self.main_win.windowFlags() | Qt.WindowStaysOnTopHint
+        self.main_win.setWindowFlags(_args)
+        self.main_win.show()
 
     def calculate_resize_values(self, media_w, media_h) -> (int, int):
         """Calculate total window resize values from current compoment displacement"""

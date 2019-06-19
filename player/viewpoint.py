@@ -39,7 +39,8 @@ class ViewpointManager:
 
         The redraw is triggered by a hack... setting a new viewpoint with an
         unobservable differential applied to the yaw value. This is probably only
-        necessary because of the the implementation of viewpoints in vlclib 3.0, and will hopefully be unnecessary in 4.0.
+        necessary because of the the implementation of viewpoints in vlclib 3.0, and
+        will hopefully be unnecessary in 4.0.
         """
         differential = 0.01 ** 20  # (0.01 ** 22) is max effective differential
         self.set_new_viewpoint(

@@ -82,152 +82,152 @@ class MediaPlayerVlclibSignals(QObject):
 
     @pyqtSlot(vlc.Event)
     def _audiodevice(self, e):
-        print("_audiodevice")
+        log.debug("_audiodevice")
         self.audiodevice.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _audiovolume(self, e):
-        print("_audiovolume")
+        log.debug("_audiovolume")
         self.audiovolume.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _backward(self, e):
-        print("_backward")
+        log.debug("_backward")
         self.backward.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _buffering(self, e):
-        print("_buffering")
+        log.debug("_buffering")
         self.buffering.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _chapterchanged(self, e):
-        print("_chapterchanged")
+        log.debug("_chapterchanged")
         self.chapterchanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _corked(self, e):
-        print("_corked")
+        log.debug("_corked")
         self.corked.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _esadded(self, e):
-        print("_esadded")
+        log.debug("_esadded")
         self.esadded.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _esdeleted(self, e):
-        print("_esdeleted")
+        log.debug("_esdeleted")
         self.esdeleted.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _esselected(self, e):
-        print("_esselected")
+        log.debug("_esselected")
         self.esselected.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _encounterederror(self, e):
-        print("_encounterederror")
+        log.debug("_encounterederror")
         self.encounterederror.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _endreached(self, e):
-        print("_endreached")
+        log.debug("_endreached")
         self.endreached.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _forward(self, e):
-        print("_forward")
+        log.debug("_forward")
         self.forward.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _lengthchanged(self, e):
-        print("_lengthchanged")
+        log.debug("_lengthchanged")
         self.lengthchanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _mediachanged(self, e):
-        print("_mediachanged")
+        log.debug("_mediachanged")
         self.mediachanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _muted(self, e):
-        print("_muted")
+        log.debug("_muted")
         self.muted.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _nothingspecial(self, e):
-        print("_nothingspecial")
+        log.debug("_nothingspecial")
         self.nothingspecial.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _opening(self, e):
-        print("_opening")
+        log.debug("_opening")
         self.opening.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _pausablechanged(self, e):
-        print("_pausablechanged")
+        log.debug("_pausablechanged")
         self.pausablechanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _paused(self, e):
-        print("_paused")
+        log.debug("_paused")
         self.paused.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _playing(self, e):
-        print("_playing")
+        log.debug("_playing")
         self.playing.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _positionchanged(self, e):
-        print("_positionchanged")
+        log.debug("_positionchanged")
         self.positionchanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _scrambledchanged(self, e):
-        print("_scrambledchanged")
+        log.debug("_scrambledchanged")
         self.scrambledchanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _seekablechanged(self, e):
-        print("_seekablechanged")
+        log.debug("_seekablechanged")
         self.seekablechanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _snapshottaken(self, e):
-        print("_snapshottaken")
+        log.debug("_snapshottaken")
         self.snapshottaken.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _stopped(self, e):
-        print("_stopped")
+        log.debug("_stopped")
         self.stopped.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _timechanged(self, e):
-        print("_timechanged")
+        log.debug("_timechanged")
         self.timechanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _titlechanged(self, e):
-        print("_titlechanged")
+        log.debug("_titlechanged")
         self.titlechanged.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _uncorked(self, e):
-        print("_uncorked")
+        log.debug("_uncorked")
         self.uncorked.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _unmuted(self, e):
-        print("_unmuted")
+        log.debug("_unmuted")
         self.unmuted.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _vout(self, e):
-        print("_vout")
+        log.debug("_vout")
         self.vout.emit(e)
 
 
@@ -294,17 +294,17 @@ class MediaListPlayerVlclibSignals(QObject):
 
     @pyqtSlot(vlc.Event)
     def _nextitemset(self, e):
-        print("_nextitemset")
+        log.debug("_nextitemset")
         self.nextitemset.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _played(self, e):
-        print("_played")
+        log.debug("_played")
         self.played.emit(e)
 
     @pyqtSlot(vlc.Event)
     def _stopped(self, e):
-        print("_stopped")
+        log.debug("_stopped")
         self.stopped.emit(e)
 
 

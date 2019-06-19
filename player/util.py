@@ -1,3 +1,7 @@
+from random import choice
+from string import ascii_uppercase, digits
+
+
 def get_media_fps(vlc_media) -> float:
     if not vlc_media:
         return None
@@ -23,3 +27,7 @@ def rotate_list(l, n):
 
 def positive_threshold(value: int):
     return value if value > 0 else 0
+
+
+def rand_id(size=6):
+    return "".join(choice(ascii_uppercase + digits) for _ in range(size))
