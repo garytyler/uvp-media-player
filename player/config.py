@@ -6,29 +6,28 @@ from tempfile import gettempdir
 
 log = logging.getLogger(__name__)
 
-_CONFIG_PATH = getenv("VR_PLAYER_CONFIG", join(gettempdir(), ".vr_player_config"))
 
-# "zoom": {
-#     "options": ["quarter", "half", "original", "double"],
-#     "default": "original",
-# },
+_CONFIG_FILE_PATH = getenv("VR_PLAYER_CONFIG", join(gettempdir(), ".vr_player_config"))
+
+
 _SETTINGS = {
     "playback_mode": {"options": ["off", "one", "all"], "default": "off"},
+    "stay_on_top": {"options": [True, False], "default": False},
     "zoom": {"options": [0.25, 0.5, 1, 2], "default": 1},
     "color_theme": {"options": ["light", "dark"], "default": "dark"},
     "url": {"options": [], "default": None},
 }
 
 
-class _Config:
+class _State:
     _handlers = {}
 
     def __init__(self):
-        super(_Config, self).__setattr__("_state", {})
+        super(_State, self).__setattr__("_state", {})
 
     def load(self):
         try:
-            with open(_CONFIG_PATH, "r") as f:
+            with open(_CONFIG_FILE_PATH, "r") as f:
                 data = json.loads(f.read())
         except FileNotFoundError:
             log.info("NO CONFIG FILE FOUND")
@@ -69,7 +68,7 @@ class _Config:
 
         self._update_runtime(key, value)
 
-        with open(_CONFIG_PATH, "w") as f:
+        with open(_CONFIG_FILE_PATH, "w") as f:
             f.write(json.dumps(self._state))
 
     def __getattr__(self, key):
@@ -82,4 +81,12 @@ class _Config:
             return value
 
 
-config = _Config()
+state = _State()
+
+
+class _Options:
+    def __getattr__(self, key):
+        return _SETTINGS[key]["options"]
+
+
+options = _Options()

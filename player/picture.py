@@ -1,17 +1,44 @@
 import logging
 import sys
 
-from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
+from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QFrame, QSizePolicy
 
-from . import util, vlc_objects
+from . import config, util, vlc_objects
 
 log = logging.getLogger(__name__)
 
 
+class MediaZoomController(QObject):
+    zoomrequest = pyqtSignal(float)
+
+    def __init__(self):
+        super().__init__()
+        self.option_enum_map = {}
+        for index, option in enumerate(sorted(config.options.zoom)):
+            self.option_enum_map[option] = index
+
+    def set_zoom(self, value):
+        config.state.zoom = value
+        self.zoomrequest.emit(value)
+
+    def zoom_in(self):
+        current_enum = self.option_enum_map[config.state.zoom]
+        next_val = config.options.zoom[current_enum + 1]
+        self.set_zoom(next_val)
+
+    def zoom_out(self):
+        current_enum = self.option_enum_map[config.state.zoom]
+        next_val = config.options.zoom[current_enum - 1]
+        self.set_zoom(next_val)
+
+
+media_zoomer = MediaZoomController()
+
+
 class MediaFrame(QFrame, QObject):
-    mediachanged = pyqtSignal()
+    explicitresize = pyqtSignal(int, int)
 
     _default_media_h = media_h = 360
     _default_media_w = media_w = 600
@@ -25,8 +52,9 @@ class MediaFrame(QFrame, QObject):
         self.setAutoFillBackground(True)
 
         self.media = None
-        self.media_qsize = QSize(self.media_h, self.media_w)
         self.mp = vlc_objects.media_player
+        self.conform_to_current_media()
+        self.media_qsize = QSize(self.media_h, self.media_w)
 
         if sys.platform.startswith("linux"):  # for Linux X Server
             self.mp.set_xwindow(self.winId())
@@ -37,9 +65,13 @@ class MediaFrame(QFrame, QObject):
         else:
             raise EnvironmentError("Could not determine platform")
 
-        self.conform_to_current_media()
-
         self.mp.mediachanged.connect(self.on_mp_mediachanged)
+        media_zoomer.zoomrequest.connect(self.on_zoomer_zoomrequest)
+
+    @pyqtSlot(float)
+    def on_zoomer_zoomrequest(self, value):
+        print(value)
+        self.explicitresize.emit(self.media_w * value, self.media_h * value)
 
     def on_mp_mediachanged(self):
         self.conform_to_current_media()
@@ -50,15 +82,25 @@ class MediaFrame(QFrame, QObject):
             _dimensions = util.get_media_size(self.media)
         else:
             self.media = None
-            _dimensions = self._default_media_w, self._default_media_h
+            self.media_w, self.media_h = self._default_media_w, self._default_media_h
+
+        _zoom = config.state.zoom
         self.media_w, self.media_h = _dimensions
-        self.mediachanged.emit()
+        self.explicitresize.emit(self.media_w * _zoom, self.media_h * _zoom)
 
-    def get_media_size(self, zoom: int = 1):
-        return self.media_w * zoom, self.media_h * zoom
+    def sizeHint(self):
+        return self.get_zoomed_media_qsize()
 
-    def get_media_qsize(self, zoom: int = 1):
-        w, h = self.get_media_size(zoom=zoom)
+    def get_zoomed_media_size(self):
+        print("HAS MEDIA", self.mp.has_media)
+        # _zoom = config.state.zoom if self.mp.has_media else 1
+        _zoom = config.state.zoom
+        zoomed_size = self.media_w * _zoom, self.media_h * _zoom
+        # print("zoomed_size", zoomed_size)
+        return zoomed_size
+
+    def get_zoomed_media_qsize(self):
+        w, h = self.get_zoomed_media_size()
         self.media_qsize.setWidth(w)
         self.media_qsize.setHeight(h)
         return self.media_qsize

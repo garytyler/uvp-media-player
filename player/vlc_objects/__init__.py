@@ -1,5 +1,5 @@
 from . import vlc_facades
-from player import user
+from player import config
 import vlc
 from PyQt5.QtCore import pyqtSlot
 

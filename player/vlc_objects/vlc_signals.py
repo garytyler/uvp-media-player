@@ -245,13 +245,27 @@ class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
         self.stopped.connect(self.timer.stop)
         self.paused.connect(self.timer.stop)
 
+        self.__has_media = True if self._vlc_obj.get_media() else False
         self.mediachanged.connect(self.on_mediachanged)
 
     def on_timeout(self):
         self.newframe.emit()
 
+    @property
+    def has_media(self):
+        return self.__has_media
+
+    @property
+    def media_size(self):
+        return self.__has_media
+
     def on_mediachanged(self, e):
         media = self._vlc_obj.get_media()
+
+        # Update common has_media bool
+        self.__has_media = True if self._vlc_obj.get_media() else False
+
+        # Set timer
         media_fps = util.get_media_fps(media)
         playback_fps = media_fps * self.get_rate()
         self.timer.setInterval(1000 / playback_fps)

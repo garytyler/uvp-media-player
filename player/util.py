@@ -19,3 +19,7 @@ def get_media_size(vlc_media):
 
 def rotate_list(l, n):
     l[:] = l[n:] + l[:n]
+
+
+def positive_threshold(value: int):
+    return value if value > 0 else 0

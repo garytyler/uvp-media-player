@@ -6,13 +6,15 @@ APP_ICONS = None
 
 light_defaults = {
     "color": qta.iconic_font._default_options["color"],
-    "color_disabled": qta.iconic_font._default_options["color_disabled"],
+    "color_disabled": QColor(20, 20, 20),
+    # "color_disabled": qta.iconic_font._default_options["color_disabled"],
 }
 
 
 dark_defaults = {
     "color": QColor(180, 180, 180),
-    "color_disabled": light_defaults["color_disabled"],
+    "color_disabled": QColor(100, 100, 100),
+    # "color_disabled": light_defaults["color_disabled"],
 }
 
 

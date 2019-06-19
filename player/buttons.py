@@ -4,7 +4,7 @@ from PyQt5.QtCore import QEvent, QPoint, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QMouseEvent
 from PyQt5.QtWidgets import QPushButton
 
-from . import icons, user, util, vlc_objects
+from . import config, icons, util, vlc_objects
 
 log = logging.getLogger(__name__)
 
@@ -13,10 +13,11 @@ class SquareIconButton(QPushButton):
     enterhover = pyqtSignal()
     leavehover = pyqtSignal()
 
-    def __init__(self, parent, icons, size=40):
+    def __init__(self, parent, icons, size=None):
         super().__init__(parent=parent)
         self.icons = icons
         self.setFlat(True)
+        size = size if size else 40
         qsize = QSize(size, size)
         self.setIconSize(qsize)
         self.sizeHint = lambda: qsize
@@ -65,12 +66,12 @@ class SquareIconButton(QPushButton):
 class PlaybackModeButton(SquareIconButton):
     setplaybackmode = pyqtSignal(str)
 
-    def __init__(self, parent):
-        super().__init__(parent=parent, icons=icons.playback_mode_button)
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent, size=size, icons=icons.playback_mode_button)
         self.lp = vlc_objects.list_player
         self.option_names = ["off", "one", "all"]
         for index, item in enumerate(self.option_names):
-            if item == user.config.playback_mode:
+            if item == config.state.playback_mode:
                 util.rotate_list(self.option_names, index)
                 break
 
@@ -83,13 +84,13 @@ class PlaybackModeButton(SquareIconButton):
         util.rotate_list(self.option_names, 1)
         option_name = self.option_names[0]
         self.switch_icon(self.option_names[0])
-        user.config.playback_mode = option_name
+        config.state.playback_mode = option_name
         self.setplaybackmode.emit(option_name)
 
 
 class PlayPauseButton(SquareIconButton):
-    def __init__(self, parent):
-        super().__init__(parent=parent, icons=icons.play_pause_button)
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent, size=size, icons=icons.play_pause_button)
         self.switch_icon("play")
         self.mp = vlc_objects.media_player
         self.lp = vlc_objects.list_player
@@ -125,8 +126,8 @@ class PlayPauseButton(SquareIconButton):
 
 
 class MainMenuButton(SquareIconButton):
-    def __init__(self, parent, main_menu):
-        super().__init__(parent=parent, icons=icons.main_menu_button)
+    def __init__(self, parent, main_menu, size=None):
+        super().__init__(parent=parent, size=size, icons=icons.main_menu_button)
         self.main_menu = main_menu
         self.curr_icon = icons.main_menu_button
         self.update_icon_hover()
@@ -140,24 +141,24 @@ class MainMenuButton(SquareIconButton):
 
 
 class VolumeButton(SquareIconButton):
-    def __init__(self, parent):
-        super().__init__(parent=parent, icons=icons.volume_button)
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent, size=size, icons=icons.volume_button)
         self.switch_icon("off")
         self.setDisabled(True)
         self.update_icon_hover()
 
 
 class SkipBackwardButton(SquareIconButton):
-    def __init__(self, parent):
-        super().__init__(parent=parent, icons=icons.skip_backward_button)
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent, size=size, icons=icons.skip_backward_button)
         self.curr_icon = self.icons
         self.update_icon_hover()
         pass
 
 
 class SkipForwardButton(SquareIconButton):
-    def __init__(self, parent):
-        super().__init__(parent=parent, icons=icons.skip_forward_button)
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent, size=size, icons=icons.skip_forward_button)
         self.curr_icon = self.icons
         self.update_icon_hover()
         pass
