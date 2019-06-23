@@ -3,7 +3,14 @@ import sys
 
 from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import QAction, QFrame, QSizePolicy, QVBoxLayout, QWidget
+from PyQt5.QtWidgets import (
+    QAction,
+    QFrame,
+    QSizePolicy,
+    QStackedLayout,
+    QVBoxLayout,
+    QWidget,
+)
 
 from . import vlcqt
 
@@ -64,7 +71,7 @@ class MainMediaFrame(BaseMediaFrame):
         self.setVisible(True)
 
 
-class MainMediaFrameLayout(QVBoxLayout):
+class MainMediaFrameLayout(QStackedLayout):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__()
         self.main_win = main_win
@@ -72,23 +79,22 @@ class MainMediaFrameLayout(QVBoxLayout):
         self.media_frame = MainMediaFrame(
             main_win=self.main_win, frame_size_ctrlr=frame_size_ctrlr
         )
-        self.addWidget(self.media_frame)
+        self.insertWidget(0, self.media_frame)
         self.media_frame.activate()
         self.replacement = BaseMediaFrame(
             main_win=self.main_win, frame_size_ctrlr=frame_size_ctrlr
         )
+        self.insertWidget(1, self.replacement)
 
     def start_fullscreen_media_frame(self, qscreen):
-        self.replacement.hide()
-        self.replaceWidget(self.media_frame, self.replacement)
-        self.replacement.show()
+        self.insertWidget(1, self.replacement)
+        self.setCurrentIndex(1)
         self.media_frame.start_fullscreen(qscreen)
 
     def stop_fullscreen_media_frame(self):
         self.media_frame.stop_fullscreen()
-        self.media_frame.hide()
-        self.replaceWidget(self.replacement, self.media_frame)
-        self.media_frame.show()
+        self.insertWidget(0, self.media_frame)
+        self.setCurrentIndex(0)
 
 
 class FullscreenController(QObject):

@@ -104,16 +104,10 @@ class AppWindow(QMainWindow):
         self.connect_label = connect.ServerConnectionWidget()
         self.frame_size_ctrlr = scale.MainMediaFrameSizeController(main_win=self)
         self.view_scale_menu = scale.ViewScaleMenu(main_win=self)
-        # self.media_frame = frame.MainMediaFrame(
-        #     main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
-        # )
         self.mf_layout = frame.MainMediaFrameLayout(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.fullscreen_ctrlr = frame.FullscreenController(mf_layout=self.mf_layout)
-        # self.fullscreen_ctrlr = frame.FullscreenController(
-        #     main_win=self, media_frame=self.media_frame
-        # )
         self.target_screen_menu = fullscreen.FullscreenMenu(
             main_win=self, fullscreen_ctrlr=self.fullscreen_ctrlr
         )
@@ -123,7 +117,6 @@ class AppWindow(QMainWindow):
             fullscreen_ctrlr=self.fullscreen_ctrlr,
         )
 
-        # self.pb_slider_components = PlaybackSliderComponents(parent=self)
         self.main_menu = MainMenu(main_win=self)
 
         self.skip_backward_button = playback.SkipBackwardButton(parent=self, size=48)
