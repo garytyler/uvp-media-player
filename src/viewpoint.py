@@ -1,6 +1,6 @@
 import logging
 
-from . import comm, vlcqt
+from . import vlcqt
 
 # from vlcqt import Viewpoint
 

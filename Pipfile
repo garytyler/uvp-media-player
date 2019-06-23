@@ -7,13 +7,13 @@ verify_ssl = true
 flake8 = "*"
 pre-commit = "*"
 isort = {extras = ["pipfile"],version = "*"}
-colorlog = "*"
 pyinstaller = "*"
 pytest = "*"
 
 [packages]
 click = "*"
 colorama = "*"
+colorlog = "*"
 python-vlc = "*"
 pyqt5 = "*"
 qtawesome = "*"

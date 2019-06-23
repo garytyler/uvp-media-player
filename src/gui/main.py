@@ -4,16 +4,12 @@ from os.path import exists
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import (
     QAction,
-    QActionGroup,
     QApplication,
-    QButtonGroup,
     QFileDialog,
     QGridLayout,
     QHBoxLayout,
     QMainWindow,
     QMenu,
-    QShortcut,
-    QSpacerItem,
     QVBoxLayout,
     QWidget,
 )
@@ -31,7 +27,6 @@ from . import (
     scale,
     sound,
     util,
-    viewpoint,
     vlcqt,
     window,
 )

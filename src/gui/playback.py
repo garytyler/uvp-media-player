@@ -1,8 +1,7 @@
 import logging
 
-from PyQt5.QtCore import QEvent, QPoint, QSize, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QMouseEvent
-from PyQt5.QtWidgets import QButtonGroup, QPushButton, QSlider, QVBoxLayout, QWidget
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import QSlider
 
 from . import buttons, config, icons, util, vlcqt
 

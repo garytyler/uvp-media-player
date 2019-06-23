@@ -1,17 +1,5 @@
-import logging
-from os.path import exists
-
-from PyQt5.QtCore import QObject, Qt, QVariant, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QGuiApplication
-from PyQt5.QtWidgets import (
-    QAction,
-    QActionGroup,
-    QApplication,
-    QComboBox,
-    QFileDialog,
-    QMainWindow,
-    QMenu,
-)
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction, QApplication
 
 from . import config
 

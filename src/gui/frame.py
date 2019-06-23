@@ -1,11 +1,11 @@
 import logging
 import sys
 
-from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QColor, QPalette, QScreen
+from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QAction, QFrame, QSizePolicy, QVBoxLayout, QWidget
 
-from . import config, util, vlcqt
+from . import vlcqt
 
 log = logging.getLogger(__name__)
 

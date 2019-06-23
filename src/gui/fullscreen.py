@@ -1,20 +1,7 @@
 import logging
-import sys
-from contextlib import contextmanager
-from time import sleep
 
-from PyQt5.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QGuiApplication, QScreen
-from PyQt5.QtWidgets import (
-    QAction,
-    QActionGroup,
-    QApplication,
-    QComboBox,
-    QMainWindow,
-    QMenu,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtGui import QGuiApplication
+from PyQt5.QtWidgets import QAction, QActionGroup, QMenu
 
 from . import buttons, icons
 

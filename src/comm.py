@@ -1,7 +1,5 @@
 import array
 import logging
-import random
-import string
 
 from PyQt5.QtCore import QByteArray, Qt, QTimer, QUrl
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol

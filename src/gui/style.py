@@ -10,7 +10,8 @@ LIGHT_PALETTE = None
 DARK_PALETTE = None
 
 LIGHT_STYLESHEET = None
-DARK_STYLESHEET = join(dirname(abspath(realpath(__file__))), "resources/style.qss")
+DARK_STYLESHEET = "resources/style.qss"
+# DARK_STYLESHEET = join(dirname(abspath(realpath(__file__))), "resources/style.qss")
 
 
 def initialize_style(qapp):
