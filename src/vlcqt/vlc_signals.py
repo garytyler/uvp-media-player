@@ -82,153 +82,153 @@ class MediaPlayerVlclibSignals(QObject):
 
     @pyqtSlot(vlc.Event)
     def _audiodevice(self, e):
-        log.debug("_audiodevice")
         self.audiodevice.emit(e)
+        log.debug("VLCQT SIGNAL name='audiodevice'")
 
     @pyqtSlot(vlc.Event)
     def _audiovolume(self, e):
-        log.debug("_audiovolume")
         self.audiovolume.emit(e)
+        log.debug("VLCQT SIGNAL name='audiovolume'")
 
     @pyqtSlot(vlc.Event)
     def _backward(self, e):
-        log.debug("_backward")
         self.backward.emit(e)
+        log.debug("VLCQT SIGNAL name='backward'")
 
     @pyqtSlot(vlc.Event)
     def _buffering(self, e):
-        log.debug("_buffering")
         self.buffering.emit(e)
+        log.debug("VLCQT SIGNAL name='buffering'")
 
     @pyqtSlot(vlc.Event)
     def _chapterchanged(self, e):
-        log.debug("_chapterchanged")
         self.chapterchanged.emit(e)
+        log.debug("VLCQT SIGNAL name='chapterchanged'")
 
     @pyqtSlot(vlc.Event)
     def _corked(self, e):
-        log.debug("_corked")
         self.corked.emit(e)
+        log.debug("VLCQT SIGNAL name='corked'")
 
     @pyqtSlot(vlc.Event)
     def _esadded(self, e):
-        log.debug("_esadded")
         self.esadded.emit(e)
+        log.debug("VLCQT SIGNAL name='esadded'")
 
     @pyqtSlot(vlc.Event)
     def _esdeleted(self, e):
-        log.debug("_esdeleted")
         self.esdeleted.emit(e)
+        log.debug("VLCQT SIGNAL name='esdeleted'")
 
     @pyqtSlot(vlc.Event)
     def _esselected(self, e):
-        log.debug("_esselected")
         self.esselected.emit(e)
+        log.debug("VLCQT SIGNAL name='esselected'")
 
     @pyqtSlot(vlc.Event)
     def _encounterederror(self, e):
-        log.debug("_encounterederror")
         self.encounterederror.emit(e)
+        log.debug("VLCQT SIGNAL name='encounterederror'")
 
     @pyqtSlot(vlc.Event)
     def _endreached(self, e):
-        log.debug("_endreached")
         self.endreached.emit(e)
+        log.debug("VLCQT SIGNAL name='endreached'")
 
     @pyqtSlot(vlc.Event)
     def _forward(self, e):
-        log.debug("_forward")
         self.forward.emit(e)
+        log.debug("VLCQT SIGNAL name='forward'")
 
     @pyqtSlot(vlc.Event)
     def _lengthchanged(self, e):
-        log.debug("_lengthchanged")
         self.lengthchanged.emit(e)
+        log.debug("VLCQT SIGNAL name='lengthchanged'")
 
     @pyqtSlot(vlc.Event)
     def _mediachanged(self, e):
-        log.debug("_mediachanged")
         self.mediachanged.emit(e)
+        log.debug("VLCQT SIGNAL name='mediachanged'")
 
     @pyqtSlot(vlc.Event)
     def _muted(self, e):
-        log.debug("_muted")
         self.muted.emit(e)
+        log.debug("VLCQT SIGNAL name='muted'")
 
     @pyqtSlot(vlc.Event)
     def _nothingspecial(self, e):
-        log.debug("_nothingspecial")
         self.nothingspecial.emit(e)
+        log.debug("VLCQT SIGNAL name='nothingspecial'")
 
     @pyqtSlot(vlc.Event)
     def _opening(self, e):
-        log.debug("_opening")
         self.opening.emit(e)
+        log.debug("VLCQT SIGNAL name='opening'")
 
     @pyqtSlot(vlc.Event)
     def _pausablechanged(self, e):
-        log.debug("_pausablechanged")
         self.pausablechanged.emit(e)
+        log.debug("VLCQT SIGNAL name='pausablechanged'")
 
     @pyqtSlot(vlc.Event)
     def _paused(self, e):
-        log.debug("_paused")
         self.paused.emit(e)
+        log.debug("VLCQT SIGNAL name='paused'")
 
     @pyqtSlot(vlc.Event)
     def _playing(self, e):
-        log.debug("_playing")
         self.playing.emit(e)
+        log.debug("VLCQT SIGNAL name='playing'")
 
     @pyqtSlot(vlc.Event)
     def _positionchanged(self, e):
-        log.debug("_positionchanged")
         self.positionchanged.emit(e)
+        log.debug("VLCQT SIGNAL name='positionchanged'")
 
     @pyqtSlot(vlc.Event)
     def _scrambledchanged(self, e):
-        log.debug("_scrambledchanged")
         self.scrambledchanged.emit(e)
+        log.debug("VLCQT SIGNAL name='scrambledchanged'")
 
     @pyqtSlot(vlc.Event)
     def _seekablechanged(self, e):
-        log.debug("_seekablechanged")
         self.seekablechanged.emit(e)
+        log.debug("VLCQT SIGNAL name='seekablechanged'")
 
     @pyqtSlot(vlc.Event)
     def _snapshottaken(self, e):
-        log.debug("_snapshottaken")
         self.snapshottaken.emit(e)
+        log.debug("VLCQT SIGNAL name='snapshottaken'")
 
     @pyqtSlot(vlc.Event)
     def _stopped(self, e):
-        log.debug("_stopped")
         self.stopped.emit(e)
+        log.debug("VLCQT SIGNAL name='stopped'")
 
     @pyqtSlot(vlc.Event)
     def _timechanged(self, e):
-        log.debug("_timechanged")
         self.timechanged.emit(e)
+        log.debug("VLCQT SIGNAL name='timechanged'")
 
     @pyqtSlot(vlc.Event)
     def _titlechanged(self, e):
-        log.debug("_titlechanged")
         self.titlechanged.emit(e)
+        log.debug("VLCQT SIGNAL name='titlechanged'")
 
     @pyqtSlot(vlc.Event)
     def _uncorked(self, e):
-        log.debug("_uncorked")
         self.uncorked.emit(e)
+        log.debug("VLCQT SIGNAL name='uncorked'")
 
     @pyqtSlot(vlc.Event)
     def _unmuted(self, e):
-        log.debug("_unmuted")
         self.unmuted.emit(e)
+        log.debug("VLCQT SIGNAL name='unmuted'")
 
     @pyqtSlot(vlc.Event)
     def _vout(self, e):
-        log.debug("_vout")
         self.vout.emit(e)
+        log.debug("VLCQT SIGNAL name='vout'")
 
 
 class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
@@ -294,18 +294,18 @@ class MediaListPlayerVlclibSignals(QObject):
 
     @pyqtSlot(vlc.Event)
     def _nextitemset(self, e):
-        log.debug("_nextitemset")
         self.nextitemset.emit(e)
+        log.debug("VLCQT SIGNAL name='nextitemset'")
 
     @pyqtSlot(vlc.Event)
     def _played(self, e):
-        log.debug("_played")
         self.played.emit(e)
+        log.debug("VLCQT SIGNAL name='played'")
 
     @pyqtSlot(vlc.Event)
     def _stopped(self, e):
-        log.debug("_stopped")
         self.stopped.emit(e)
+        log.debug("VLCQT SIGNAL name='stopped'")
 
 
 MediaListPlayerSignals = MediaListPlayerVlclibSignals

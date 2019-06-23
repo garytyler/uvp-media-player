@@ -1,21 +1,22 @@
 import logging
 
-from vlc import VideoViewpoint
+from . import comm, vlcqt
 
-from . import comm, vlc_objects
+# from vlcqt import Viewpoint
+
 
 log = logging.getLogger(__name__)
 
 
 class ViewpointManager:
-    """Handles setting viewpoint in VLC media player object."""
+    """Handles setting viewpoint in vlcqt media player object."""
 
-    def __init__(self, url):
-        self.media_player = vlc_objects.media_player
-        self.client = comm.RemoteInputClient(url=url)
+    def __init__(self, client):
+        self.media_player = vlcqt.media_player
+        self.client = client
         self.curr_yaw = self.curr_pitch = self.curr_roll = 0
 
-        self.vp = VideoViewpoint()
+        self.vp = vlcqt.VideoViewpoint()
         self.vp.field_of_view = 80
 
         self.media_player.newframe.connect(self.on_newframe)

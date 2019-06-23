@@ -18,7 +18,11 @@ QGroupBox::title {
  */
 
 QAction::title {
-    font-size: 12pt;
+    font-size: 10pt;
+}
+
+QPushButton {
+    font-size: 10pt;
 }
 
 
@@ -180,5 +184,5 @@ QMenu:item {
 }
 
 QMenu {
-    font-size: 12pt;
+    font-size: 10pt;
 }

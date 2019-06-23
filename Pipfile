@@ -16,9 +16,7 @@ click = "*"
 colorama = "*"
 python-vlc = "*"
 pyqt5 = "*"
-python-dotenv = "*"
 qtawesome = "*"
-qtmodern = "*"
 
 [requires]
 python_version = "3.7"

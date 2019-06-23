@@ -1,4 +1,4 @@
-# from vlc import Event
+# from vlcqt import Event
 
 
 # class TestListSignals:

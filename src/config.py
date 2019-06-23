@@ -11,11 +11,11 @@ _CONFIG_FILE_PATH = getenv("VR_PLAYER_CONFIG", join(gettempdir(), ".vr_player_co
 
 
 _SETTINGS = {
-    "playback_mode": {"options": ["off", "one", "all"], "default": "off"},
-    "stay_on_top": {"options": [True, False], "default": False},
-    "zoom": {"options": [0.25, 0.5, 1, 2], "default": 1},
-    "color_theme": {"options": ["light", "dark"], "default": "dark"},
-    "url": {"options": [], "default": None},
+    "playback_mode": {"options": ("off", "one", "all"), "default": "off"},
+    "stay_on_top": {"options": (True, False), "default": False},
+    "view_scale": {"options": (0.25, 0.5, 1, 2), "default": 1},
+    "color_theme": {"options": ("light", "dark"), "default": "dark"},
+    "url": {"options": (), "default": None},
 }
 
 
@@ -77,7 +77,7 @@ class _State:
         except KeyError as e:
             log.critical(e)
         else:
-            log.debug(f"GET CONFIG ITEM key={key}")
+            log.debug(f"GET CONFIG ITEM key={key}, value={value}")
             return value
 
 

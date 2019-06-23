@@ -6,7 +6,7 @@ import string
 from PyQt5.QtCore import QByteArray, Qt, QTimer, QUrl
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-from . import comm
+from . import comm, util
 
 log = logging.getLogger(__name__)
 
@@ -36,7 +36,7 @@ class ClientSocketBase(QWebSocket):
             self.__payload = None
 
     def send_ping(self):
-        self.__payload = rand_id().encode()
+        self.__payload = util.rand_id().encode()
         self.pong.connect(self._pong)
         self.ping(self.__payload)
 

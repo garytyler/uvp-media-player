@@ -1,5 +1,4 @@
 from . import vlc_facades
-from player import config
 import vlc
 from PyQt5.QtCore import pyqtSlot
 
@@ -38,3 +37,18 @@ class MediaListPlayer(vlc_facades.MediaListPlayerFacade):
 
 
 list_player = MediaListPlayer()
+
+_VLCQT_CUSTOM_ATTRIBUTES = [
+    "Instance",
+    "media_player",
+    "list_player",
+    "MediaPlayer",
+    "MediaListPlayer",
+]
+
+
+def __getattr__(attribute):
+    try:
+        return locals()[attribute]
+    except KeyError:
+        return vars(vlc)[attribute]

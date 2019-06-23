@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "800d84e9c2767121595de55c546e7609ba87b96b4f53f09e85dec367a58b3dfe"
+            "sha256": "96cdab76387d4007c2b6321aa245193751434a6a5ec8069cb5ea4bd1ce69ab03"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -59,14 +59,6 @@
             ],
             "version": "==4.19.17"
         },
-        "python-dotenv": {
-            "hashes": [
-                "sha256:debd928b49dbc2bf68040566f55cdb3252458036464806f4094487244e2a4093",
-                "sha256:f157d71d5fec9d4bd5f51c82746b6344dffa680ee85217c123f4a0c8117c4544"
-            ],
-            "index": "pypi",
-            "version": "==0.10.3"
-        },
         "python-vlc": {
             "hashes": [
                 "sha256:0c2c6b4e4b0cad162a694e7740a8571f12fd7eebacd5b55c93e457f917b89cd7",
@@ -82,13 +74,6 @@
             ],
             "index": "pypi",
             "version": "==0.5.7"
-        },
-        "qtmodern": {
-            "hashes": [
-                "sha256:a2acb8bf01ca3cd7edf4d9eca25a5f29cee3ddd44fc2a3b2e5511d1bc5c37932"
-            ],
-            "index": "pypi",
-            "version": "==0.1.4"
         },
         "qtpy": {
             "hashes": [
@@ -156,10 +141,10 @@
         },
         "certifi": {
             "hashes": [
-                "sha256:59b7658e26ca9c7339e00f8f4636cdfe59d34fa37b9b04f6f9e9926b3cece1a5",
-                "sha256:b26104d6835d1f5e49452a26eb2ff87fe7090b89dfcaee5ea2212697e1e1d7ae"
+                "sha256:046832c04d4e752f37383b628bc601a7ea7211496b4638f6514d0e5b9acc4939",
+                "sha256:945e3ba63a0b9f577b1395204e13c3a231f9bc0223888be653286534e5873695"
             ],
-            "version": "==2019.3.9"
+            "version": "==2019.6.16"
         },
         "cfgv": {
             "hashes": [
@@ -233,10 +218,10 @@
         },
         "identify": {
             "hashes": [
-                "sha256:3e8268640da8fa2a62acd5af2c299c45597a9a845d6706b3c19ddd5a46fb32dd",
-                "sha256:78fcb1bdd37f4ecc954e8cba01680054781412a8aac82aed1998d8b5c8488011"
+                "sha256:0a11379b46d06529795442742a043dc2fa14cd8c995ae81d1febbc5f1c014c87",
+                "sha256:43a5d24ffdb07bc7e21faf68b08e9f526a1f41f0056073f480291539ef961dfd"
             ],
-            "version": "==1.4.4"
+            "version": "==1.4.5"
         },
         "idna": {
             "hashes": [
@@ -320,10 +305,10 @@
         },
         "pip-shims": {
             "hashes": [
-                "sha256:3bc24ec050a6b9eea35419467237e4f47eaf806dadc9999bf887355c377edea7",
-                "sha256:edb4cf3c509eab2f36b55c1ac1a59a4c485ccd537cc87934d74950880f641256"
+                "sha256:0162d846bd60c7b1feb4e1336541a3e661eb6a1eff4b9ea0d759780f8e0a2936",
+                "sha256:d73372b9fa3a10e73f057fced70d39bb82df16a1ee3ded027fed0bb8d7c0ff97"
             ],
-            "version": "==0.3.2"
+            "version": "==0.3.3"
         },
         "pipreqs": {
             "hashes": [
@@ -473,10 +458,10 @@
         },
         "virtualenv": {
             "hashes": [
-                "sha256:99acaf1e35c7ccf9763db9ba2accbca2f4254d61d1912c5ee364f9cc4a8942a0",
-                "sha256:fe51cdbf04e5d8152af06c075404745a7419de27495a83f0d72518ad50be3ce8"
+                "sha256:b7335cddd9260a3dd214b73a2521ffc09647bde3e9457fcca31dc3be3999d04a",
+                "sha256:d28ca64c0f3f125f59cabf13e0a150e1c68e5eea60983cc4395d88c584495783"
             ],
-            "version": "==16.6.0"
+            "version": "==16.6.1"
         },
         "vistir": {
             "hashes": [
