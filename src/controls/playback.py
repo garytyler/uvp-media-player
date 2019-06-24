@@ -1,19 +1,24 @@
 import logging
 
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QSlider
+from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import QAction, QSlider, QToolButton
 
-from . import buttons, config, icons, util, vlcqt
+from .. import config, util, vlcqt
+from ..controls import base
+from ..gui import icons
 
 log = logging.getLogger(__name__)
 
 
-class PlaybackModeButton(buttons.SquareIconButton):
+class TogglePlaybackModeAction(QAction):
     setplaybackmode = pyqtSignal(str)
 
-    def __init__(self, parent, size=None):
-        super().__init__(parent=parent, size=size, icons=icons.playback_mode_button)
-        self.setToolTip("Playback Mode")
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+        self.setText("Toggle Playback Mode")
+        self.setToolTip("Toggle Playback Mode")
+        self.setIconText("Playback Mode")
+
         self.lp = vlcqt.list_player
         self.setCheckable(True)
 
@@ -23,27 +28,42 @@ class PlaybackModeButton(buttons.SquareIconButton):
                 util.rotate_list(self.option_names, index)
                 break
 
-        self.switch_icon(self.option_names[0])
+        option_name = self.option_names[0]
+        self.setIcon(icons.playback_mode[option_name])
 
-        self.clicked.connect(self.on_clicked)
+        self.triggered.connect(self.on_triggered)
         self.setplaybackmode.connect(self.lp.on_setplaybackmode)
 
-    def on_clicked(self):
+    def on_triggered(self):
         util.rotate_list(self.option_names, 1)
         option_name = self.option_names[0]
-        self.switch_icon(self.option_names[0])
+        self.setIcon(icons.playback_mode[option_name])
         config.state.playback_mode = option_name
         self.setplaybackmode.emit(option_name)
         self.setChecked(True if option_name != "off" else False)
 
 
-class PlayPauseButton(buttons.SquareIconButton):
-    def __init__(self, parent, size=None):
-        super().__init__(parent=parent, size=size, icons=icons.play_pause_button)
-        self.switch_icon("play")
+class TogglePlaybackModeButton(QToolButton):
+    def __init__(self, parent, size):
+        super().__init__(parent=parent)
+        self.setIconSize(QSize(size, size))
+        self.setAutoRaise(True)
+        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
+
+        self.action = TogglePlaybackModeAction(parent=self)
+        self.setDefaultAction(self.action)
+
+
+class PlayPauseAction(QAction):
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+        self.setToolTip("Play/Pause")
+        self.setCheckable(True)
+
+        self.setIcon(icons.play_pause)
+
         self.mp = vlcqt.media_player
         self.lp = vlcqt.list_player
-        self.setToolTip("Play/Pause")
 
         if self.mp.is_playing():
             self.on_playing()
@@ -54,27 +74,36 @@ class PlayPauseButton(buttons.SquareIconButton):
         self.mp.paused.connect(self.on_paused)
         self.mp.stopped.connect(self.on_paused)
 
-        self.clicked.connect(self.on_clicked)
+        self.triggered.connect(self.on_triggered)
 
     @pyqtSlot()
     def on_playing(self):
-        self.switch_icon("play")
+        self.setChecked(True)
 
     @pyqtSlot()
     def on_paused(self):
-        self.switch_icon("pause")
+        self.setChecked(False)
 
     @pyqtSlot()
-    def on_clicked(self):
+    def on_triggered(self):
         if self.mp.is_playing():
-            # self.lp.pause()
-            self.mp.pause()
+            self.lp.pause()
         else:
-            # self.lp.play()
-            self.mp.play()
+            self.lp.play()
 
 
-class SkipBackwardButton(buttons.SquareIconButton):
+class PlayPauseButton(QToolButton):
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent)
+        self.setIconSize(QSize(size, size))
+        self.setAutoRaise(True)
+        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
+
+        self.action = PlayPauseAction(parent=self)
+        self.setDefaultAction(self.action)
+
+
+class SkipBackwardButton(base.SquareIconButton):
     def __init__(self, parent, size=None):
         super().__init__(parent=parent, size=size, icons=icons.skip_backward_button)
         self.curr_icon = self.icons
@@ -82,7 +111,7 @@ class SkipBackwardButton(buttons.SquareIconButton):
         pass
 
 
-class SkipForwardButton(buttons.SquareIconButton):
+class SkipForwardButton(base.SquareIconButton):
     def __init__(self, parent, size=None):
         super().__init__(parent=parent, size=size, icons=icons.skip_forward_button)
         self.curr_icon = self.icons

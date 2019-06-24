@@ -1,8 +1,10 @@
 from random import choice
 from string import ascii_uppercase, digits
 
+from vlc import Media
 
-def get_media_fps(vlc_media) -> float:
+
+def get_media_fps(vlc_media: Media) -> float:
     if not vlc_media:
         return None
     if not vlc_media.is_parsed():
@@ -11,7 +13,7 @@ def get_media_fps(vlc_media) -> float:
     return track.video.contents.frame_rate_num
 
 
-def get_media_size(vlc_media):
+def get_media_size(vlc_media: Media):
     if not vlc_media.is_parsed():
         vlc_media.parse()
     media_tracks = vlc_media.tracks_get()

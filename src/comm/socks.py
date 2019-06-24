@@ -1,10 +1,9 @@
-import array
 import logging
 
-from PyQt5.QtCore import QByteArray, Qt, QTimer, QUrl
+from PyQt5.QtCore import Qt, QTimer, QUrl
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-from . import comm, util
+from .. import util
 
 log = logging.getLogger(__name__)
 
@@ -68,26 +67,5 @@ class AutoConnectSocket(ClientSocketBase):
         self.connect_timer.setInterval(interval)
         QTimer.singleShot(0, self.connect_timer.start)
 
-
-class RemoteInputClient:
-    def __init__(self, url):
-        self.motion_state = None
-        self.state_changed = False
-        self.socket = comm.AutoConnectSocket()
-
-        self._curr_motion_state = QByteArray()
-        self._last_motion_state = QByteArray()
-
-        self.socket.binaryMessageReceived.connect(self.received_bytes)
-
-        # TODO Call this later to not risk a connection before all signals are connected
-        self.socket.attempt_open_on_interval(url=url)
-
-    def received_bytes(self, qbytearray):
-        self._curr_motion_state = qbytearray
-
-    def get_new_motion_state(self):
-        if self._curr_motion_state == self._last_motion_state:
-            return
-        motion_state_array = array.array("d", self._curr_motion_state.data())
-        return motion_state_array
+    def stop_attempting(self):
+        self.connect_timer.stop()

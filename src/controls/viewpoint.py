@@ -1,9 +1,6 @@
 import logging
 
-from . import vlcqt
-
-# from vlcqt import Viewpoint
-
+from .. import vlcqt
 
 log = logging.getLogger(__name__)
 

@@ -22,7 +22,7 @@ def main():
 
     media_paths = sys.argv[1:]
     if media_paths:
-        vlcqt.media_player.set_mrl(media_paths[0])
+        vlcqt.list_player.set_mrls(media_paths)
 
     sys.exit(qapp.exec_())
 

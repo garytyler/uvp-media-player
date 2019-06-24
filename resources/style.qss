@@ -14,30 +14,55 @@ QGroupBox::title {
 
 
 /*
- * QAction
+ * QMenu
  */
 
-QAction::title {
-    font-size: 10pt;
+QMenu:disabled {
+    color: transparent;
 }
 
-QPushButton {
-    font-size: 10pt;
+QMenu:item {
+    background-color: palette(midlight);
+}
+
+QMenu {
+    font-size: 11pt;
 }
 
 
 /*
-   * QToolBar
-   */
+ * QAction
+ */
+
+QAction::title {
+    font-size: 11pt;
+}
+
+
+/* QPushButton {
+    font-size: 10pt;
+} */
+
+
+/*
+ * QToolBar
+ */
 
 QToolBar {
     border: none;
 }
 
+QToolButton {
+    font-size: 11pt;
+    background-color: transparent;
+    border: none;
+    padding: 0px;
+}
+
 
 /*
-   * QTabBar
-   */
+ * QTabBar
+ */
 
 QTabBar {
     background-color: transparent;
@@ -168,21 +193,4 @@ QSlider::sub-page:horizontal {
 
 QSlider::sub-page:horizontal:disabled {
     background-color: palette(light);
-}
-
-
-/*
- * QMenu
- */
-
-QMenu:disabled {
-    color: transparent;
-}
-
-QMenu:item {
-    background-color: palette(midlight);
-}
-
-QMenu {
-    font-size: 10pt;
 }

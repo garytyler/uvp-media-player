@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QSlider
 
-from . import buttons, icons
+from . import base
+from ..gui import icons
 
 
 class VolumeSlider(QSlider):
@@ -20,7 +21,7 @@ class VolumeSlider(QSlider):
         self.volumeslider.setValue(self.mediaplayer.audio_get_volume())
 
 
-class VolumeButton(buttons.SquareIconButton):
+class VolumeButton(base.SquareIconButton):
     def __init__(self, parent, size=None):
         super().__init__(parent=parent, size=size, icons=icons.volume_button)
         self.setToolTip("Volume")

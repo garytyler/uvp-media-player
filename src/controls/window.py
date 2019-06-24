@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QApplication
 
-from . import config
+from .. import config
 
 
 class ExitApp(QAction):
@@ -38,3 +38,4 @@ class StayOnTop(QAction):
     def _disable(self):
         _args = self.main_win.windowFlags() & ~Qt.WindowStaysOnTopHint
         self.main_win.setWindowFlags(_args)
+        self.main_win.show()

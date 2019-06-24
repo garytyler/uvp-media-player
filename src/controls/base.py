@@ -1,6 +1,21 @@
 from PyQt5.QtCore import QEvent, QPoint, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QMouseEvent
-from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QAction, QPushButton
+
+
+class OpenMenuAction(QAction):
+    def __init__(self, icon, text, menu, button):
+        super().__init__(icon, text, parent=button)
+        self.button = button
+        self.menu = menu
+        self.triggered.connect(self.open_menu)
+
+    def open_menu(self):
+        menu_size = self.menu.sizeHint()
+        butt_rect = self.button.rect()
+        x = butt_rect.x()
+        y = butt_rect.y() - menu_size.height()
+        self.menu.popup(self.button.mapToGlobal(QPoint(x, y)))
 
 
 class IconButton(QPushButton):

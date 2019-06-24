@@ -1,23 +1,16 @@
 import logging
 import sys
 
-from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
+from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import (
-    QAction,
-    QFrame,
-    QSizePolicy,
-    QStackedLayout,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtWidgets import QFrame, QSizePolicy, QStackedLayout
 
-from . import vlcqt
+from .. import vlcqt
 
 log = logging.getLogger(__name__)
 
 
-class BaseMediaFrame(QFrame):
+class _BaseMediaFrame(QFrame):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__(parent=main_win)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
@@ -38,7 +31,7 @@ class BaseMediaFrame(QFrame):
         self.setPalette(p)
 
 
-class MainMediaFrame(BaseMediaFrame):
+class _MainMediaFrame(_BaseMediaFrame):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__(main_win=main_win, frame_size_ctrlr=frame_size_ctrlr)
 
@@ -53,7 +46,7 @@ class MainMediaFrame(BaseMediaFrame):
         else:
             raise EnvironmentError("Could not determine platform")
 
-    def start_fullscreen(self, qscreen):
+    def configure_for_fullscreen(self, qscreen):
         self.setVisible(False)
         self.setParent(None)
         wingeo = self.geometry()
@@ -64,7 +57,7 @@ class MainMediaFrame(BaseMediaFrame):
         self.setWindowState(Qt.WindowFullScreen)
         self.setVisible(True)
 
-    def stop_fullscreen(self):
+    def configure_for_embedded(self):
         self.setVisible(False)
         self.setParent(self.main_win)
         self.setWindowState(Qt.WindowNoState)
@@ -74,43 +67,25 @@ class MainMediaFrame(BaseMediaFrame):
 class MainMediaFrameLayout(QStackedLayout):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__()
+        self.setContentsMargins(0, 0, 0, 0)
         self.main_win = main_win
         self.frame_size_ctrlr = frame_size_ctrlr
-        self.media_frame = MainMediaFrame(
+        self.media_frame = _MainMediaFrame(
             main_win=self.main_win, frame_size_ctrlr=frame_size_ctrlr
         )
         self.insertWidget(0, self.media_frame)
         self.media_frame.activate()
-        self.replacement = BaseMediaFrame(
+        self.replacement = _BaseMediaFrame(
             main_win=self.main_win, frame_size_ctrlr=frame_size_ctrlr
         )
         self.insertWidget(1, self.replacement)
 
-    def start_fullscreen_media_frame(self, qscreen):
+    def start_fullscreen(self, qscreen):
         self.insertWidget(1, self.replacement)
         self.setCurrentIndex(1)
-        self.media_frame.start_fullscreen(qscreen)
+        self.media_frame.configure_for_fullscreen(qscreen)
 
-    def stop_fullscreen_media_frame(self):
-        self.media_frame.stop_fullscreen()
+    def stop_fullscreen(self):
+        self.media_frame.configure_for_embedded()
         self.insertWidget(0, self.media_frame)
         self.setCurrentIndex(0)
-
-
-class FullscreenController(QObject):
-    fullscreenstarted = pyqtSignal(QAction)
-    fullscreenstopped = pyqtSignal()
-
-    def __init__(self, mf_layout):
-        super().__init__()
-        self.mf_layout = mf_layout
-        self.replacement = QWidget()
-
-    def start(self, action):
-        qscreen = action.qscreen
-        self.mf_layout.start_fullscreen_media_frame(qscreen)
-        self.fullscreenstarted.emit(action)
-
-    def stop(self):
-        self.mf_layout.stop_fullscreen_media_frame()
-        self.fullscreenstopped.emit()

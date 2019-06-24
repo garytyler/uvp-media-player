@@ -10,58 +10,70 @@ light_defaults = {
     # "color_disabled": qta.iconic_font._default_options["color_disabled"],
 }
 
+color_on = QColor("ForestGreen")
+color_off = QColor(150, 150, 150)
+
+# base_text = QColor(160, 160, 160)
+other = QColor("Magenta").lighter(170)
+
+
+class Defaults:
+    def __init__(self):
+        self.color = QColor(150, 150, 150)
+        self.color_on = color_on
+        self.color_off_active = color_off.lighter()
+        self.color_on_active = color_on.lighter()
+        self.color_disabled = QColor(100, 100, 100)
+
+
+defaults = Defaults()
 
 dark_defaults = {
-    "color": QColor(160, 160, 160),
+    "color": color_off,
     "color_disabled": QColor(100, 100, 100),
-    # "color_disabled": light_defaults["color_disabled"],
+    "color_on": color_on,
+    "color_off_active": color_off.lighter(),
+    "color_on_active": color_on.lighter(),
 }
 
 
 class AppIcons:
     def __init__(self):
         self.color_on_active = "blue"
-        self.color_off_inactive = dark_defaults["color"]
+        self.color_off_inactive = defaults.color
         self.unchecked_hover = "white"
         self.checked_hover = QColor(193, 193, 74)
         self.checked_normal = "orange"
 
-        self.main_menu_button = {
-            "normal": qta.icon("mdi.dots-vertical"),
-            "hovered": qta.icon("mdi.dots-vertical", color=self.unchecked_hover),
+        self.fullscreen_button = qta.icon("mdi.fullscreen")
+        self.playback_mode = {
+            "off": qta.icon("mdi.repeat-off"),
+            "one": qta.icon("mdi.repeat-once"),
+            "all": qta.icon("mdi.repeat"),
         }
+        self.play_pause = qta.icon(
+            "mdi.play",
+            on="mdi.pause",
+            off="mdi.play",
+            on_active="mdi.pause",
+            off_active="mdi.play",
+            color=defaults.color,
+            color_on=defaults.color,
+            color_off=defaults.color,
+            color_on_active=defaults.color_off_active,
+            color_off_active=defaults.color_off_active,
+        )
+        self.frame_scale_menu_button = qta.icon("mdi.magnify")
+        self.main_menu_button = qta.icon("mdi.dots-vertical")
         self.stop = qta.icon("mdi.stop")
-        self.play_pause_button = {
-            "play": {
-                "normal": qta.icon("mdi.pause"),
-                "hovered": qta.icon("mdi.pause", color=self.unchecked_hover),
-            },
-            "pause": {
-                "normal": qta.icon("mdi.play"),
-                "hovered": qta.icon("mdi.play", color=self.unchecked_hover),
-            },
-        }
-        self.playback_mode_button = {
-            "off": {
-                "normal": qta.icon("mdi.repeat-off"),
-                "hovered": qta.icon("mdi.repeat-off", color=self.unchecked_hover),
-            },
-            "one": {
-                "normal": qta.icon("mdi.repeat-once"),
-                "hovered": qta.icon("mdi.repeat-once", color=self.unchecked_hover),
-            },
-            "all": {
-                "normal": qta.icon("mdi.repeat"),
-                "hovered": qta.icon("mdi.repeat", color=self.unchecked_hover),
-            },
-        }
+
         self.skip_forward_button = {
             "normal": qta.icon("mdi.skip-forward"),
-            "hovered": qta.icon("mdi.skip-forward", color=self.unchecked_hover),
+            "hovered": qta.icon("mdi.skip-forward", color=defaults.color_off_active),
         }
         self.skip_backward_button = {
             "normal": qta.icon("mdi.skip-backward"),
-            "hovered": qta.icon("mdi.skip-backward", color=self.unchecked_hover),
+            "hovered": qta.icon("mdi.skip-backward", color=defaults.color_off_active),
         }
         self.zoom_in = {
             "normal": qta.icon("mdi.magnify-plus-outline"),
@@ -73,11 +85,6 @@ class AppIcons:
                 "mdi.magnify-minus-outline", color=self.unchecked_hover
             ),
         }
-        self.zoom_menu_button = {
-            "normal": qta.icon("mdi.magnify"),
-            "hovered": qta.icon("mdi.magnify", color=self.unchecked_hover),
-        }
-
         self.pc_display = {
             "normal": qta.icon(
                 "mdi.desktop-mac",
@@ -85,22 +92,13 @@ class AppIcons:
             ),
             "hovered": qta.icon("mdi.desktop-mac", color=self.unchecked_hover),
         }
-        self.fullscreen_button = {
-            "off": {
-                "normal": qta.icon("mdi.fullscreen"),
-                "hovered": qta.icon("mdi.fullscreen", color=self.unchecked_hover),
-            },
-            "on": {
-                "normal": qta.icon("mdi.fullscreen", color=self.checked_normal),
-                "hovered": qta.icon("mdi.fullscreen", color=self.checked_hover),
-            },
-        }
         self.server_connection = qta.icon(
             "mdi.server-network",
             on="mdi.server-network",
             off="mdi.server-network-off",
             color_on="green",
-            color_off="red",
+            color_on_disabled="green",
+            color_off_disabled="red",
         )
         self.server_disconnected = qta.icon("mdi.server-network-off")
         self.volume_button = {

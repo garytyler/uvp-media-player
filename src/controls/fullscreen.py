@@ -1,11 +1,41 @@
 import logging
 
-from PyQt5.QtGui import QGuiApplication
-from PyQt5.QtWidgets import QAction, QActionGroup, QMenu
+from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
+from PyQt5.QtGui import QFontMetrics, QGuiApplication
+from PyQt5.QtWidgets import QAction, QActionGroup, QLabel, QMenu, QToolButton
 
-from . import buttons, icons
+from ..controls import base
+from ..gui import icons
 
 log = logging.getLogger(__name__)
+
+
+class FullscreenController(QObject):
+    fullscreenstarted = pyqtSignal(QAction)
+    fullscreenstopped = pyqtSignal()
+
+    def __init__(self, media_frame_layout, viewpoint_manager):
+        super().__init__()
+        self.vp_manager = viewpoint_manager
+        self._is_fullscreen = False
+        self.media_frame_layout = media_frame_layout
+
+        self.fullscreenstarted.connect(self.vp_manager.trigger_redraw)
+        self.fullscreenstopped.connect(self.vp_manager.trigger_redraw)
+
+    def start(self, action):
+        qscreen = action.qscreen
+        self.media_frame_layout.start_fullscreen(qscreen)
+        self._is_fullscreen = True
+        self.fullscreenstarted.emit(action)
+
+    def stop(self):
+        self.media_frame_layout.stop_fullscreen()
+        self._is_fullscreen = False
+        self.fullscreenstopped.emit()
+
+    def is_fullscreen(self):
+        return self._is_fullscreen
 
 
 class StartFullscreenAction(QAction):
@@ -26,12 +56,12 @@ class StartFullscreenAction(QAction):
             if value:
                 self.id_string += value.strip(".\\")
         self.description = f"{self.id_string} - ({self.width},{self.height})"
+
         self.set_description_as_text(primary, this_screen)
 
         self.triggered.connect(self.on_triggered)
 
     def on_triggered(self, arg):
-        print(arg)
         self.fullscreen_ctrlr.start(self)
 
     def set_description_as_text(self, primary: bool = False, this_screen: bool = False):
@@ -101,28 +131,83 @@ class FullscreenMenu(QMenu):
         self.fullscreen_ctrlr.start(action.qscreen)
 
 
-class FullscreenButton(buttons.MenuButton):
-    def __init__(self, parent, menu, fullscreen_ctrlr):
-        super().__init__(parent=parent, menu=menu, icons=icons.fullscreen_button)
+class ScreenLabel(QLabel):
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+
+
+class FullscreenMenuAction(base.OpenMenuAction):
+    def __init__(self, button, fullscreen_menu, fullscreen_ctrlr):
+        super().__init__(
+            icons.fullscreen_button,
+            fullscreen_menu.title(),
+            menu=fullscreen_menu,
+            button=button,
+        )
+        self.button = button
+        self.fullscreen_menu = fullscreen_menu
+        self.fullscreen_ctrlr = fullscreen_ctrlr
         self.setToolTip("Fullscreen Mode")
 
-        self.fullscreen_ctrlr = fullscreen_ctrlr
+        first_screen = self.fullscreen_menu.actions()[0].description
+        self.setIconText(self.button.get_elided_txt(first_screen))
 
+        self.setIconText(first_screen)
+        self.setCheckable(True)
+
+        self.fullscreen_ctrlr.fullscreenstarted.connect(self.on_fullscreenstarted)
+        self.fullscreen_ctrlr.fullscreenstopped.connect(self.on_fullscreenstopped)
+        self.fullscreen_menu.aboutToShow.connect(self.on_menu_aboutToShow)
+
+    def on_menu_aboutToShow(self):
+        self.setChecked(self.fullscreen_ctrlr.is_fullscreen())
+
+    def on_fullscreenstarted(self, action):
+        self.setChecked(True)
+
+    def on_fullscreenstopped(self):
+        self.setChecked(False)
+
+
+class FullscreenButton(QToolButton):
+    def __init__(self, parent, menu, fullscreen_ctrlr, size):
+        super().__init__(parent=parent)
+        self.fullscreen_ctrlr = fullscreen_ctrlr
         self.menu = menu
 
-        self.switch_icon("off")
-        self.update_icon_hover()
+        self.setIconSize(QSize(size, size))
+        self.setAutoRaise(True)
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
         self.setCheckable(True)
-        self.setText(getattr(self.menu.actions()[0], "description", ""))
 
-        self.clicked.connect(self.open_menu)
+        self.setMinimumSize(self.sizeHint())
+        self.curr_screen_description = None
+
+        self.action = FullscreenMenuAction(
+            button=self,
+            fullscreen_menu=self.menu,
+            fullscreen_ctrlr=self.fullscreen_ctrlr,
+        )
+        self.setDefaultAction(self.action)
+
         self.fullscreen_ctrlr.fullscreenstarted.connect(self.on_fullscreenstarted)
         self.fullscreen_ctrlr.fullscreenstopped.connect(self.on_fullscreenstopped)
 
     def on_fullscreenstarted(self, action):
-        self.setText(action.description)
-        self.switch_icon("on")
-        print(self.text())
+        self.curr_screen_description = action.description
+        self.update_screen_description_display()
 
     def on_fullscreenstopped(self):
-        self.switch_icon("off")
+        self.curr_screen_description = None
+
+    def update_screen_description_display(self):
+        elided_txt = self.get_elided_txt(self.curr_screen_description)
+        self.action.setIconText(elided_txt)
+
+    def get_elided_txt(self, string):
+        return QFontMetrics(self.font()).elidedText(
+            string, Qt.ElideRight, self.sizeHint().width()
+        )
+
+    def resizeEvent(self, e):
+        self.update_screen_description_display()
