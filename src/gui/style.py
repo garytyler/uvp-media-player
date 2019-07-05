@@ -2,7 +2,8 @@ import qtawesome
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QApplication
 
-from . import config, icons
+from . import icons
+from .. import config
 
 LIGHT_PALETTE = None
 DARK_PALETTE = None

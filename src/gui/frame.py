@@ -47,21 +47,14 @@ class _MainMediaFrame(_BaseMediaFrame):
             raise EnvironmentError("Could not determine platform")
 
     def configure_for_fullscreen(self, qscreen):
-        self.setVisible(False)
         self.setParent(None)
-        wingeo = self.geometry()
-        targetgeo = qscreen.geometry()
-        wingeo.moveCenter(targetgeo.center())
-        self.setGeometry(wingeo)
+        self.setWindowState(Qt.WindowFullScreen)  # Lets geo map to non-primary screens
+        self.setGeometry(qscreen.geometry())
         self.showFullScreen()
-        self.setWindowState(Qt.WindowFullScreen)
-        self.setVisible(True)
 
     def configure_for_embedded(self):
-        self.setVisible(False)
         self.setParent(self.main_win)
         self.setWindowState(Qt.WindowNoState)
-        self.setVisible(True)
 
 
 class MainMediaFrameLayout(QStackedLayout):

@@ -44,8 +44,9 @@ class AppIcons:
         self.unchecked_hover = "white"
         self.checked_hover = QColor(193, 193, 74)
         self.checked_normal = "orange"
-
-        self.fullscreen_button = qta.icon("mdi.fullscreen")
+        self.fullscreen_enter = qta.icon("mdi.fullscreen")
+        self.fullscreen_exit = qta.icon("mdi.fullscreen-exit")
+        self.display_screen = qta.icon("mdi.desktop-mac")
         self.playback_mode = {
             "off": qta.icon("mdi.repeat-off"),
             "one": qta.icon("mdi.repeat-once"),
@@ -63,33 +64,23 @@ class AppIcons:
             color_on_active=defaults.color_off_active,
             color_off_active=defaults.color_off_active,
         )
-        self.frame_scale_menu_button = qta.icon("mdi.magnify")
         self.main_menu_button = qta.icon("mdi.dots-vertical")
         self.stop = qta.icon("mdi.stop")
+        self.next_media = qta.icon("mdi.skip-forward")
+        self.previous_media = qta.icon("mdi.skip-backward")
 
-        self.skip_forward_button = {
-            "normal": qta.icon("mdi.skip-forward"),
-            "hovered": qta.icon("mdi.skip-forward", color=defaults.color_off_active),
-        }
-        self.skip_backward_button = {
-            "normal": qta.icon("mdi.skip-backward"),
-            "hovered": qta.icon("mdi.skip-backward", color=defaults.color_off_active),
-        }
-        self.zoom_in = {
-            "normal": qta.icon("mdi.magnify-plus-outline"),
-            "hovered": qta.icon("mdi.magnify-plus-outline", color=self.unchecked_hover),
-        }
-        self.zoom_out = {
-            "normal": qta.icon("mdi.magnify-minus-outline"),
-            "hovered": qta.icon(
-                "mdi.magnify-minus-outline", color=self.unchecked_hover
-            ),
-        }
+        self.frame_scale_menu = qta.icon(
+            "mdi.magnify",
+            "mdi.menu-up",
+            options=[{}, {"scale_factor": 0.6, "offset": (0.35, -0.35)}],
+        )
+        self.zoom_in_button = qta.icon("mdi.magnify-plus-outline")
+        self.zoom_out_button = qta.icon("mdi.magnify-minus-outline")
+        self.zoom_in_menu_item = qta.icon("mdi.magnify-plus")
+        self.zoom_out_menu_item = qta.icon("mdi.magnify-minus")
+
         self.pc_display = {
-            "normal": qta.icon(
-                "mdi.desktop-mac",
-                # "ei.screen"
-            ),
+            "normal": qta.icon("mdi.desktop-mac"),
             "hovered": qta.icon("mdi.desktop-mac", color=self.unchecked_hover),
         }
         self.server_connection = qta.icon(

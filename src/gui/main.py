@@ -15,10 +15,19 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from . import base, icons, main, playback, sound, util, vlcqt, window
+from .. import config, util, vlcqt
 from ..comm import client
-from ..controls import connect, fullscreen, scale, viewpoint
-from ..gui import frame
+from ..controls import (
+    base,
+    connect,
+    fullscreen,
+    playback,
+    scale,
+    sound,
+    viewpoint,
+    window,
+)
+from ..gui import frame, icons
 
 log = logging.getLogger(__name__)
 
@@ -111,12 +120,17 @@ class AppWindow(QMainWindow):
         self.connection_button = connect.ServerConnectionButton(
             action=self.connection_action, parent=self, size=32
         )
+
         self.frame_size_ctrlr = scale.FrameSizeController(
             main_win=self, viewpoint_manager=self.vp_manager
         )
-        self.frame_scale_menu = scale.FrameScaleMenu(
+        self.frame_scale_ctrlr = scale.FrameScaleController(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
+        self.frame_scale_menu = scale.FrameScaleMenu(
+            main_win=self, frame_scale_ctrlr=self.frame_scale_ctrlr
+        )
+
         self.media_frame_layout = frame.MainMediaFrameLayout(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
@@ -135,9 +149,9 @@ class AppWindow(QMainWindow):
             size=40,
         )
         self.playback_slider_components = PlaybackSliderComponents(self)
-        self.skip_backward_button = playback.SkipBackwardButton(parent=self, size=48)
+        self.prev_media_button = playback.PreviousMediaButton(parent=self, size=48)
         self.play_pause_button = playback.PlayPauseButton(parent=self, size=48)
-        self.skip_forward_button = playback.SkipForwardButton(parent=self, size=48)
+        self.next_media_button = playback.NextMediaButton(parent=self, size=48)
 
         self.playback_mode_button = playback.TogglePlaybackModeButton(
             parent=self, size=32
@@ -145,8 +159,15 @@ class AppWindow(QMainWindow):
         self.frame_scale_menu_button = scale.FrameScaleMenuButton(
             parent=self, frame_scale_menu=self.frame_scale_menu, size=32
         )
+        self.zoom_out_button = scale.ZoomOutButton(
+            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr, size=32
+        )
+        self.zoom_in_button = scale.ZoomInButton(
+            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr, size=32
+        )
+
         self.volume_button = sound.VolumeButton(parent=self, size=32)
-        self.main_menu_button = main.MainMenuButton(
+        self.main_menu_button = MainMenuButton(
             parent=self, size=48, menu=self.main_menu
         )
 
@@ -178,15 +199,18 @@ class AppWindow(QMainWindow):
         self.playback_bttns = QWidget(self)
         self.playback_bttns_lo = QHBoxLayout(self.playback_bttns)
         self.playback_bttns_lo.setContentsMargins(0, 0, 0, 0)
-        self.playback_bttns_lo.addWidget(self.skip_backward_button)
+        self.playback_bttns_lo.addWidget(self.prev_media_button)
         self.playback_bttns_lo.addWidget(self.play_pause_button)
-        self.playback_bttns_lo.addWidget(self.skip_forward_button)
+        self.playback_bttns_lo.addWidget(self.next_media_button)
         self.ctrls_layout.addWidget(self.playback_bttns, 3, 0, 1, -1, Qt.AlignHCenter)
 
         self.lower_bttns = QWidget(self)
         self.lower_bttns_lo = QHBoxLayout(self.lower_bttns)
         self.lower_bttns_lo.setContentsMargins(0, 0, 0, 0)
         self.lower_bttns_lo.addWidget(self.fullscreen_button, 1, Qt.AlignLeft)
+
+        self.lower_bttns_lo.addWidget(self.zoom_out_button, 0, Qt.AlignRight)
+        self.lower_bttns_lo.addWidget(self.zoom_in_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.frame_scale_menu_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.playback_mode_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.volume_button, 0, Qt.AlignRight)
@@ -249,8 +273,8 @@ class AppWindow(QMainWindow):
         self.size_hint_qsize = QSize(targ_w, targ_h)
 
     def showEvent(self, e):
-        # if 1 < config.state.view_scale:
-        #     config.state.view_scale = 1
+        if 1 < config.state.view_scale:
+            config.state.view_scale = 1
         media_w, media_h = self.frame_size_ctrlr.get_media_size(scaled=True)
         targ_w, targ_h = self.calculate_resize_values(media_w, media_h)
         self.resize(targ_w, targ_h)

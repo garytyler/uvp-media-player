@@ -92,6 +92,36 @@ class PlayPauseAction(QAction):
             self.lp.play()
 
 
+class PreviousMediaAction(QAction):
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent)
+        self.setToolTip("Previous Media")
+        self.setIcon(icons.previous_media)
+
+        self.lp = vlcqt.list_player
+
+        self.triggered.connect(self.on_triggered)
+
+    @pyqtSlot(bool)
+    def on_triggered(self, checked):
+        self.lp.previous()
+
+
+class NextMediaAction(QAction):
+    def __init__(self, parent, size=None):
+        super().__init__(parent=parent)
+        self.setToolTip("Next Media")
+        self.setIcon(icons.next_media)
+
+        self.lp = vlcqt.list_player
+
+        self.triggered.connect(self.on_triggered)
+
+    @pyqtSlot(bool)
+    def on_triggered(self, checked):
+        self.lp.next()
+
+
 class PlayPauseButton(QToolButton):
     def __init__(self, parent, size=None):
         super().__init__(parent=parent)
@@ -103,20 +133,24 @@ class PlayPauseButton(QToolButton):
         self.setDefaultAction(self.action)
 
 
-class SkipBackwardButton(base.SquareIconButton):
+class PreviousMediaButton(QToolButton):
     def __init__(self, parent, size=None):
-        super().__init__(parent=parent, size=size, icons=icons.skip_backward_button)
-        self.curr_icon = self.icons
-        self.update_icon_hover()
-        pass
+        super().__init__(parent=parent)
+        self.setAutoRaise(True)
+        self.setIconSize(QSize(size, size))
+
+        self.action = PreviousMediaAction(parent=self)
+        self.setDefaultAction(self.action)
 
 
-class SkipForwardButton(base.SquareIconButton):
+class NextMediaButton(QToolButton):
     def __init__(self, parent, size=None):
-        super().__init__(parent=parent, size=size, icons=icons.skip_forward_button)
-        self.curr_icon = self.icons
-        self.update_icon_hover()
-        pass
+        super().__init__(parent=parent)
+        self.setAutoRaise(True)
+        self.setIconSize(QSize(size, size))
+
+        self.action = NextMediaAction(parent=self)
+        self.setDefaultAction(self.action)
 
 
 class FrameResPlaybackSlider(QSlider):

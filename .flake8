@@ -1,3 +1,3 @@
 [flake8]
 per-file-ignores =
-    ./src/gui/__init__.py:F401
+    ./src/*/__init__.py:F401
