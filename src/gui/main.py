@@ -186,13 +186,13 @@ class AppWindow(QMainWindow):
         self.ctrls_widget = QWidget(self)
         self.ctrls_layout = QGridLayout(self.ctrls_widget)
         self.ctrls_layout.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(self.ctrls_widget)
+        self.layout.addWidget(self.ctrls_widget, 0, Qt.AlignBottom)
 
         self.frame_ctrls = QWidget(self)
         self.frame_ctrls_lo = QHBoxLayout(self.frame_ctrls)
         self.frame_ctrls_lo.setContentsMargins(0, 0, 0, 0)
-        self.frame_ctrls_lo.addWidget(self.connection_button)
-        self.ctrls_layout.addWidget(self.frame_ctrls, 1, 0, 1, -1, Qt.AlignLeft)
+        self.frame_ctrls_lo.addWidget(self.connection_button, Qt.AlignLeft)
+        self.ctrls_layout.addWidget(self.frame_ctrls, 1, 0, 1, -1, Qt.AlignBottom)
 
         self.ctrls_layout.addWidget(self.playback_slider_components, 2, 0, 1, -1)
 
@@ -202,7 +202,7 @@ class AppWindow(QMainWindow):
         self.playback_bttns_lo.addWidget(self.prev_media_button)
         self.playback_bttns_lo.addWidget(self.play_pause_button)
         self.playback_bttns_lo.addWidget(self.next_media_button)
-        self.ctrls_layout.addWidget(self.playback_bttns, 3, 0, 1, -1, Qt.AlignHCenter)
+        self.ctrls_layout.addWidget(self.playback_bttns, 3, 0, 1, -1, Qt.AlignCenter)
 
         self.lower_bttns = QWidget(self)
         self.lower_bttns_lo = QHBoxLayout(self.lower_bttns)
@@ -216,7 +216,7 @@ class AppWindow(QMainWindow):
         self.lower_bttns_lo.addWidget(self.volume_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.main_menu_button, 0, Qt.AlignRight)
 
-        self.ctrls_layout.addWidget(self.lower_bttns, 4, 0, 1, -1)
+        self.ctrls_layout.addWidget(self.lower_bttns, 4, 0, 1, -1, Qt.AlignBottom)
 
     # def create_window_shortcuts(self):
     #     self.ctrl_w = QShortcut("Ctrl+W", self, self.close)
@@ -267,7 +267,8 @@ class AppWindow(QMainWindow):
 
     @pyqtSlot(int, int)
     def resize_to_media(self, media_w, media_h):
-        targ_w, targ_h = self.calculate_resize_values(media_w, media_h)
+        win_w, win_h = self.calculate_resize_values(media_w, media_h)
+        targ_w, targ_h = self.screen_size_threshold_filter(win_w, win_h)
         self.showNormal()
         self.resize(targ_w, targ_h)
         self.size_hint_qsize = QSize(targ_w, targ_h)

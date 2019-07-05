@@ -28,7 +28,7 @@ class FrameSizeController(QObject):
         self.mp.mediachanged.connect(self.vp_manager.trigger_redraw)
         self.mediaframerescaled.connect(self.vp_manager.trigger_redraw)
 
-    def set_scale(self, scale) -> float:
+    def rescale_frame(self, scale) -> float:
         self._apply_rescale(scale)
         config.state.view_scale = scale
 
@@ -51,12 +51,97 @@ class FrameSizeController(QObject):
         self._apply_rescale(scale=config.state.view_scale)
 
     def _apply_rescale(self, scale):
+        self.media = self.mp.get_media()
         if self.media:
             w, h = util.get_media_size(self.media)
             self.main_win.resize_to_media(w * scale, h * scale)
         else:
             self.main_win.resize_to_media(self._default_w, self._default_h)
         self.mediaframerescaled.emit(scale)
+
+
+class FrameScaleController(QMenu):
+    scalechanged = pyqtSignal(float)
+
+    def __init__(self, main_win, frame_size_ctrlr):
+        super().__init__(parent=main_win)
+        self.main_win = main_win
+        self.frame_size_ctrlr = frame_size_ctrlr
+
+        for a in self.actions():
+            a.setEnabled(vlcqt.media_player.has_media)
+
+        self.config_options = sorted(config.options.view_scale)
+
+        self.option_enum_map = {}
+        for index, option in enumerate(sorted(self.config_options)):
+            self.option_enum_map[option] = index
+
+        self.frame_size_ctrlr.mediaframerescaled.connect(self.on_mediaframerescaled)
+
+    def set_scale(self, value):
+        self.frame_size_ctrlr.rescale_frame(value)
+
+    def on_mediaframerescaled(self, value: float):
+        self.scalechanged.emit(value)
+
+    def zoom_in(self):
+        index = self.option_enum_map[config.state.view_scale] + 1
+        try:
+            value = self.config_options[index]
+        except IndexError as e:
+            log.error(e)
+        else:
+            self.set_scale(value)
+
+    def zoom_out(self):
+        index = self.option_enum_map[config.state.view_scale] - 1
+        try:
+            value = self.config_options[index]
+        except IndexError as e:
+            log.error(e)
+        else:
+            self.set_scale(value)
+
+
+class ZoomInAction(QAction):
+    def __init__(self, parent, frame_scale_ctrlr, size=None):
+        super().__init__(parent=parent)
+        self.frame_scale_ctrlr = frame_scale_ctrlr
+
+        self.setText("Zoom In")
+        self.setToolTip("Zoom In")
+        self.setIcon(icons.zoom_in_button)
+
+        self.frame_scale_ctrlr.scalechanged.connect(self.on_scalechanged)
+        self.triggered.connect(self.on_triggered)
+
+    @pyqtSlot()
+    def on_triggered(self):
+        self.frame_scale_ctrlr.zoom_in()
+
+    def on_scalechanged(self, value):
+        self.setEnabled(value != self.frame_scale_ctrlr.config_options[-1])
+
+
+class ZoomOutAction(QAction):
+    def __init__(self, parent, frame_scale_ctrlr, size=None):
+        super().__init__(parent=parent)
+        self.frame_scale_ctrlr = frame_scale_ctrlr
+
+        self.setText("Zoom Out")
+        self.setToolTip("Zoom Out")
+        self.setIcon(icons.zoom_out_button)
+
+        self.frame_scale_ctrlr.scalechanged.connect(self.on_scalechanged)
+        self.triggered.connect(self.on_triggered)
+
+    @pyqtSlot()
+    def on_triggered(self):
+        self.frame_scale_ctrlr.zoom_out()
+
+    def on_scalechanged(self, value):
+        self.setEnabled(value != self.frame_scale_ctrlr.config_options[0])
 
 
 class FrameScaleMenu(QMenu):
@@ -123,50 +208,6 @@ class FrameScaleMenu(QMenu):
         self.option_action_map[config.state.view_scale].setChecked(True)
 
 
-class FrameScaleController(QMenu):
-    scalechanged = pyqtSignal(float)
-
-    def __init__(self, main_win, frame_size_ctrlr):
-        super().__init__(parent=main_win)
-        self.main_win = main_win
-        self.frame_size_ctrlr = frame_size_ctrlr
-
-        for a in self.actions():
-            a.setEnabled(vlcqt.media_player.has_media)
-
-        self.config_options = sorted(config.options.view_scale)
-
-        self.option_enum_map = {}
-        for index, option in enumerate(sorted(self.config_options)):
-            self.option_enum_map[option] = index
-
-        self.frame_size_ctrlr.mediaframerescaled.connect(self.on_mediaframerescaled)
-
-    def set_scale(self, value):
-        self.frame_size_ctrlr.set_scale(value)
-
-    def on_mediaframerescaled(self, value: float):
-        self.scalechanged.emit(value)
-
-    def zoom_in(self):
-        index = self.option_enum_map[config.state.view_scale] + 1
-        try:
-            value = self.config_options[index]
-        except IndexError as e:
-            log.error(e)
-        else:
-            self.set_scale(value)
-
-    def zoom_out(self):
-        index = self.option_enum_map[config.state.view_scale] - 1
-        try:
-            value = self.config_options[index]
-        except IndexError as e:
-            log.error(e)
-        else:
-            self.set_scale(value)
-
-
 class FrameScaleMenuButton(QToolButton):
     def __init__(self, parent, frame_scale_menu, size):
         super().__init__(parent=parent)
@@ -185,46 +226,6 @@ class FrameScaleMenuButton(QToolButton):
         self.setToolTip("Zoom")
         self.setCheckable(False)
         self.setDefaultAction(self.action)
-
-
-class ZoomInAction(QAction):
-    def __init__(self, parent, frame_scale_ctrlr, size=None):
-        super().__init__(parent=parent)
-        self.frame_scale_ctrlr = frame_scale_ctrlr
-
-        self.setText("Zoom In")
-        self.setToolTip("Zoom In")
-        self.setIcon(icons.zoom_in_button)
-
-        self.frame_scale_ctrlr.scalechanged.connect(self.on_scalechanged)
-        self.triggered.connect(self.on_triggered)
-
-    @pyqtSlot()
-    def on_triggered(self):
-        self.frame_scale_ctrlr.zoom_in()
-
-    def on_scalechanged(self, value):
-        self.setEnabled(value != self.frame_scale_ctrlr.config_options[-1])
-
-
-class ZoomOutAction(QAction):
-    def __init__(self, parent, frame_scale_ctrlr, size=None):
-        super().__init__(parent=parent)
-        self.frame_scale_ctrlr = frame_scale_ctrlr
-
-        self.setText("Zoom Out")
-        self.setToolTip("Zoom Out")
-        self.setIcon(icons.zoom_out_button)
-
-        self.frame_scale_ctrlr.scalechanged.connect(self.on_scalechanged)
-        self.triggered.connect(self.on_triggered)
-
-    @pyqtSlot()
-    def on_triggered(self):
-        self.frame_scale_ctrlr.zoom_out()
-
-    def on_scalechanged(self, value):
-        self.setEnabled(value != self.frame_scale_ctrlr.config_options[0])
 
 
 class ZoomInButton(QToolButton):

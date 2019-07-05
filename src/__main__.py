@@ -24,6 +24,7 @@ def main():
     if media_paths:
         vlcqt.list_player.set_mrls(media_paths)
 
+    vlcqt.list_player.play()
     sys.exit(qapp.exec_())
 
 
