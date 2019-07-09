@@ -68,22 +68,16 @@ class AppIcons:
         self.stop = qta.icon("mdi.stop")
         self.next_media = qta.icon("mdi.skip-forward")
         self.previous_media = qta.icon("mdi.skip-backward")
-
-        self.frame_scale_menu = qta.icon(
-            "mdi.magnify",
-            "mdi.menu-up",
-            options=[{}, {"scale_factor": 0.6, "offset": (0.35, -0.35)}],
-        )
         self.zoom_in_button = qta.icon("mdi.magnify-plus-outline")
         self.zoom_out_button = qta.icon("mdi.magnify-minus-outline")
         self.zoom_in_menu_item = qta.icon("mdi.magnify-plus")
         self.zoom_out_menu_item = qta.icon("mdi.magnify-minus")
-
-        self.pc_display = {
-            "normal": qta.icon("mdi.desktop-mac"),
-            "hovered": qta.icon("mdi.desktop-mac", color=self.unchecked_hover),
-        }
-        self.server_connection = qta.icon(
+        self.zoom_menu_button = qta.icon(
+            "mdi.magnify",
+            "mdi.menu-up",
+            options=[{}, {"scale_factor": 0.6, "offset": (0.35, -0.35)}],
+        )
+        self.server_connected = qta.icon(
             "mdi.server-network",
             on="mdi.server-network",
             off="mdi.server-network-off",
@@ -92,36 +86,37 @@ class AppIcons:
             color_off_disabled="red",
         )
         self.server_disconnected = qta.icon("mdi.server-network-off")
-        self.volume_button = {
-            "low": {
-                "normal": qta.icon("mdi.volume-low"),
-                "hovered": qta.icon("mdi.volume-low", color=self.unchecked_hover),
-            },
-            "medium": {
-                "normal": qta.icon("mdi.volume-medium"),
-                "hovered": qta.icon("mdi.volume-medium", color=self.unchecked_hover),
-            },
-            "high": {
-                "normal": qta.icon("mdi.volume-high"),
-                "hovered": qta.icon("mdi.volume-high", color=self.unchecked_hover),
-            },
-            "minus": {
-                "normal": qta.icon("mdi.volume-minus"),
-                "hovered": qta.icon("mdi.volume-minus", color=self.unchecked_hover),
-            },
-            "plus": {
-                "normal": qta.icon("mdi.volume-plus"),
-                "hovered": qta.icon("mdi.volume-plus", color=self.unchecked_hover),
-            },
-            "mute": {
-                "normal": qta.icon("mdi.volume-mute"),
-                "hovered": qta.icon("mdi.volume-mute", color=self.unchecked_hover),
-            },
-            "off": {
-                "normal": qta.icon("mdi.volume-off"),
-                "hovered": qta.icon("mdi.volume-off", color=self.unchecked_hover),
-            },
-        }
+        self.volume_button = qta.icon("mdi.volume-low")
+        # self.volume_button = {
+        #     "low": {
+        #         "normal": qta.icon("mdi.volume-low"),
+        #         "hovered": qta.icon("mdi.volume-low", color=self.unchecked_hover),
+        #     },
+        #     "medium": {
+        #         "normal": qta.icon("mdi.volume-medium"),
+        #         "hovered": qta.icon("mdi.volume-medium", color=self.unchecked_hover),
+        #     },
+        #     "high": {
+        #         "normal": qta.icon("mdi.volume-high"),
+        #         "hovered": qta.icon("mdi.volume-high", color=self.unchecked_hover),
+        #     },
+        #     "minus": {
+        #         "normal": qta.icon("mdi.volume-minus"),
+        #         "hovered": qta.icon("mdi.volume-minus", color=self.unchecked_hover),
+        #     },
+        #     "plus": {
+        #         "normal": qta.icon("mdi.volume-plus"),
+        #         "hovered": qta.icon("mdi.volume-plus", color=self.unchecked_hover),
+        #     },
+        #     "mute": {
+        #         "normal": qta.icon("mdi.volume-mute"),
+        #         "hovered": qta.icon("mdi.volume-mute", color=self.unchecked_hover),
+        #     },
+        #     "off": {
+        #         "normal": qta.icon("mdi.volume-off"),
+        #         "hovered": qta.icon("mdi.volume-off", color=self.unchecked_hover),
+        #     },
+        # }
 
 
 def __getattr__(name: str):

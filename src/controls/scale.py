@@ -21,9 +21,11 @@ class FrameSizeController(QObject):
         self.vp_manager = viewpoint_manager
         self.main_win = main_win
         self.mp = vlcqt.media_player
+        # self.lp = vlcqt.list_player
         self.media = self.mp.get_media()
-        self.mp.mediachanged.connect(self.conform_to_current_media)
-
+        # self.mp.mediachanged.connect(self.conform_to_current_media)
+        # self.lp.mediachanged.connect(self.conform_to_current_media)
+        # self.lp.
         # TODO Clean this up. It was hacked in here at the last minute.
         self.mp.mediachanged.connect(self.vp_manager.trigger_redraw)
         self.mediaframerescaled.connect(self.vp_manager.trigger_redraw)
@@ -218,7 +220,7 @@ class FrameScaleMenuButton(QToolButton):
         self.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
         self.action = base.OpenMenuAction(
-            icon=icons.frame_scale_menu,
+            icon=icons.zoom_menu_button,
             text=self.menu.title(),
             menu=self.menu,
             button=self,

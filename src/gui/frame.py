@@ -35,8 +35,9 @@ class _MainMediaFrame(_BaseMediaFrame):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__(main_win=main_win, frame_size_ctrlr=frame_size_ctrlr)
 
-    def activate(self):
-        self.mp = vlcqt.media_player
+    def activate(self, mp=None):
+        # self.mp = mp if mp else vlcqt.media_player
+        self.mp = vlcqt.list_player.get_media_player()
         if sys.platform.startswith("linux"):  # for Linux X Server
             self.mp.set_xwindow(self.winId())
         elif sys.platform == "win32":  # for Windows
@@ -63,15 +64,27 @@ class MainMediaFrameLayout(QStackedLayout):
         self.setContentsMargins(0, 0, 0, 0)
         self.main_win = main_win
         self.frame_size_ctrlr = frame_size_ctrlr
-        self.media_frame = _MainMediaFrame(
-            main_win=self.main_win, frame_size_ctrlr=frame_size_ctrlr
-        )
-        self.insertWidget(0, self.media_frame)
-        self.media_frame.activate()
         self.replacement = _BaseMediaFrame(
-            main_win=self.main_win, frame_size_ctrlr=frame_size_ctrlr
+            main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.insertWidget(1, self.replacement)
+        self.reset_media_frame()
+
+    def clear_media_frame(self):
+        if hasattr(self, "media_frame"):
+            self.media_frame.hide()
+            self.removeWidget(self.media_frame)
+            del self.media_frame
+
+    def reset_media_frame(self):
+        self.clear_media_frame()
+        new_media_frame = _MainMediaFrame(
+            main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
+        )
+        self.media_frame = new_media_frame
+        self.media_frame.activate()
+        self.insertWidget(0, self.media_frame)
+        self.setCurrentIndex(0)
 
     def start_fullscreen(self, qscreen):
         self.insertWidget(1, self.replacement)

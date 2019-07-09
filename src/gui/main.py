@@ -21,6 +21,7 @@ from ..controls import (
     base,
     connect,
     fullscreen,
+    media,
     playback,
     scale,
     sound,
@@ -44,6 +45,7 @@ class MainMenuButton(QToolButton):
         self.action = base.OpenMenuAction(
             icon=icons.main_menu_button, text=menu.title(), menu=self.menu, button=self
         )
+
         self.action.setToolTip("More Options")
         self.setCheckable(False)
         self.setDefaultAction(self.action)
@@ -64,31 +66,9 @@ class MainMenu(QMenu):
         super().__init__(parent=main_win)
         self.main_win = main_win
 
-        # Open file
-        self.open_file = QAction("Open file", self)
-        self.open_file.triggered.connect(self._open_file)
-        self.open_file.setShortcut("Ctrl+O")
-        self.open_file.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        self.open_file.setShortcutVisibleInContextMenu(True)
-
-        # Open multiple
-        self.open_multiple = QAction("Open multiple files", self)
-        self.open_multiple.triggered.connect(self._open_multiple)
-
-        self.addAction(self.open_file)
-        self.addAction(self.open_multiple)
+        # self.addAction(self.open_file)
+        # self.addAction(self.open_multiple)
         self.addAction(window.StayOnTop(main_win=main_win))
-
-    def _open_file(self):
-        file_path, filter_desc = QFileDialog.getOpenFileName(self, "Open file")
-        if exists(file_path):
-            vlcqt.list_player.set_mrls([file_path])
-
-    def _open_multiple(self):
-        file_paths, filter_desc = QFileDialog.getOpenFileNames(
-            self, "Open file", directory="media"
-        )
-        vlcqt.list_player.set_mrls(file_paths)
 
 
 class AppWindow(QMainWindow):
@@ -111,7 +91,7 @@ class AppWindow(QMainWindow):
         self.initialized.emit()
 
     def create_components(self):
-        self.main_menu = MainMenu(main_win=self)
+
         self.client = client.RemoteInputClient(url=self.url)
         self.vp_manager = viewpoint.ViewpointManager(client=self.client)
         self.connection_action = connect.ServerConnectionAction(
@@ -165,8 +145,21 @@ class AppWindow(QMainWindow):
         self.zoom_in_button = scale.ZoomInButton(
             parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr, size=32
         )
+        # self.volume_slider = sound.VolumeSlider(parent=self)
+        self.volume_button = sound.VolumePopUpButton(parent=self, size=32)
+        # self.volume_button = sound.VolumeButton(parent=self, size=32)
 
-        self.volume_button = sound.VolumeButton(parent=self, size=32)
+        self.media_ctrlr = media.MediaController(
+            media_frame_layout=self.media_frame_layout
+        )
+
+        self.open_file = media.OpenFileAction(self, self.media_ctrlr)
+        self.open_multiple = media.OpenMultipleFilesAction(self, self.media_ctrlr)
+
+        self.main_menu = MainMenu(main_win=self)
+        self.main_menu.addAction(self.open_file)
+        # self.main_menu.addAction(self.open_multiple)
+
         self.main_menu_button = MainMenuButton(
             parent=self, size=48, menu=self.main_menu
         )
@@ -213,6 +206,7 @@ class AppWindow(QMainWindow):
         self.lower_bttns_lo.addWidget(self.zoom_in_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.frame_scale_menu_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.playback_mode_button, 0, Qt.AlignRight)
+        # self.lower_bttns_lo.addWidget(self.volume_slider, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.volume_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.main_menu_button, 0, Qt.AlignRight)
 

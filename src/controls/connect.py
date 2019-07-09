@@ -12,7 +12,7 @@ class ServerConnectionAction(QAction):
 
     def __init__(self, client, viewpoint_manager, parent):
         super().__init__(parent=parent)
-        self.setIcon(icons.server_connection)
+        self.setIcon(icons.server_connected)
         self.setIconText("Disconnected")
         self.setToolTip("Server is disconnected")
         self.setCheckable(True)
@@ -102,10 +102,10 @@ class ServerConnectionWidget(QLabel):
 
     def set_icons(self):
         self.icon_size = QSize(48, 48)
-        self.connected_icon = icons.server_connection.pixmap(
+        self.connected_icon = icons.server_connected.pixmap(
             self.icon_size, QIcon.Normal, QIcon.On
         )
-        self.disconnected_icon = icons.server_connection.pixmap(
+        self.disconnected_icon = icons.server_connected.pixmap(
             self.icon_size, QIcon.Normal, QIcon.Off
         )
         self.setPixmap(self.disconnected_icon)

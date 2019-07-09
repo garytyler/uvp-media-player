@@ -11,7 +11,7 @@ def main():
     initialize_logging()
     config.state.load()
 
-    vlcqt.Instance([])
+    vlcqt.Instance(["-vv"])
 
     qapp = QApplication([])
 
@@ -20,11 +20,11 @@ def main():
     player_win = AppWindow()
     player_win.show()
 
-    media_paths = sys.argv[1:]
-    if media_paths:
-        vlcqt.list_player.set_mrls(media_paths)
+    # media_paths = sys.argv[1:]
+    # if media_paths:
+    #     vlcqt.list_player.set_mrls(media_paths)
 
-    vlcqt.list_player.play()
+    # vlcqt.list_player.play()
     sys.exit(qapp.exec_())
 
 
