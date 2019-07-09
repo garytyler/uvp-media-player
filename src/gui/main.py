@@ -75,7 +75,7 @@ class AppWindow(QMainWindow):
     url = "wss://eventvr.herokuapp.com/mediaplayer"
     initialized = pyqtSignal()
 
-    def __init__(self, flags=None):
+    def __init__(self, media_paths=[], flags=None):
         QMainWindow.__init__(self, flags=flags if flags else Qt.WindowFlags())
         self.qapp = QApplication.instance()
         self.mp = vlcqt.media_player
@@ -88,10 +88,11 @@ class AppWindow(QMainWindow):
         self.create_components()
         self.add_components()
 
+        self.media_ctrlr.load_media_paths(media_paths)
+
         self.initialized.emit()
 
     def create_components(self):
-
         self.client = client.RemoteInputClient(url=self.url)
         self.vp_manager = viewpoint.ViewpointManager(client=self.client)
         self.connection_action = connect.ServerConnectionAction(
@@ -100,7 +101,6 @@ class AppWindow(QMainWindow):
         self.connection_button = connect.ServerConnectionButton(
             action=self.connection_action, parent=self, size=32
         )
-
         self.frame_size_ctrlr = scale.FrameSizeController(
             main_win=self, viewpoint_manager=self.vp_manager
         )
@@ -145,20 +145,16 @@ class AppWindow(QMainWindow):
         self.zoom_in_button = scale.ZoomInButton(
             parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr, size=32
         )
-        # self.volume_slider = sound.VolumeSlider(parent=self)
         self.volume_button = sound.VolumePopUpButton(parent=self, size=32)
-        # self.volume_button = sound.VolumeButton(parent=self, size=32)
-
         self.media_ctrlr = media.MediaController(
-            media_frame_layout=self.media_frame_layout
+            media_frame_layout=self.media_frame_layout,
+            frame_size_ctrlr=self.frame_size_ctrlr,
         )
-
         self.open_file = media.OpenFileAction(self, self.media_ctrlr)
         self.open_multiple = media.OpenMultipleFilesAction(self, self.media_ctrlr)
-
         self.main_menu = MainMenu(main_win=self)
         self.main_menu.addAction(self.open_file)
-        # self.main_menu.addAction(self.open_multiple)
+        self.main_menu.addAction(self.open_multiple)
 
         self.main_menu_button = MainMenuButton(
             parent=self, size=48, menu=self.main_menu
@@ -206,7 +202,6 @@ class AppWindow(QMainWindow):
         self.lower_bttns_lo.addWidget(self.zoom_in_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.frame_scale_menu_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.playback_mode_button, 0, Qt.AlignRight)
-        # self.lower_bttns_lo.addWidget(self.volume_slider, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.volume_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.main_menu_button, 0, Qt.AlignRight)
 

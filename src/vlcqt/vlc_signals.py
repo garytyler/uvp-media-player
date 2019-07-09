@@ -267,7 +267,7 @@ class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
 
         # Set timer
         media_fps = util.get_media_fps(media)
-        playback_fps = media_fps * self.get_rate()
+        playback_fps = media_fps * self.get_rate() if media_fps else 30
         self.timer.setInterval(1000 / playback_fps)
 
 

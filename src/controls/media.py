@@ -5,20 +5,26 @@ from .. import vlcqt
 
 
 class MediaController(QObject):
-    def __init__(self, media_frame_layout):
+    def __init__(self, media_frame_layout, frame_size_ctrlr):
         super().__init__()
-        self.lp = vlcqt.list_player
         self.mf_layout = media_frame_layout
+        self.frame_size_ctrlr = frame_size_ctrlr
+        self.lp = vlcqt.list_player
+        self.mp = vlcqt.media_player
 
     def load_media_paths(self, paths: list):
-        self.load_media_list(vlcqt.MediaList(paths))
+        self.media_list = vlcqt.MediaList(paths)
+        self.load_media_list(self.media_list)
 
     def load_media_list(self, media_list: vlcqt.MediaList):
+        self.media_list = media_list
+
         self.mf_layout.clear_media_frame()
         self.lp.stop()
-        self.mf_layout.reset_media_frame()
         self.lp.set_media_list(media_list)
-        self.media_list = media_list
+        self.mf_layout.reset_media_frame()
+
+        self.frame_size_ctrlr.conform_to_media(self.media_list.item_at_index(0))
 
 
 class OpenFileAction(QAction):
@@ -56,4 +62,4 @@ class OpenMultipleFilesAction(QAction):
         file_paths, filter_desc = QFileDialog.getOpenFileNames(
             self.parent, self.text(), directory="media"
         )
-        self.media_ctrlr.load_media(file_paths)
+        self.media_ctrlr.load_media_paths(file_paths)

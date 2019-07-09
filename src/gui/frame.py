@@ -68,15 +68,10 @@ class MainMediaFrameLayout(QStackedLayout):
             main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.insertWidget(1, self.replacement)
-        self.reset_media_frame()
+        # self.reset_media_frame()
+        # self._new_media_frame()
 
-    def clear_media_frame(self):
-        if hasattr(self, "media_frame"):
-            self.media_frame.hide()
-            self.removeWidget(self.media_frame)
-            del self.media_frame
-
-    def reset_media_frame(self):
+    def _new_media_frame(self):
         self.clear_media_frame()
         new_media_frame = _MainMediaFrame(
             main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
@@ -85,6 +80,23 @@ class MainMediaFrameLayout(QStackedLayout):
         self.media_frame.activate()
         self.insertWidget(0, self.media_frame)
         self.setCurrentIndex(0)
+
+    def clear_media_frame(self):
+        if hasattr(self, "media_frame"):
+            self.media_frame.hide()
+            self.removeWidget(self.media_frame)
+            del self.media_frame
+        if isinstance(self.widget(0), _BaseMediaFrame):
+            _w = self.widget(0)
+            _w.hide()
+            self.removeWidget(_w)
+            del _w
+
+    def reset_media_frame(self):
+
+        self._new_media_frame()
+
+        self.frame_size_ctrlr.conform_to_media()
 
     def start_fullscreen(self, qscreen):
         self.insertWidget(1, self.replacement)

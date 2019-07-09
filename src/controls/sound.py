@@ -10,7 +10,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from .. import vlcqt
+from .. import config, vlcqt
 from ..controls import base
 from ..gui import icons
 
@@ -21,6 +21,7 @@ class VolumeSlider(QSlider):
         self.mp = vlcqt.media_player
 
         self.setToolTip("Volume")
+        self.setMinimum(0)
         self.setMaximum(100)
         self.setMinimumWidth(100)
         self.setMaximumWidth(400)
@@ -34,15 +35,31 @@ class VolumeSlider(QSlider):
         self.setValue(self.mp.audio_get_volume())
 
     def on_valueChanged(self, value):
-        self.mp.audio_set_volume(value)
+        self.update_slider_value(value)
+
+    def update_slider_value(self, value=None):
+        if value:
+            _value = value
+        elif self.mp.has_media:
+            _value = self.mp.audio_get_volume()
+        else:
+            _value = config.state.volume
+        self.mp.audio_set_volume(_value)
 
 
 class VolumeSliderPopUp(base.PopUpWidget):
     def __init__(self, parent):
         super().__init__(parent)
+
         self.layout = QHBoxLayout(self)
         self.slider = VolumeSlider(self)
         self.layout.addWidget(self.slider)
+
+    def showEvent(self, e):
+        self.slider.update_slider_value()
+
+    def hideEvent(self, e):
+        config.state.volume = self.slider.value()
 
 
 class VolumePopUpButton(QToolButton):

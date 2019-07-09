@@ -1,3 +1,4 @@
+import os
 import sys
 
 from PyQt5.QtWidgets import QApplication
@@ -11,20 +12,17 @@ def main():
     initialize_logging()
     config.state.load()
 
-    vlcqt.Instance(["-vv"])
+    vlc_args = os.environ.get("VLC_ARGS", default="").split(",")
+    vlcqt.Instance(vlc_args)
 
-    qapp = QApplication([])
+    qt_args = os.environ.get("QT_ARGS", default="").split(",")
+    qapp = QApplication(qt_args)
 
     initialize_style(qapp)
 
-    player_win = AppWindow()
+    player_win = AppWindow(media_paths=sys.argv[1:])
     player_win.show()
 
-    # media_paths = sys.argv[1:]
-    # if media_paths:
-    #     vlcqt.list_player.set_mrls(media_paths)
-
-    # vlcqt.list_player.play()
     sys.exit(qapp.exec_())
 
 

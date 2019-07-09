@@ -235,7 +235,9 @@ class FrameResPlaybackSlider(QSlider):
 
     def set_length(self, value):
         self.setMinimum(0)
-        self.setMaximum(value)
+        # If length more than float max use float max.
+        # This only matters for setting ticks. Can also just be set to 1.
+        self.setMaximum(min((value, 2147483647)))
         self.length = self.maximum() - self.minimum()
         self.setTickInterval(1 / self.length)
 

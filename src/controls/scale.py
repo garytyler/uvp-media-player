@@ -12,6 +12,7 @@ log = logging.getLogger(__name__)
 
 class FrameSizeController(QObject):
     mediaframerescaled = pyqtSignal(float)
+    mediaframeresized = pyqtSignal(float)
 
     _default_h = 360
     _default_w = 600
@@ -21,12 +22,7 @@ class FrameSizeController(QObject):
         self.vp_manager = viewpoint_manager
         self.main_win = main_win
         self.mp = vlcqt.media_player
-        # self.lp = vlcqt.list_player
         self.media = self.mp.get_media()
-        # self.mp.mediachanged.connect(self.conform_to_current_media)
-        # self.lp.mediachanged.connect(self.conform_to_current_media)
-        # self.lp.
-        # TODO Clean this up. It was hacked in here at the last minute.
         self.mp.mediachanged.connect(self.vp_manager.trigger_redraw)
         self.mediaframerescaled.connect(self.vp_manager.trigger_redraw)
 
@@ -48,12 +44,12 @@ class FrameSizeController(QObject):
             return w * scale, h * scale
         return w, h
 
-    def conform_to_current_media(self):
-        self.media = self.mp.get_media()
+    def conform_to_media(self, media: vlcqt.Media = None):
+        """If media arg is None, current media_player media is used"""
+        self.media = media if media else self.mp.get_media()
         self._apply_rescale(scale=config.state.view_scale)
 
     def _apply_rescale(self, scale):
-        self.media = self.mp.get_media()
         if self.media:
             w, h = util.get_media_size(self.media)
             self.main_win.resize_to_media(w * scale, h * scale)

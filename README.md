@@ -6,6 +6,8 @@
 
 ## Environment Variables
 
+- `VLC_ARGS`
+- `QT_ARGS`
 - `LOG_LEVEL`
 - `VR_PLAYER_CONFIG`
 - `VR_PLAYER_COLOR_THEME` (overridden by setting in config file)
