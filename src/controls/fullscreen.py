@@ -26,11 +26,11 @@ class FullscreenController(QObject):
     fullscreenstarted = pyqtSignal(QAction)
     fullscreenstopped = pyqtSignal()
 
-    def __init__(self, media_frame_layout, viewpoint_manager):
+    def __init__(self, content_frame_layout, viewpoint_manager):
         super().__init__()
         self.vp_manager = viewpoint_manager
         self._is_fullscreen = False
-        self.media_frame_layout = media_frame_layout
+        self.content_frame_layout = content_frame_layout
 
         self.fullscreenstarted.connect(self.vp_manager.trigger_redraw)
         self.fullscreenstopped.connect(self.vp_manager.trigger_redraw)
@@ -38,12 +38,12 @@ class FullscreenController(QObject):
     def start(self, action):
         qscreen = action.qscreen
         print(action.description, qscreen)
-        self.media_frame_layout.start_fullscreen(qscreen)
+        self.content_frame_layout.start_fullscreen(qscreen)
         self._is_fullscreen = True
         self.fullscreenstarted.emit(action)
 
     def stop(self):
-        self.media_frame_layout.stop_fullscreen()
+        self.content_frame_layout.stop_fullscreen()
         self._is_fullscreen = False
         self.fullscreenstopped.emit()
 

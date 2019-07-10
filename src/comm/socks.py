@@ -1,9 +1,11 @@
 import logging
+from random import choice
+from string import ascii_uppercase, digits
 
 from PyQt5.QtCore import Qt, QTimer, QUrl
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-from .. import util
+# from .. import util
 
 log = logging.getLogger(__name__)
 
@@ -33,9 +35,13 @@ class ClientSocketBase(QWebSocket):
             self.__payload = None
 
     def send_ping(self):
-        self.__payload = util.rand_id().encode()
+        self.__payload = self.rand_id().encode()
         self.pong.connect(self._pong)
         self.ping(self.__payload)
+
+    @staticmethod
+    def rand_id(size=6):
+        return "".join(choice(ascii_uppercase + digits) for _ in range(size))
 
 
 class AutoConnectSocket(ClientSocketBase):

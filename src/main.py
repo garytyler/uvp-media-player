@@ -15,20 +15,22 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from .. import config, util, vlcqt
-from ..comm import client
-from ..controls import (
+from . import vlcqt
+from .comm import client
+from .controls import (
     base,
     connect,
+    files,
     fullscreen,
-    media,
     playback,
     scale,
     sound,
     viewpoint,
     window,
 )
-from ..gui import frame, icons
+from .frame.layout import MainContentFrameLayout
+from .gui import icons
+from .util import config
 
 log = logging.getLogger(__name__)
 
@@ -88,7 +90,7 @@ class AppWindow(QMainWindow):
         self.create_components()
         self.add_components()
 
-        self.media_ctrlr.load_media_paths(media_paths)
+        self.media_loader.load_media_paths(media_paths)
 
         self.initialized.emit()
 
@@ -111,11 +113,11 @@ class AppWindow(QMainWindow):
             main_win=self, frame_scale_ctrlr=self.frame_scale_ctrlr
         )
 
-        self.media_frame_layout = frame.MainMediaFrameLayout(
+        self.content_frame_layout = MainContentFrameLayout(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.fullscreen_ctrlr = fullscreen.FullscreenController(
-            media_frame_layout=self.media_frame_layout,
+            content_frame_layout=self.content_frame_layout,
             viewpoint_manager=self.vp_manager,
         )
         self.fullscreen_menu = fullscreen.FullscreenMenu(
@@ -145,13 +147,16 @@ class AppWindow(QMainWindow):
         self.zoom_in_button = scale.ZoomInButton(
             parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr, size=32
         )
-        self.volume_button = sound.VolumePopUpButton(parent=self, size=32)
-        self.media_ctrlr = media.MediaController(
-            media_frame_layout=self.media_frame_layout,
+        self.vol_ctrlr = sound.VolumeController(parent=self)
+        self.vol_button = sound.VolumePopUpButton(
+            vol_ctrlr=self.vol_ctrlr, parent=self, size=32
+        )
+        self.media_loader = files.FileLoader(
+            content_frame_layout=self.content_frame_layout,
             frame_size_ctrlr=self.frame_size_ctrlr,
         )
-        self.open_file = media.OpenFileAction(self, self.media_ctrlr)
-        self.open_multiple = media.OpenMultipleFilesAction(self, self.media_ctrlr)
+        self.open_file = files.OpenFileAction(self, self.media_loader)
+        self.open_multiple = files.OpenMultipleFilesAction(self, self.media_loader)
         self.main_menu = MainMenu(main_win=self)
         self.main_menu.addAction(self.open_file)
         self.main_menu.addAction(self.open_multiple)
@@ -169,7 +174,7 @@ class AppWindow(QMainWindow):
         self.setCentralWidget(self.widget)
 
         # Media frame
-        self.layout.addLayout(self.media_frame_layout, 0)
+        self.layout.addLayout(self.content_frame_layout, 0)
 
         # Controls layout
         self.ctrls_widget = QWidget(self)
@@ -202,7 +207,7 @@ class AppWindow(QMainWindow):
         self.lower_bttns_lo.addWidget(self.zoom_in_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.frame_scale_menu_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.playback_mode_button, 0, Qt.AlignRight)
-        self.lower_bttns_lo.addWidget(self.volume_button, 0, Qt.AlignRight)
+        self.lower_bttns_lo.addWidget(self.vol_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.main_menu_button, 0, Qt.AlignRight)
 
         self.ctrls_layout.addWidget(self.lower_bttns, 4, 0, 1, -1, Qt.AlignBottom)
@@ -228,16 +233,20 @@ class AppWindow(QMainWindow):
         self.main_win.setWindowFlags(_args)
         self.main_win.show()
 
+    @staticmethod
+    def positive_threshold(value: int):
+        return value if value > 0 else 0
+
     def calculate_resize_values(self, media_w, media_h) -> (int, int):
         """Calculate total window resize values from current compoment displacement"""
         self.layout.removeWidget(self.ctrls_widget)
         wo_other_qsize = self.layout.totalSizeHint()
         self.layout.addWidget(self.ctrls_widget)
         with_other_qsize = self.layout.totalSizeHint()
-        wo_other_w = util.positive_threshold(wo_other_qsize.width())
-        wo_other_h = util.positive_threshold(wo_other_qsize.height())
-        with_other_w = util.positive_threshold(with_other_qsize.width())
-        with_other_h = util.positive_threshold(with_other_qsize.height())
+        wo_other_w = self.positive_threshold(wo_other_qsize.width())
+        wo_other_h = self.positive_threshold(wo_other_qsize.height())
+        with_other_w = self.positive_threshold(with_other_qsize.width())
+        with_other_h = self.positive_threshold(with_other_qsize.height())
         total_disp_w = with_other_w - wo_other_w
         total_disp_h = with_other_h - wo_other_h
         targ_w = media_w + total_disp_w
@@ -264,9 +273,11 @@ class AppWindow(QMainWindow):
 
     def showEvent(self, e):
         if 1 < config.state.view_scale:
-            config.state.view_scale = 1
-        media_w, media_h = self.frame_size_ctrlr.get_media_size(scaled=True)
-        targ_w, targ_h = self.calculate_resize_values(media_w, media_h)
+            scale = config.state.view_scale = 1
+        else:
+            scale = config.state.view_scale
+        media_w, media_h = self.frame_size_ctrlr.get_current_media_size()
+        targ_w, targ_h = self.calculate_resize_values(media_w * scale, media_h * scale)
         self.resize(targ_w, targ_h)
         self.size_hint_qsize = QSize(targ_w, targ_h)
 
@@ -274,8 +285,11 @@ class AppWindow(QMainWindow):
         try:
             return self.size_hint_qsize
         except AttributeError:
-            media_w, media_h = self.frame_size_ctrlr.get_media_size(scaled=True)
-            targ_w, targ_h = self.calculate_resize_values(media_w, media_h)
+            media_w, media_h = self.frame_size_ctrlr.get_current_media_size()
+            scale = config.state.view_scale
+            targ_w, targ_h = self.calculate_resize_values(
+                media_w * scale, media_h * scale
+            )
             self.size_hint_qsize = QSize(targ_w, targ_h)
         finally:
             return self.size_hint_qsize

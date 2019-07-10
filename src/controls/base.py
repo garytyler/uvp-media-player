@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QPoint, Qt
-from PyQt5.QtWidgets import QAction, QFrame
+from PyQt5.QtWidgets import QAction, QFrame, QToolButton
 
 
 class PopUpWidget(QFrame):
@@ -20,8 +20,8 @@ class PopUpWidget(QFrame):
 
 
 class PopUpWidgetAction(QAction):
-    def __init__(self, icon, text, widget, button):
-        super().__init__(icon, text, parent=widget)
+    def __init__(self, text: str, widget: PopUpWidget, button: QToolButton):
+        super().__init__(text, parent=widget)
         self.button = button
         self.text = text
         self.widget = widget

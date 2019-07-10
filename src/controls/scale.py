@@ -3,9 +3,11 @@ import logging
 from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QToolButton
 
-from .. import config, util, vlcqt
+from .. import vlcqt
 from ..controls import base
+from ..frame.items import ContentFrameItem
 from ..gui import icons
+from ..util import config
 
 log = logging.getLogger(__name__)
 
@@ -30,19 +32,9 @@ class FrameSizeController(QObject):
         self._apply_rescale(scale)
         config.state.view_scale = scale
 
-    def get_base_media_size(self):
-        if self.media:
-            return util.get_media_size(self.media)
-        return self._default_w, self._default_h
-
-    def get_media_size(self, scaled=False):
-        if not self.media:
-            return self._default_w, self._default_h
-        w, h = util.get_media_size(self.media)
-        if scaled:
-            scale = config.state.view_scale
-            return w * scale, h * scale
-        return w, h
+    def get_current_media_size(self):
+        content_view = ContentFrameItem(self.media)
+        return content_view.width(), content_view.height()
 
     def conform_to_media(self, media: vlcqt.Media = None):
         """If media arg is None, current media_player media is used"""
@@ -51,7 +43,7 @@ class FrameSizeController(QObject):
 
     def _apply_rescale(self, scale):
         if self.media:
-            w, h = util.get_media_size(self.media)
+            w, h = self.get_current_media_size()
             self.main_win.resize_to_media(w * scale, h * scale)
         else:
             self.main_win.resize_to_media(self._default_w, self._default_h)

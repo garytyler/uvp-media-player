@@ -3,7 +3,9 @@ import logging
 import vlc
 from PyQt5.QtCore import QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 
-from .. import util
+from ..frame.items import MediaFrameItem
+
+# from . import vlc_views
 
 log = logging.getLogger(__name__)
 
@@ -266,9 +268,19 @@ class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
         self.__has_media = True if self._vlc_obj.get_media() else False
 
         # Set timer
-        media_fps = util.get_media_fps(media)
-        playback_fps = media_fps * self.get_rate() if media_fps else 30
-        self.timer.setInterval(1000 / playback_fps)
+        # media_fps = self._get_media_fps(media)
+        self.mv = MediaFrameItem(media)
+        media_rate = self.mv.get_media_rate()
+        playback_rate = media_rate * self.get_rate() if media_rate else 30
+        self.timer.setInterval(1000 / playback_rate)
+
+    def _get_media_fps(self, vlc_media: vlc.Media) -> float:
+        if not vlc_media:
+            return None
+        if not vlc_media.is_parsed():
+            vlc_media.parse()
+        track = [t for t in vlc_media.tracks_get()][0]
+        return track.video.contents.frame_rate_num
 
 
 MediaPlayerSignals = MediaPlayerCustomSignals

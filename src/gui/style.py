@@ -3,7 +3,7 @@ from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QApplication
 
 from . import icons
-from .. import config
+from ..util import config
 
 LIGHT_PALETTE = None
 DARK_PALETTE = None
@@ -28,7 +28,7 @@ def set_color_theme(name):
         qtawesome.set_global_defaults(**icons.light_defaults)
         qapp.setPalette(LIGHT_PALETTE)
     elif name == "dark":
-        qtawesome.set_global_defaults(**icons.dark_defaults)
+        qtawesome.set_global_defaults(**icons.dark_defaults.__dict__)
         qapp.setPalette(_get_dark_palette())
         with open(DARK_STYLESHEET) as stylesheet:
             qapp.setStyleSheet(stylesheet.read())

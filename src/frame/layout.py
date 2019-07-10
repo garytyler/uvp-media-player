@@ -6,23 +6,27 @@ from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QStackedLayout
 
 from .. import vlcqt
+from ..util import config
 
 log = logging.getLogger(__name__)
 
 
-class _BaseMediaFrame(QFrame):
+class _BaseContentFrame(QFrame):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__(parent=main_win)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.media_qsize = QSize()
+        self.content_qsize = QSize()
         self.main_win = main_win
         self.frame_size_ctrlr = frame_size_ctrlr
+        self.mp = vlcqt.media_player
 
     def sizeHint(self):
-        w, h = self.frame_size_ctrlr.get_media_size(scaled=True)
-        self.media_qsize.setWidth(w)
-        self.media_qsize.setHeight(h)
+        self.mp.get_media()
+        w, h = self.frame_size_ctrlr.get_current_media_size()
+        scale = config.state.view_scale
+        self.content_qsize.setWidth(w * scale)
+        self.content_qsize.setHeight(h * scale)
         return QSize(w, h)
 
     def set_fill_color(self, r, g, b):
@@ -31,7 +35,7 @@ class _BaseMediaFrame(QFrame):
         self.setPalette(p)
 
 
-class _MainMediaFrame(_BaseMediaFrame):
+class _MainContentFrame(_BaseContentFrame):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__(main_win=main_win, frame_size_ctrlr=frame_size_ctrlr)
 
@@ -58,52 +62,48 @@ class _MainMediaFrame(_BaseMediaFrame):
         self.setWindowState(Qt.WindowNoState)
 
 
-class MainMediaFrameLayout(QStackedLayout):
+class MainContentFrameLayout(QStackedLayout):
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__()
         self.setContentsMargins(0, 0, 0, 0)
         self.main_win = main_win
         self.frame_size_ctrlr = frame_size_ctrlr
-        self.replacement = _BaseMediaFrame(
+        self.replacement = _BaseContentFrame(
             main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.insertWidget(1, self.replacement)
-        # self.reset_media_frame()
-        # self._new_media_frame()
 
-    def _new_media_frame(self):
-        self.clear_media_frame()
-        new_media_frame = _MainMediaFrame(
+    def _new_content_frame(self):
+        self.clear_content_frame()
+        new_content_frame = _MainContentFrame(
             main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
         )
-        self.media_frame = new_media_frame
-        self.media_frame.activate()
-        self.insertWidget(0, self.media_frame)
+        self.content_frame = new_content_frame
+        self.content_frame.activate()
+        self.insertWidget(0, self.content_frame)
         self.setCurrentIndex(0)
 
-    def clear_media_frame(self):
-        if hasattr(self, "media_frame"):
-            self.media_frame.hide()
-            self.removeWidget(self.media_frame)
-            del self.media_frame
-        if isinstance(self.widget(0), _BaseMediaFrame):
+    def clear_content_frame(self):
+        if hasattr(self, "content_frame"):
+            self.content_frame.hide()
+            self.removeWidget(self.content_frame)
+            del self.content_frame
+        if isinstance(self.widget(0), _BaseContentFrame):
             _w = self.widget(0)
             _w.hide()
             self.removeWidget(_w)
             del _w
 
-    def reset_media_frame(self):
-
-        self._new_media_frame()
-
+    def reset_content_frame(self):
+        self._new_content_frame()
         self.frame_size_ctrlr.conform_to_media()
 
     def start_fullscreen(self, qscreen):
         self.insertWidget(1, self.replacement)
         self.setCurrentIndex(1)
-        self.media_frame.configure_for_fullscreen(qscreen)
+        self.content_frame.configure_for_fullscreen(qscreen)
 
     def stop_fullscreen(self):
-        self.media_frame.configure_for_embedded()
-        self.insertWidget(0, self.media_frame)
+        self.content_frame.configure_for_embedded()
+        self.insertWidget(0, self.content_frame)
         self.setCurrentIndex(0)

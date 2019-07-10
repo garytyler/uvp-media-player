@@ -1,7 +1,7 @@
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QApplication
 
-from .. import config
+from ..util import config
 
 
 class ExitApp(QAction):
