@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QObject, Qt, pyqtSignal
-from PyQt5.QtWidgets import QAction, QFileDialog, QWidget
+# from PyQt5.QtCore import QObject, Qt, pyqtSignal
+# from PyQt5.QtWidgets import QAction, QFileDialog, QWidget
 
 from .. import vlcqt
 

@@ -38,7 +38,7 @@ def set_color_theme(name):
 
 def _get_dark_palette() -> QPalette:
     p = QPalette()
-    # base
+    # Base
     p.setColor(QPalette.WindowText, QColor(180, 180, 180))
     p.setColor(QPalette.Button, QColor(53, 53, 53))
     p.setColor(QPalette.Light, QColor(180, 180, 180))
@@ -56,7 +56,7 @@ def _get_dark_palette() -> QPalette:
     p.setColor(QPalette.AlternateBase, QColor(66, 66, 66))
     p.setColor(QPalette.ToolTipBase, QColor(53, 53, 53))
     p.setColor(QPalette.ToolTipText, QColor(180, 180, 180))
-    # disabled
+    # Disabled
     p.setColor(QPalette.Disabled, QPalette.WindowText, QColor(127, 127, 127))
     p.setColor(QPalette.Disabled, QPalette.Text, QColor(127, 127, 127))  #
     p.setColor(QPalette.Disabled, QPalette.ButtonText, QColor(127, 127, 127))

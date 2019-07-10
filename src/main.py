@@ -17,18 +17,10 @@ from PyQt5.QtWidgets import (
 
 from . import vlcqt
 from .comm import client
-from .controls import (
-    base,
-    connect,
-    files,
-    fullscreen,
-    playback,
-    scale,
-    sound,
-    viewpoint,
-    window,
-)
+from .controls import base, connect, files, playback, scale, screen, sound, window
+from .controls.screen import FullscreenController
 from .frame.layout import MainContentFrameLayout
+from .frame.viewpoint import ViewpointManager
 from .gui import icons
 from .util import config
 
@@ -68,8 +60,6 @@ class MainMenu(QMenu):
         super().__init__(parent=main_win)
         self.main_win = main_win
 
-        # self.addAction(self.open_file)
-        # self.addAction(self.open_multiple)
         self.addAction(window.StayOnTop(main_win=main_win))
 
 
@@ -96,7 +86,7 @@ class AppWindow(QMainWindow):
 
     def create_components(self):
         self.client = client.RemoteInputClient(url=self.url)
-        self.vp_manager = viewpoint.ViewpointManager(client=self.client)
+        self.vp_manager = ViewpointManager(client=self.client)
         self.connection_action = connect.ServerConnectionAction(
             client=self.client, viewpoint_manager=self.vp_manager, parent=self
         )
@@ -112,21 +102,19 @@ class AppWindow(QMainWindow):
         self.frame_scale_menu = scale.FrameScaleMenu(
             main_win=self, frame_scale_ctrlr=self.frame_scale_ctrlr
         )
-
         self.content_frame_layout = MainContentFrameLayout(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
-        self.fullscreen_ctrlr = fullscreen.FullscreenController(
+        self.fullscreen_ctrlr = FullscreenController(
             content_frame_layout=self.content_frame_layout,
             viewpoint_manager=self.vp_manager,
         )
-        self.fullscreen_menu = fullscreen.FullscreenMenu(
+        self.screens_menu = screen.ScreensMenu(
             main_win=self, fullscreen_ctrlr=self.fullscreen_ctrlr
         )
-        self.screen_label = fullscreen.ScreenLabel(parent=self)
-        self.fullscreen_button = fullscreen.FullscreenButton(
+        self.fullscreen_button = screen.FullscreenButton(
             parent=self,
-            menu=self.fullscreen_menu,
+            menu=self.screens_menu,
             fullscreen_ctrlr=self.fullscreen_ctrlr,
             size=40,
         )
@@ -155,12 +143,16 @@ class AppWindow(QMainWindow):
             content_frame_layout=self.content_frame_layout,
             frame_size_ctrlr=self.frame_size_ctrlr,
         )
-        self.open_file = files.OpenFileAction(self, self.media_loader)
-        self.open_multiple = files.OpenMultipleFilesAction(self, self.media_loader)
-        self.main_menu = MainMenu(main_win=self)
-        self.main_menu.addAction(self.open_file)
-        self.main_menu.addAction(self.open_multiple)
+        self.open_file_action = files.OpenFileAction(self, self.media_loader)
+        self.open_multiple_action = files.OpenMultipleAction(self, self.media_loader)
+        self.open_file_button = files.OpenFileButton(
+            parent=self, size=32, action=self.open_file_action
+        )
+        self.open_multiple_button = files.OpenMultipleButton(
+            parent=self, size=32, action=self.open_multiple_action
+        )
 
+        self.main_menu = MainMenu(main_win=self)
         self.main_menu_button = MainMenuButton(
             parent=self, size=48, menu=self.main_menu
         )
@@ -208,6 +200,8 @@ class AppWindow(QMainWindow):
         self.lower_bttns_lo.addWidget(self.frame_scale_menu_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.playback_mode_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.vol_button, 0, Qt.AlignRight)
+        self.lower_bttns_lo.addWidget(self.open_file_button, 0, Qt.AlignRight)
+        self.lower_bttns_lo.addWidget(self.open_multiple_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.main_menu_button, 0, Qt.AlignRight)
 
         self.ctrls_layout.addWidget(self.lower_bttns, 4, 0, 1, -1, Qt.AlignBottom)

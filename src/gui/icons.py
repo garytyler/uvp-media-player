@@ -1,5 +1,6 @@
 import qtawesome as qta
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtWidgets import QApplication
 
 APP_ICONS = None
 
@@ -19,7 +20,6 @@ dark_defaults = DarkColors()
 
 class AppIcons:
     def __init__(self):
-
         self.fullscreen_enter = qta.icon("mdi.fullscreen")
         self.fullscreen_exit = qta.icon("mdi.fullscreen-exit")
         self.display_screen = qta.icon("mdi.desktop-mac")
@@ -62,15 +62,47 @@ class AppIcons:
             color_off_disabled="red",
         )
         self.server_disconnected = qta.icon("mdi.server-network-off")
-        self.open_file = qta.icon("mdi.file")
-        self.open_multiple = qta.icon("mdi.file-multiple")
-        # self.volume_button = qta.icon("mdi.volume-low")
+        open_file_bg_scale = 0.9
+        open_many_bg_scale = 0.8
+        bg_fg_multiplier = 0.7
+        self.open_file = qta.icon(
+            "mdi.file",
+            "mdi.play",
+            options=[
+                {"scale_factor": open_file_bg_scale},
+                {
+                    "scale_factor": open_file_bg_scale * bg_fg_multiplier,
+                    "color": self.palette().window(),
+                    "color_on_active": self.palette().window(),
+                    "color_off_active": self.palette().window(),
+                    "offset": (-0.01, 0.02),
+                },
+            ],
+        )
+        self.open_multiple = qta.icon(
+            "mdi.file-multiple",
+            "mdi.play",
+            options=[
+                {"scale_factor": open_many_bg_scale},
+                {
+                    "scale_factor": open_many_bg_scale * bg_fg_multiplier,
+                    "color": self.palette().window(),
+                    "color_on_active": self.palette().window(),
+                    "color_off_active": self.palette().window(),
+                    "offset": (0.05, -0.05),
+                },
+            ],
+        )
         self.volume_button = {
             "mute": qta.icon("mdi.volume-mute", disabled="mdi.volume-off"),
             "low": qta.icon("mdi.volume-low", disabled="mdi.volume-off"),
             "medium": qta.icon("mdi.volume-medium", disabled="mdi.volume-off"),
             "high": qta.icon("mdi.volume-high", disabled="mdi.volume-off"),
         }
+
+    def palette(self):
+        qapp = QApplication.instance()
+        return qapp.palette()
 
 
 def __getattr__(name: str):
