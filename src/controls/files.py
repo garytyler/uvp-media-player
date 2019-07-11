@@ -3,29 +3,81 @@ from PyQt5.QtWidgets import QAction, QFileDialog, QToolButton
 
 from .. import vlcqt
 from ..gui import icons
+from ..playlist import Playlist
 
 
-class FileLoader(QObject):
-    def __init__(self, content_frame_layout, frame_size_ctrlr):
+class FileListLoader(QObject):
+    def __init__(self, content_frame_layout, frame_size_ctrlr, playlist_ctrlr):
         super().__init__()
         self.content_frame_layout = content_frame_layout
         self.frame_size_ctrlr = frame_size_ctrlr
-        self.lp = vlcqt.list_player
         self.mp = vlcqt.media_player
+        self.playlist_ctrlr = playlist_ctrlr
 
     def load_media_paths(self, paths: list):
-        self.media_list = vlcqt.MediaList(paths)
-        self.load_media_list(self.media_list)
+        self.playlist = Playlist(paths)
+        self.playlist.add_paths(paths)
+        self.load_playlist(self.playlist)
 
-    def load_media_list(self, media_list: vlcqt.MediaList):
-        self.media_list = media_list
-        self.content_frame_layout.clear_content_frame()
-        self.lp.stop()
-        self.lp.set_media_list(media_list)
-        self.content_frame_layout.reset_content_frame()
-        self.lp.stop()
-        first_list_item = self.media_list.item_at_index(0)
-        self.frame_size_ctrlr.conform_to_media(first_list_item)
+    def load_playlist(self, playlist):
+        self.playlist_ctrlr.set_playlist(playlist)
+
+    # def load_media_list(self, media_list: vlcqt.MediaList):
+    #     self.media_list = media_list
+    #     self.content_frame_layout.clear_content_frame()
+    #     # self.mp.stop()
+    #     # self.mp.set_media_list(media_list)
+    #     self.content_frame_layout.reset_content_frame()
+    #     self.mp.stop()
+    #     first_list_item = self.media_list.item_at_index(0)
+    #     self.frame_size_ctrlr.conform_to_media(first_list_item)
+
+
+# class FileLoader(QObject):
+#     def __init__(self, content_frame_layout, frame_size_ctrlr):
+#         super().__init__()
+#         self.content_frame_layout = content_frame_layout
+#         self.frame_size_ctrlr = frame_size_ctrlr
+#         # self.lp = vlcqt.list_player
+#         self.mp = vlcqt.media_player
+
+#     def load_media_paths(self, paths: list):
+#         self.media_list = vlcqt.MediaList(paths)
+#         self.load_media_list(self.media_list)
+
+#     def load_media_list(self, media_list: vlcqt.MediaList):
+#         self.media_list = media_list
+#         self.content_frame_layout.clear_content_frame()
+#         self.
+#         # self.lp.stop()
+#         # self.lp.set_media_list(media_list)
+#         self.content_frame_layout.reset_content_frame()
+#         self.lp.stop()
+#         first_list_item = self.media_list.item_at_index(0)
+#         self.frame_size_ctrlr.conform_to_media(first_list_item)
+
+
+# class FileLoader(QObject):
+#     def __init__(self, content_frame_layout, frame_size_ctrlr):
+#         super().__init__()
+#         self.content_frame_layout = content_frame_layout
+#         self.frame_size_ctrlr = frame_size_ctrlr
+#         self.lp = vlcqt.list_player
+#         self.mp = vlcqt.media_player
+
+#     def load_media_paths(self, paths: list):
+#         self.media_list = vlcqt.MediaList(paths)
+#         self.load_media_list(self.media_list)
+
+#     def load_media_list(self, media_list: vlcqt.MediaList):
+#         self.media_list = media_list
+#         self.content_frame_layout.clear_content_frame()
+#         self.lp.stop()
+#         self.lp.set_media_list(media_list)
+#         self.content_frame_layout.reset_content_frame()
+#         self.lp.stop()
+#         first_list_item = self.media_list.item_at_index(0)
+#         self.frame_size_ctrlr.conform_to_media(first_list_item)
 
 
 class OpenFileAction(QAction):

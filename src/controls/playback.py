@@ -1,10 +1,9 @@
 import logging
 
-from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QAction, QSlider, QToolButton
+from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtWidgets import QAction, QSlider
 
 from .. import vlcqt
-from ..controls import base
 from ..frame.items import MediaFrameItem
 from ..gui import icons
 from ..util import config
@@ -35,6 +34,7 @@ class PlaybackModeAction(QAction):
 
         self.triggered.connect(self.on_triggered)
         self.setplaybackmode.connect(self.lp.on_setplaybackmode)
+        self.setplaybackmode.connect(self.lp.on_setplaybackmode)
 
     def on_triggered(self):
         self.rotate_list(self.option_names, 1)
@@ -58,7 +58,6 @@ class PlayPauseAction(QAction):
         self.setIcon(icons.play_pause)
 
         self.mp = vlcqt.media_player
-        self.lp = vlcqt.list_player
 
         if self.mp.is_playing():
             self.on_playing()
@@ -82,39 +81,43 @@ class PlayPauseAction(QAction):
     @pyqtSlot()
     def on_triggered(self):
         if self.mp.is_playing():
-            self.lp.pause()
+            # self.lp.pause()
+            self.mp.pause()
+            # self.playlist_ctrlr.pause()
         else:
-            self.lp.play()
+            # self.lp.play()
+            self.mp.play()
+            # self.playlist_ctrlr.play()
 
 
 class PreviousMediaAction(QAction):
-    def __init__(self, parent):
+    def __init__(self, parent, playlist_ctrlr):
         super().__init__(parent=parent)
         self.setToolTip("Previous Media")
         self.setIcon(icons.previous_media)
 
-        self.lp = vlcqt.list_player
+        self.playlist_ctrlr = playlist_ctrlr
 
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.lp.previous()
+        self.playlist_ctrlr.previous()
 
 
 class NextMediaAction(QAction):
-    def __init__(self, parent):
+    def __init__(self, parent, playlist_ctrlr):
         super().__init__(parent=parent)
         self.setToolTip("Next Media")
         self.setIcon(icons.next_media)
 
-        self.lp = vlcqt.list_player
+        self.playlist_ctrlr = playlist_ctrlr
 
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.lp.next()
+        self.playlist_ctrlr.next()
 
 
 class FrameResPlaybackSlider(QSlider):
