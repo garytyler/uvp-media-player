@@ -16,12 +16,43 @@ from PyQt5.QtWidgets import (
 )
 
 from . import vlcqt
-from .comm import client
-from .controls import base, connect, files, playback, scale, screen, sound, window
-from .controls.screen import FullscreenController
+from .comm.client import RemoteInputClient
+from .controls.base import OpenMenuAction
+from .controls.connect import ServerConnectionAction, ServerConnectionButton
+from .controls.files import FileLoader, OpenFileAction, OpenMultipleAction
+from .controls.fullscreen import FullscreenLabeledButton, FullscreenMenu
+from .controls.playback import (
+    FrameResPlaybackSlider,
+    NextMediaAction,
+    PlaybackModeAction,
+    PlayPauseAction,
+    PreviousMediaAction,
+)
+from .controls.scale import (
+    FrameScaleController,
+    FrameScaleMenu,
+    FrameScaleMenuButton,
+    FrameSizeController,
+    ZoomInAction,
+    ZoomOutAction,
+)
+from .controls.screens import FullscreenController
+from .controls.sound import VolumeController, VolumeSliderPopUpButton
+from .controls.window import AlwaysOnTopAction
 from .frame.layout import MainContentFrameLayout
 from .frame.viewpoint import ViewpointManager
 from .gui import icons
+from .gui.buttons import (
+    AlwaysOnTopButton,
+    NextMediaButton,
+    OpenFileButton,
+    OpenMultipleButton,
+    PlaybackModeButton,
+    PlayPauseButton,
+    PreviousMediaButton,
+    ZoomInButton,
+    ZoomOutButton,
+)
 from .util import config
 
 log = logging.getLogger(__name__)
@@ -30,14 +61,14 @@ log = logging.getLogger(__name__)
 class MainMenuButton(QToolButton):
     def __init__(self, parent, menu, size):
         super().__init__(parent=parent)
-
         self.menu = menu
+
         self.setIconSize(QSize(size, size))
         self.setAutoRaise(True)
         self.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
-        self.action = base.OpenMenuAction(
-            icon=icons.main_menu_button, text=menu.title(), menu=self.menu, button=self
+        self.action = OpenMenuAction(
+            icon=icons.main_menu_button, text=menu.title(), menu=self.menu, parent=self
         )
 
         self.action.setToolTip("More Options")
@@ -51,16 +82,8 @@ class PlaybackSliderComponents(QWidget):
         self.layout = QVBoxLayout(self)
         l, t, r, b = self.layout.getContentsMargins()
         self.layout.setContentsMargins(l, 0, r, 0)
-        self.slider = playback.FrameResPlaybackSlider(parent=parent)
+        self.slider = FrameResPlaybackSlider(parent=parent)
         self.layout.addWidget(self.slider)
-
-
-class MainMenu(QMenu):
-    def __init__(self, main_win: QMainWindow):
-        super().__init__(parent=main_win)
-        self.main_win = main_win
-
-        self.addAction(window.StayOnTop(main_win=main_win))
 
 
 class AppWindow(QMainWindow):
@@ -68,7 +91,7 @@ class AppWindow(QMainWindow):
     initialized = pyqtSignal()
 
     def __init__(self, media_paths=[], flags=None):
-        QMainWindow.__init__(self, flags=flags if flags else Qt.WindowFlags())
+        QMain__init__(self, flags=flags if flags else Qt.WindowFlags())
         self.qapp = QApplication.instance()
         self.mp = vlcqt.media_player
 
@@ -77,30 +100,26 @@ class AppWindow(QMainWindow):
         self.app_display_name = self.qapplication.applicationDisplayName().strip()
         self.setWindowTitle(self.app_display_name)
 
-        self.create_components()
-        self.add_components()
+        self.create_interface_components()
+        self.create_menus()
+        self.create_menu_buttons()
+        self.create_actions()
+        self.create_main_menu()
+        self.create_action_buttons()
+        self.create_main_window()
 
         self.media_loader.load_media_paths(media_paths)
 
         self.initialized.emit()
 
-    def create_components(self):
-        self.client = client.RemoteInputClient(url=self.url)
+    def create_interface_components(self):
+        self.client = RemoteInputClient(url=self.url)
         self.vp_manager = ViewpointManager(client=self.client)
-        self.connection_action = connect.ServerConnectionAction(
-            client=self.client, viewpoint_manager=self.vp_manager, parent=self
-        )
-        self.connection_button = connect.ServerConnectionButton(
-            action=self.connection_action, parent=self, size=32
-        )
-        self.frame_size_ctrlr = scale.FrameSizeController(
+        self.frame_size_ctrlr = FrameSizeController(
             main_win=self, viewpoint_manager=self.vp_manager
         )
-        self.frame_scale_ctrlr = scale.FrameScaleController(
+        self.frame_scale_ctrlr = FrameScaleController(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
-        )
-        self.frame_scale_menu = scale.FrameScaleMenu(
-            main_win=self, frame_scale_ctrlr=self.frame_scale_ctrlr
         )
         self.content_frame_layout = MainContentFrameLayout(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
@@ -109,56 +128,94 @@ class AppWindow(QMainWindow):
             content_frame_layout=self.content_frame_layout,
             viewpoint_manager=self.vp_manager,
         )
-        self.screens_menu = screen.ScreensMenu(
-            main_win=self, fullscreen_ctrlr=self.fullscreen_ctrlr
-        )
-        self.fullscreen_button = screen.FullscreenButton(
-            parent=self,
-            menu=self.screens_menu,
-            fullscreen_ctrlr=self.fullscreen_ctrlr,
-            size=40,
-        )
         self.playback_slider_components = PlaybackSliderComponents(self)
-        self.prev_media_button = playback.PreviousMediaButton(parent=self, size=48)
-        self.play_pause_button = playback.PlayPauseButton(parent=self, size=48)
-        self.next_media_button = playback.NextMediaButton(parent=self, size=48)
-
-        self.playback_mode_button = playback.TogglePlaybackModeButton(
-            parent=self, size=32
-        )
-        self.frame_scale_menu_button = scale.FrameScaleMenuButton(
-            parent=self, frame_scale_menu=self.frame_scale_menu, size=32
-        )
-        self.zoom_out_button = scale.ZoomOutButton(
-            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr, size=32
-        )
-        self.zoom_in_button = scale.ZoomInButton(
-            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr, size=32
-        )
-        self.vol_ctrlr = sound.VolumeController(parent=self)
-        self.vol_button = sound.VolumePopUpButton(
-            vol_ctrlr=self.vol_ctrlr, parent=self, size=32
-        )
-        self.media_loader = files.FileLoader(
+        self.vol_ctrlr = VolumeController(parent=self)
+        self.media_loader = FileLoader(
             content_frame_layout=self.content_frame_layout,
             frame_size_ctrlr=self.frame_size_ctrlr,
         )
-        self.open_file_action = files.OpenFileAction(self, self.media_loader)
-        self.open_multiple_action = files.OpenMultipleAction(self, self.media_loader)
-        self.open_file_button = files.OpenFileButton(
-            parent=self, size=32, action=self.open_file_action
+        self.connection_action = ServerConnectionAction(
+            client=self.client, viewpoint_manager=self.vp_manager, parent=self
         )
-        self.open_multiple_button = files.OpenMultipleButton(
-            parent=self, size=32, action=self.open_multiple_action
+        self.connection_button = ServerConnectionButton(
+            action=self.connection_action, parent=self, size=32
         )
 
-        self.main_menu = MainMenu(main_win=self)
+    def create_menus(self):
+        self.frame_scale_menu = FrameScaleMenu(
+            main_win=self, frame_scale_ctrlr=self.frame_scale_ctrlr
+        )
+        self.fullscreen_menu = FullscreenMenu(
+            main_win=self, fullscreen_ctrlr=self.fullscreen_ctrlr
+        )
+
+    def create_menu_buttons(self):
+        self.frame_scale_menu_button = FrameScaleMenuButton(
+            parent=self, frame_scale_menu=self.frame_scale_menu, size=32
+        )
+        self.fullscreen_menu_button = FullscreenLabeledButton(
+            parent=self,
+            menu=self.fullscreen_menu,
+            fullscreen_ctrlr=self.fullscreen_ctrlr,
+            size=40,
+        )
+        self.vol_slider_popup_button = VolumeSliderPopUpButton(
+            vol_ctrlr=self.vol_ctrlr, parent=self, size=32
+        )
+
+    def create_actions(self):
+        self.playback_mode_action = PlaybackModeAction(parent=self)
+        self.open_file_action = OpenFileAction(self, self.media_loader)
+        self.open_multiple_action = OpenMultipleAction(self, self.media_loader)
+        self.always_on_top_action = AlwaysOnTopAction(main_win=self)
+        self.prev_media_action = PreviousMediaAction(parent=self)
+        self.play_pause_action = PlayPauseAction(parent=self)
+        self.next_media_action = NextMediaAction(parent=self)
+        self.zoom_in_action = ZoomInAction(
+            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr
+        )
+        self.zoom_out_action = ZoomOutAction(
+            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr
+        )
+
+    def create_main_menu(self):
+        self.main_menu = QMenu(parent=self)
+        self.main_menu.addMenu(self.fullscreen_menu)
+        self.main_menu.addMenu(self.frame_scale_menu)
         self.main_menu_button = MainMenuButton(
             parent=self, size=48, menu=self.main_menu
         )
 
-    def add_components(self):
+    def create_action_buttons(self):
+        self.prev_media_button = PreviousMediaButton(
+            parent=self, action=self.prev_media_action, size=48
+        )
+        self.play_pause_button = PlayPauseButton(
+            parent=self, action=self.play_pause_action, size=48
+        )
+        self.next_media_button = NextMediaButton(
+            parent=self, action=self.next_media_action, size=48
+        )
+        self.playback_mode_button = PlaybackModeButton(
+            parent=self, action=self.playback_mode_action, size=32
+        )
+        self.open_file_button = OpenFileButton(
+            parent=self, action=self.open_file_action, size=32
+        )
+        self.open_multiple_button = OpenMultipleButton(
+            parent=self, action=self.open_multiple_action, size=32
+        )
+        self.always_on_top_button = AlwaysOnTopButton(
+            parent=self, action=self.always_on_top_action, size=32
+        )
+        self.zoom_out_button = ZoomOutButton(
+            parent=self, action=self.zoom_in_action, size=32
+        )
+        self.zoom_in_button = ZoomInButton(
+            parent=self, action=self.zoom_out_action, size=32
+        )
 
+    def create_main_window(self):
         # Main layout
         self.widget = QWidget(self)
         self.layout = QVBoxLayout(self.widget)
@@ -193,15 +250,16 @@ class AppWindow(QMainWindow):
         self.lower_bttns = QWidget(self)
         self.lower_bttns_lo = QHBoxLayout(self.lower_bttns)
         self.lower_bttns_lo.setContentsMargins(0, 0, 0, 0)
-        self.lower_bttns_lo.addWidget(self.fullscreen_button, 1, Qt.AlignLeft)
+        self.lower_bttns_lo.addWidget(self.fullscreen_menu_button, 1, Qt.AlignLeft)
 
         self.lower_bttns_lo.addWidget(self.zoom_out_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.zoom_in_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.frame_scale_menu_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.playback_mode_button, 0, Qt.AlignRight)
-        self.lower_bttns_lo.addWidget(self.vol_button, 0, Qt.AlignRight)
+        self.lower_bttns_lo.addWidget(self.vol_slider_popup_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.open_file_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.open_multiple_button, 0, Qt.AlignRight)
+        self.lower_bttns_lo.addWidget(self.always_on_top_button, 0, Qt.AlignRight)
         self.lower_bttns_lo.addWidget(self.main_menu_button, 0, Qt.AlignRight)
 
         self.ctrls_layout.addWidget(self.lower_bttns, 4, 0, 1, -1, Qt.AlignBottom)

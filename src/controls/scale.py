@@ -211,36 +211,8 @@ class FrameScaleMenuButton(QToolButton):
             icon=icons.zoom_menu_button,
             text=self.menu.title(),
             menu=self.menu,
-            button=self,
+            parent=self,
         )
         self.setToolTip("Zoom")
         self.setCheckable(False)
-        self.setDefaultAction(self.action)
-
-
-class ZoomInButton(QToolButton):
-    def __init__(self, parent, frame_scale_ctrlr, size=None):
-        super().__init__(parent=parent)
-        self.frame_scale_ctrlr = frame_scale_ctrlr
-
-        self.setAutoRaise(True)
-        self.setIconSize(QSize(size, size))
-
-        self.action = ZoomInAction(
-            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr
-        )
-        self.setDefaultAction(self.action)
-
-
-class ZoomOutButton(QToolButton):
-    def __init__(self, parent, frame_scale_ctrlr, size=None):
-        super().__init__(parent=parent)
-        self.frame_scale_ctrlr = frame_scale_ctrlr
-
-        self.setAutoRaise(True)
-        self.setIconSize(QSize(size, size))
-
-        self.action = ZoomOutAction(
-            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr
-        )
         self.setDefaultAction(self.action)

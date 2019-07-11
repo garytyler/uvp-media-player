@@ -68,31 +68,3 @@ class OpenMultipleAction(QAction):
         )
         if file_paths:
             self.media_loader.load_media_paths(file_paths)
-
-
-class OpenFileButton(QToolButton):
-    def __init__(self, parent, size, action: OpenFileAction):
-        super().__init__(parent=parent)
-        self.action = action
-
-        self.setToolTip("")
-        self.setCheckable(False)
-        self.setIconSize(QSize(size, size))
-        self.setAutoRaise(True)
-        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
-
-        self.setDefaultAction(self.action)
-
-
-class OpenMultipleButton(QToolButton):
-    def __init__(self, parent, size, action: OpenMultipleAction):
-        super().__init__(parent=parent)
-        self.action = action
-
-        self.setToolTip("")
-        self.setCheckable(False)
-        self.setIconSize(QSize(size, size))
-        self.setAutoRaise(True)
-        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
-
-        self.setDefaultAction(self.action)

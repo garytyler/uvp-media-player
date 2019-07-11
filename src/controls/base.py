@@ -29,15 +29,15 @@ class PopUpWidgetAction(QAction):
 
 
 class OpenMenuAction(QAction):
-    def __init__(self, icon, text, menu, button):
-        super().__init__(icon, text, parent=button)
-        self.button = button
+    def __init__(self, icon, text, menu, parent):
+        super().__init__(icon, text)
+        self.parent = parent
         self.menu = menu
         self.triggered.connect(self.open_menu)
 
     def open_menu(self):
         menu_size = self.menu.sizeHint()
-        butt_rect = self.button.rect()
+        butt_rect = self.parent.rect()
         x = butt_rect.x()
         y = butt_rect.y() - menu_size.height()
-        self.menu.popup(self.button.mapToGlobal(QPoint(x, y)))
+        self.menu.popup(self.parent.mapToGlobal(QPoint(x, y)))

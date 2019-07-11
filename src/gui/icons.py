@@ -99,6 +99,7 @@ class AppIcons:
             "medium": qta.icon("mdi.volume-medium", disabled="mdi.volume-off"),
             "high": qta.icon("mdi.volume-high", disabled="mdi.volume-off"),
         }
+        self.always_on_top = qta.icon("mdi.window-restore", scale_factor=1.2)
 
     def palette(self):
         qapp = QApplication.instance()

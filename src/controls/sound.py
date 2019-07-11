@@ -85,6 +85,8 @@ class VolumeSliderPopUpWidget(base.PopUpWidget):
         self.slider = slider
         self.layout = QHBoxLayout(self)
         self.layout.addWidget(self.slider)
+        print(slider.width())
+        print(slider.height())
 
 
 class VolumePopUpAction(base.PopUpWidgetAction):
@@ -115,7 +117,7 @@ class VolumePopUpAction(base.PopUpWidgetAction):
             self.setIcon(self.icons["high"])
 
 
-class VolumePopUpButton(QToolButton):
+class VolumeSliderPopUpButton(QToolButton):
     def __init__(self, parent, size, vol_ctrlr):
         super().__init__(parent=parent)
         self.vol_ctrlr = vol_ctrlr

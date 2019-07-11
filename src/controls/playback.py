@@ -12,7 +12,7 @@ from ..util import config
 log = logging.getLogger(__name__)
 
 
-class TogglePlaybackModeAction(QAction):
+class PlaybackModeAction(QAction):
     setplaybackmode = pyqtSignal(str)
 
     def __init__(self, parent):
@@ -47,17 +47,6 @@ class TogglePlaybackModeAction(QAction):
     @staticmethod
     def rotate_list(l, n):
         l[:] = l[n:] + l[:n]
-
-
-class TogglePlaybackModeButton(QToolButton):
-    def __init__(self, parent, size):
-        super().__init__(parent=parent)
-        self.setIconSize(QSize(size, size))
-        self.setAutoRaise(True)
-        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
-
-        self.action = TogglePlaybackModeAction(parent=self)
-        self.setDefaultAction(self.action)
 
 
 class PlayPauseAction(QAction):
@@ -99,7 +88,7 @@ class PlayPauseAction(QAction):
 
 
 class PreviousMediaAction(QAction):
-    def __init__(self, parent, size=None):
+    def __init__(self, parent):
         super().__init__(parent=parent)
         self.setToolTip("Previous Media")
         self.setIcon(icons.previous_media)
@@ -114,7 +103,7 @@ class PreviousMediaAction(QAction):
 
 
 class NextMediaAction(QAction):
-    def __init__(self, parent, size=None):
+    def __init__(self, parent):
         super().__init__(parent=parent)
         self.setToolTip("Next Media")
         self.setIcon(icons.next_media)
@@ -126,37 +115,6 @@ class NextMediaAction(QAction):
     @pyqtSlot(bool)
     def on_triggered(self, checked):
         self.lp.next()
-
-
-class PlayPauseButton(QToolButton):
-    def __init__(self, parent, size=None):
-        super().__init__(parent=parent)
-        self.setIconSize(QSize(size, size))
-        self.setAutoRaise(True)
-        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
-
-        self.action = PlayPauseAction(parent=self)
-        self.setDefaultAction(self.action)
-
-
-class PreviousMediaButton(QToolButton):
-    def __init__(self, parent, size=None):
-        super().__init__(parent=parent)
-        self.setAutoRaise(True)
-        self.setIconSize(QSize(size, size))
-
-        self.action = PreviousMediaAction(parent=self)
-        self.setDefaultAction(self.action)
-
-
-class NextMediaButton(QToolButton):
-    def __init__(self, parent, size=None):
-        super().__init__(parent=parent)
-        self.setAutoRaise(True)
-        self.setIconSize(QSize(size, size))
-
-        self.action = NextMediaAction(parent=self)
-        self.setDefaultAction(self.action)
 
 
 class FrameResPlaybackSlider(QSlider):
