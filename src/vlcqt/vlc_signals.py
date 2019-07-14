@@ -321,3 +321,70 @@ class MediaListPlayerVlclibSignals(QObject):
 
 
 MediaListPlayerSignals = MediaListPlayerVlclibSignals
+
+
+class MediaVlclibSignals(QObject):
+
+    mediadurationchanged = pyqtSignal(vlc.Event)
+    mediafreed = pyqtSignal(vlc.Event)
+    mediametachanged = pyqtSignal(vlc.Event)
+    mediaparsedchanged = pyqtSignal(vlc.Event)
+    mediastatechanged = pyqtSignal(vlc.Event)
+    mediasubitemadded = pyqtSignal(vlc.Event)
+    mediasubitemtreeadded = pyqtSignal(vlc.Event)
+    mediathumbnailgenerated = pyqtSignal(vlc.Event)
+    metadataready = pyqtSignal(dict)
+
+    def __init__(self, vlc_media: vlc.Media):
+        super().__init__()
+
+        type_slot_pairs = [
+            (vlc.EventType.MediaDurationChanged, self.__MediaDurationChanged),
+            (vlc.EventType.MediaFreed, self.__MediaFreed),
+            (vlc.EventType.MediaMetaChanged, self.__MediaMetaChanged),
+            (vlc.EventType.MediaParsedChanged, self.__MediaParsedChanged),
+            (vlc.EventType.MediaStateChanged, self.__MediaStateChanged),
+            (vlc.EventType.MediaSubItemAdded, self.__MediaSubItemAdded),
+            (vlc.EventType.MediaSubItemTreeAdded, self.__MediaSubItemTreeAdded),
+        ]
+        event_manager = vlc_media.event_manager()
+        for e_type, cb_slot in type_slot_pairs:
+            event_manager.event_attach(e_type, cb_slot)
+
+    @pyqtSlot(vlc.Event)
+    def __MediaDurationChanged(self, e):
+        self.mediadurationchanged.emit(e)
+        log.debug("VLCQT SIGNAL name='mediadurationchanged'")
+
+    @pyqtSlot(vlc.Event)
+    def __MediaFreed(self, e):
+        self.mediafreed.emit(e)
+        log.debug("VLCQT SIGNAL name='mediafreed'")
+
+    @pyqtSlot(vlc.Event)
+    def __MediaMetaChanged(self, e):
+        self.mediametachanged.emit(e)
+        log.debug("VLCQT SIGNAL name='mediametachanged'")
+
+    @pyqtSlot(vlc.Event)
+    def __MediaParsedChanged(self, e):
+        self.mediaparsedchanged.emit(e)
+        log.debug("VLCQT SIGNAL name='mediaparsedchanged'")
+
+    @pyqtSlot(vlc.Event)
+    def __MediaStateChanged(self, e):
+        self.mediastatechanged.emit(e)
+        log.debug("VLCQT SIGNAL name='mediastatechanged'")
+
+    @pyqtSlot(vlc.Event)
+    def __MediaSubItemAdded(self, e):
+        self.mediasubitemadded.emit(e)
+        log.debug("VLCQT SIGNAL name='mediasubitemadded'")
+
+    @pyqtSlot(vlc.Event)
+    def __MediaSubItemTreeAdded(self, e):
+        self.mediasubitemtreeadded.emit(e)
+        log.debug("VLCQT SIGNAL name='mediasubitemtreeadded'")
+
+
+MediaSignals = MediaVlclibSignals

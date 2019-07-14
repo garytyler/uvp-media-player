@@ -8,6 +8,8 @@ from src.main import AppWindow
 from src.util import config
 from src.util.logs import initialize_logging
 
+from .playlist.editor import PlaylistWidget
+
 
 def main():
     initialize_logging()
@@ -23,6 +25,9 @@ def main():
 
     player_win = AppWindow(media_paths=sys.argv[1:])
     player_win.show()
+
+    playlist_win = PlaylistWidget(paths=sys.argv[1:])
+    playlist_win.show()
 
     sys.exit(qapp.exec_())
 

@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QAction, QFileDialog, QToolButton
 
 from .. import vlcqt
 from ..gui import icons
-from ..playlist import Playlist
+from ..playlist.interf import Playlist
 
 
 class FileListLoader(QObject):

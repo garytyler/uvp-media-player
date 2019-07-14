@@ -37,3 +37,15 @@ class MediaListPlayerFacade(vlc_signals.MediaListPlayerVlclibSignals):
 
     def __getattr__(self, attribute):
         return getattr(self._vlc_obj, attribute)
+
+
+class MediaFacade(vlc_signals.MediaVlclibSignals):
+    def __init__(self, mrl, *options):
+        self._vlc_obj = vlc.Media(mrl, *options)
+        super().__init__(vlc_media=self._vlc_obj)
+
+    def __getattr__(self, attribute):
+        try:
+            return getattr(self._vlc_obj, attribute)
+        except Exception as e:
+            raise e

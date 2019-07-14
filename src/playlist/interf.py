@@ -1,4 +1,4 @@
-from . import vlcqt
+from .. import vlcqt
 
 
 class PlaylistController:

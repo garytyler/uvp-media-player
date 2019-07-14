@@ -51,7 +51,7 @@ from .gui.buttons import (  # PlaybackModeButton,
     ZoomInButton,
     ZoomOutButton,
 )
-from .playlist import PlaylistController
+from .playlist.interf import PlaylistController
 from .util import config
 
 log = logging.getLogger(__name__)
@@ -121,7 +121,7 @@ class AppWindow(QMainWindow):
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.content_frame_layout = MainContentFrameLayout(
-            main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
+            window=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.fullscreen_ctrlr = FullscreenController(
             content_frame_layout=self.content_frame_layout,

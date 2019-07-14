@@ -11,13 +11,24 @@ from ..util import config
 log = logging.getLogger(__name__)
 
 
-class _BaseContentFrame(QFrame):
-    def __init__(self, main_win, frame_size_ctrlr):
-        super().__init__(parent=main_win)
+def set_widget_as_media_player_view(media_player, widget):
+    if sys.platform.startswith("linux"):  # for Linux X Server
+        media_player.set_xwindow(widget.winId())
+    elif sys.platform == "win32":  # for Windows
+        media_player.set_hwnd(widget.winId())
+    elif sys.platform == "darwin":  # for MacOS
+        media_player.set_nsobject(int(widget.winId()))
+    else:
+        raise EnvironmentError("Could not determine platform")
+
+
+class BaseContentFrame(QFrame):
+    def __init__(self, window, frame_size_ctrlr):
+        super().__init__(parent=window)
         self.setAttribute(Qt.WA_OpaquePaintEvent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.content_qsize = QSize()
-        self.main_win = main_win
+        self.window = window
         self.frame_size_ctrlr = frame_size_ctrlr
         self.mp = vlcqt.media_player
 
@@ -35,60 +46,52 @@ class _BaseContentFrame(QFrame):
         self.setPalette(p)
 
 
-class _MainContentFrame(_BaseContentFrame):
-    def __init__(self, main_win, frame_size_ctrlr):
-        super().__init__(main_win=main_win, frame_size_ctrlr=frame_size_ctrlr)
+class MediaPlayerContentFrame(BaseContentFrame):
+    def __init__(self, window, frame_size_ctrlr):
+        super().__init__(window=window, frame_size_ctrlr=frame_size_ctrlr)
 
     def activate(self, mp=None):
-        # self.mp = mp if mp else vlcqt.media_player
-        self.mp = vlcqt.list_player.get_media_player()
-        if sys.platform.startswith("linux"):  # for Linux X Server
-            self.mp.set_xwindow(self.winId())
-        elif sys.platform == "win32":  # for Windows
-            self.mp.set_hwnd(self.winId())
-        elif sys.platform == "darwin":  # for MacOS
-            self.mp.set_nsobject(int(self.winId()))
-        else:
-            raise EnvironmentError("Could not determine platform")
+        self.mp = mp if mp else vlcqt.media_player
+        self.mp.set_view_widget(self)
 
     def configure_for_fullscreen(self, qscreen):
-        self.setParent(None)
+        self.setwindow(None)
         self.setWindowState(Qt.WindowFullScreen)  # Lets geo map to non-primary screens
         self.setGeometry(qscreen.geometry())
         self.showFullScreen()
 
     def configure_for_embedded(self):
-        self.setParent(self.main_win)
+        self.setwindow(self.window)
         self.setWindowState(Qt.WindowNoState)
 
 
 class MainContentFrameLayout(QStackedLayout):
-    def __init__(self, main_win, frame_size_ctrlr):
+    def __init__(self, window, frame_size_ctrlr):
         super().__init__()
         self.setContentsMargins(0, 0, 0, 0)
-        self.main_win = main_win
+        self.window = window
         self.frame_size_ctrlr = frame_size_ctrlr
-        self.replacement = _BaseContentFrame(
-            main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
+        self.filler_frame = BaseContentFrame(
+            window=self.window, frame_size_ctrlr=self.frame_size_ctrlr
         )
-        self.insertWidget(1, self.replacement)
+        self.insertWidget(1, self.filler_frame)
 
     def _new_content_frame(self):
         self.clear_content_frame()
-        new_content_frame = _MainContentFrame(
-            main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
+        new_mp_content_frame = MediaPlayerContentFrame(
+            window=self.window, frame_size_ctrlr=self.frame_size_ctrlr
         )
-        self.content_frame = new_content_frame
-        self.content_frame.activate()
-        self.insertWidget(0, self.content_frame)
+        self.mp_content_frame = new_mp_content_frame
+        self.mp_content_frame.activate()
+        self.insertWidget(0, self.mp_content_frame)
         self.setCurrentIndex(0)
 
     def clear_content_frame(self):
         if hasattr(self, "content_frame"):
-            self.content_frame.hide()
-            self.removeWidget(self.content_frame)
-            del self.content_frame
-        if isinstance(self.widget(0), _BaseContentFrame):
+            self.mp_content_frame.hide()
+            self.removeWidget(self.mp_content_frame)
+            del self.mp_content_frame
+        if isinstance(self.widget(0), BaseContentFrame):
             _w = self.widget(0)
             _w.hide()
             self.removeWidget(_w)
@@ -99,11 +102,11 @@ class MainContentFrameLayout(QStackedLayout):
         self.frame_size_ctrlr.conform_to_media()
 
     def start_fullscreen(self, qscreen):
-        self.insertWidget(1, self.replacement)
+        self.insertWidget(1, self.filler_frame)
         self.setCurrentIndex(1)
-        self.content_frame.configure_for_fullscreen(qscreen)
+        self.mp_content_frame.configure_for_fullscreen(qscreen)
 
     def stop_fullscreen(self):
-        self.content_frame.configure_for_embedded()
-        self.insertWidget(0, self.content_frame)
+        self.mp_content_frame.configure_for_embedded()
+        self.insertWidget(0, self.mp_content_frame)
         self.setCurrentIndex(0)
