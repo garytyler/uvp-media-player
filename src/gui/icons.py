@@ -1,5 +1,5 @@
 import qtawesome as qta
-from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QApplication
 
 APP_ICONS = None

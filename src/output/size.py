@@ -4,16 +4,15 @@ from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QToolButton
 
 from .. import vlcqt
-from ..controls import base
-from ..frame.items import ContentFrameItem
 from ..gui import icons
+from ..gui.components import PopUpMenuAction
+from ..output.frame import ContentFrameItem
 from ..util import config
 
 log = logging.getLogger(__name__)
 
 
 class FrameSizeController(QObject):
-    mediaframerescaled = pyqtSignal(float)
     mediaframeresized = pyqtSignal(float)
 
     _default_h = 360
@@ -25,33 +24,36 @@ class FrameSizeController(QObject):
         self.main_win = main_win
         self.mp = vlcqt.media_player
         self.media = self.mp.get_media()
-        self.mp.mediachanged.connect(self.vp_manager.trigger_redraw)
-        self.mediaframerescaled.connect(self.vp_manager.trigger_redraw)
+        # self.mediaframeresized.connect(self.vp_manager.trigger_redraw)
 
     def rescale_frame(self, scale) -> float:
-        self._apply_rescale(scale)
         config.state.view_scale = scale
+        self._apply_rescale(scale)
 
     def get_current_media_size(self):
-        content_view = ContentFrameItem(self.media)
-        return content_view.width(), content_view.height()
+        main_content_frame = ContentFrameItem(self.media)
+        return main_content_frame.width(), main_content_frame.height()
 
     def conform_to_media(self, media: vlcqt.Media = None):
         """If media arg is None, current media_player media is used"""
         self.media = media if media else self.mp.get_media()
+        print(self.media)
         self._apply_rescale(scale=config.state.view_scale)
+        self.vp_manager.trigger_redraw
 
     def _apply_rescale(self, scale):
         if self.media:
             w, h = self.get_current_media_size()
+            print(w, h)
             self.main_win.resize_to_media(w * scale, h * scale)
         else:
             self.main_win.resize_to_media(self._default_w, self._default_h)
-        self.mediaframerescaled.emit(scale)
+        # self.mediaframeresized.emit(scale)
+        # self.vp_manager.trigger_redraw()
 
 
-class FrameScaleController(QMenu):
-    scalechanged = pyqtSignal(float)
+class FrameZoomController(QMenu):
+    zoomchanged = pyqtSignal(float)
 
     def __init__(self, main_win, frame_size_ctrlr):
         super().__init__(parent=main_win)
@@ -67,13 +69,13 @@ class FrameScaleController(QMenu):
         for index, option in enumerate(sorted(self.config_options)):
             self.option_enum_map[option] = index
 
-        self.frame_size_ctrlr.mediaframerescaled.connect(self.on_mediaframerescaled)
+        self.frame_size_ctrlr.mediaframeresized.connect(self.on_mediaframeresized)
 
     def set_scale(self, value):
         self.frame_size_ctrlr.rescale_frame(value)
 
-    def on_mediaframerescaled(self, value: float):
-        self.scalechanged.emit(value)
+    def on_mediaframeresized(self, value: float):
+        self.zoomchanged.emit(value)
 
     def zoom_in(self):
         index = self.option_enum_map[config.state.view_scale] + 1
@@ -95,67 +97,67 @@ class FrameScaleController(QMenu):
 
 
 class ZoomInAction(QAction):
-    def __init__(self, parent, frame_scale_ctrlr, size=None):
+    def __init__(self, parent, frame_zoom_ctrlr, size=None):
         super().__init__(parent=parent)
-        self.frame_scale_ctrlr = frame_scale_ctrlr
+        self.frame_zoom_ctrlr = frame_zoom_ctrlr
 
         self.setText("Zoom In")
         self.setToolTip("Zoom In")
         self.setIcon(icons.zoom_in_button)
 
-        self.frame_scale_ctrlr.scalechanged.connect(self.on_scalechanged)
+        self.frame_zoom_ctrlr.zoomchanged.connect(self.on_zoomchanged)
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot()
     def on_triggered(self):
-        self.frame_scale_ctrlr.zoom_in()
+        self.frame_zoom_ctrlr.zoom_in()
 
-    def on_scalechanged(self, value):
-        self.setEnabled(value != self.frame_scale_ctrlr.config_options[-1])
+    def on_zoomchanged(self, value):
+        self.setEnabled(value != self.frame_zoom_ctrlr.config_options[-1])
 
 
 class ZoomOutAction(QAction):
-    def __init__(self, parent, frame_scale_ctrlr, size=None):
+    def __init__(self, parent, frame_zoom_ctrlr, size=None):
         super().__init__(parent=parent)
-        self.frame_scale_ctrlr = frame_scale_ctrlr
+        self.frame_zoom_ctrlr = frame_zoom_ctrlr
 
         self.setText("Zoom Out")
         self.setToolTip("Zoom Out")
         self.setIcon(icons.zoom_out_button)
 
-        self.frame_scale_ctrlr.scalechanged.connect(self.on_scalechanged)
+        self.frame_zoom_ctrlr.zoomchanged.connect(self.on_zoomchanged)
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot()
     def on_triggered(self):
-        self.frame_scale_ctrlr.zoom_out()
+        self.frame_zoom_ctrlr.zoom_out()
 
-    def on_scalechanged(self, value):
-        self.setEnabled(value != self.frame_scale_ctrlr.config_options[0])
+    def on_zoomchanged(self, value):
+        self.setEnabled(value != self.frame_zoom_ctrlr.config_options[0])
 
 
-class FrameScaleMenu(QMenu):
-    def __init__(self, main_win, frame_scale_ctrlr):
+class FrameZoomMenu(QMenu):
+    def __init__(self, main_win, frame_zoom_ctrlr):
         super().__init__(parent=main_win)
         self.main_win = main_win
-        self.frame_scale_ctrlr = frame_scale_ctrlr
+        self.frame_zoom_ctrlr = frame_zoom_ctrlr
 
         self.setTitle("Zoom")
 
         self.quarter = QAction("1:4 Quarter", self)
-        self.quarter.triggered.connect(lambda: self.frame_scale_ctrlr.set_scale(0.25))
+        self.quarter.triggered.connect(lambda: self.frame_zoom_ctrlr.set_scale(0.25))
         self.quarter.setCheckable(True)
 
         self.half = QAction("1:2 Half", self)
-        self.half.triggered.connect(lambda: self.frame_scale_ctrlr.set_scale(0.5))
+        self.half.triggered.connect(lambda: self.frame_zoom_ctrlr.set_scale(0.5))
         self.half.setCheckable(True)
 
         self.original = QAction("1:1 Original", self)
-        self.original.triggered.connect(lambda: self.frame_scale_ctrlr.set_scale(1))
+        self.original.triggered.connect(lambda: self.frame_zoom_ctrlr.set_scale(1))
         self.original.setCheckable(True)
 
         self.double = QAction("1:2 Double", self)
-        self.double.triggered.connect(lambda: self.frame_scale_ctrlr.set_scale(2))
+        self.double.triggered.connect(lambda: self.frame_zoom_ctrlr.set_scale(2))
         self.double.setCheckable(True)
 
         self.explicit_zooms = QActionGroup(self)
@@ -172,20 +174,20 @@ class FrameScaleMenu(QMenu):
             2: self.double,
         }
 
-        self.zoom_in = ZoomInAction(self, frame_scale_ctrlr=self.frame_scale_ctrlr)
+        self.zoom_in = ZoomInAction(self, frame_zoom_ctrlr=self.frame_zoom_ctrlr)
         self.zoom_in.setIcon(icons.zoom_in_menu_item)
         self.addAction(self.zoom_in)
 
-        self.zoom_out = ZoomOutAction(self, frame_scale_ctrlr=self.frame_scale_ctrlr)
+        self.zoom_out = ZoomOutAction(self, frame_zoom_ctrlr=self.frame_zoom_ctrlr)
         self.zoom_out.setIcon(icons.zoom_out_menu_item)
         self.addAction(self.zoom_out)
 
         self.conform_to_media()
 
-        self.frame_scale_ctrlr.scalechanged.connect(self.on_scalechanged)
+        self.frame_zoom_ctrlr.zoomchanged.connect(self.on_zoomchanged)
         vlcqt.media_player.mediachanged.connect(self.on_mediachanged)
 
-    def on_scalechanged(self, value):
+    def on_zoomchanged(self, value):
         self.option_action_map[value].setChecked(True)
 
     def on_mediachanged(self):
@@ -198,7 +200,7 @@ class FrameScaleMenu(QMenu):
         self.option_action_map[config.state.view_scale].setChecked(True)
 
 
-class FrameScaleMenuButton(QToolButton):
+class FrameZoomMenuButton(QToolButton):
     def __init__(self, parent, frame_scale_menu, size):
         super().__init__(parent=parent)
 
@@ -207,7 +209,7 @@ class FrameScaleMenuButton(QToolButton):
         self.setAutoRaise(True)
         self.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
-        self.action = base.OpenMenuAction(
+        self.action = PopUpMenuAction(
             icon=icons.zoom_menu_button,
             text=self.menu.title(),
             menu=self.menu,

@@ -8,15 +8,23 @@ log = logging.getLogger(__name__)
 class ViewpointManager:
     """Handles setting viewpoint in vlcqt media player object."""
 
+    differential = 0.01 ** 20  # (0.01 ** 22) is max effective differential
+
     def __init__(self, client):
-        self.media_player = vlcqt.media_player
+        self.mp = vlcqt.media_player
         self.client = client
         self.curr_yaw = self.curr_pitch = self.curr_roll = 0
 
         self.vp = vlcqt.VideoViewpoint()
         self.vp.field_of_view = 80
 
-        self.media_player.newframe.connect(self.on_newframe)
+        self.mp.newframe.connect(self.on_newframe)
+        self.mp.vout.connect(self.on_vout)
+        # self.mp.timechanged.connect(self.on_timechanged)
+
+    def on_vout(self):
+        print("VOUT")
+        self.trigger_redraw()
 
     def on_newframe(self):
         new_motion_state = self.client.get_new_motion_state()
@@ -25,9 +33,7 @@ class ViewpointManager:
 
     def set_new_viewpoint(self, yaw, pitch, roll):
         self.vp.yaw, self.vp.pitch, self.vp.roll = -yaw, -pitch, -roll
-        errorcode = self.media_player.video_update_viewpoint(
-            p_viewpoint=self.vp, b_absolute=True
-        )
+        errorcode = self.mp.video_update_viewpoint(p_viewpoint=self.vp, b_absolute=True)
         if errorcode != 0:
             log.error("Error setting viewpoint")
 
@@ -40,7 +46,6 @@ class ViewpointManager:
         necessary because of the the implementation of viewpoints in vlclib 3.0, and
         will hopefully be unnecessary in 4.0.
         """
-        differential = 0.01 ** 20  # (0.01 ** 22) is max effective differential
         self.set_new_viewpoint(
-            self.curr_yaw + differential, self.curr_pitch, self.curr_roll
+            self.curr_yaw + self.differential, self.curr_pitch, self.curr_roll
         )

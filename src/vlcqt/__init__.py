@@ -1,16 +1,15 @@
 from . import vlc_facades
 
-# from . import vlc_views
 import sys
 import vlc
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QFrame
-from ..frame.layout import MediaPlayerContentFrame
+from ..output.frame import MainContentFrame
 
 Instance = vlc_facades.Instance
 
 
-def set_media_player_view_widget(media_player, widget):
+def set_output_to_widget(media_player, widget):
     if sys.platform.startswith("linux"):  # for Linux X Server
         media_player.set_xwindow(widget.winId())
     elif sys.platform == "win32":  # for Windows
@@ -25,8 +24,34 @@ class MediaPlayer(vlc_facades.MediaPlayerFacade):
     def __init__(self):
         super().__init__()
 
-    def set_view_widget(self, widget):
-        set_media_player_view_widget(media_player=self, widget=widget)
+    def set_output_widget(self, widget):
+        state = self.get_state()
+        if state in [vlc.State.Buffering, vlc.State.Playing]:
+            time = self.get_time()
+            self.stop()
+            set_output_to_widget(media_player=self, widget=widget)
+            self.play()
+            self.set_time(time)
+        elif state in [vlc.State.Opening]:
+            self.stop()
+            set_output_to_widget(media_player=self, widget=widget)
+            self.play()
+        elif state in [vlc.State.Paused]:
+            self.stop()
+            set_output_to_widget(media_player=self, widget=widget)
+            self.play()
+            self.set_time(time)
+            self.pause()
+        elif state in [vlc.State.Ended]:
+            self.stop()
+            set_output_to_widget(media_player=self, widget=widget)
+            self.play()
+            self.pause()
+            self.set_time(-1)
+        elif state in [vlc.State.Stopped, vlc.State.Error, vlc.State.NothingSpecial]:
+            self.play()
+            set_output_to_widget(media_player=self, widget=widget)
+            self.stop()
 
 
 media_player = MediaPlayer()
@@ -56,17 +81,24 @@ list_player = MediaListPlayer()
 
 
 class Media(vlc_facades.MediaFacade):
+    """
+    Use to get size: vlcqt.libvlc_video_get_size(self.mp, 0)
+
+    """
+
     def __init__(self, mrl, *options):
         super().__init__(mrl, *options)
 
     def _parse_with_options(self, parse_flag, timeout):
+        # 'parse()' has limited functionality, and does not parse meta data
+        # We use async method 'parse_with_options()' for parsing meta data
         self._vlc_obj.parse_with_options(parse_flag, timeout)
 
     def parse_with_options(self, parse_flag, timeout):
         self.vlc_instance = vlc.Instance()
         self.mp = vlc.MediaPlayer(self.vlc_instance)
         self.frame = QFrame()
-        set_media_player_view_widget(media_player=self.mp, widget=self.frame)
+        set_output_to_widget(media_player=self.mp, widget=self.frame)
         self.mp.set_media(self)
         self.mp.play()
         connection = self.mediaparsedchanged.connect(self.on_mediaparsedchanged)

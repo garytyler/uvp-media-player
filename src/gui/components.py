@@ -1,5 +1,17 @@
-from PyQt5.QtCore import QPoint, Qt
+from PyQt5.QtCore import QPoint, QSize, Qt
 from PyQt5.QtWidgets import QAction, QFrame, QToolButton
+
+
+class ActionButton(QToolButton):
+    def __init__(self, parent, action, size):
+        super().__init__(parent=parent)
+        self.action = action
+        self.setDefaultAction(self.action)
+
+        self.setToolTip(self.action.text())
+        self.setIconSize(QSize(size, size))
+        self.setAutoRaise(True)
+        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
 
 class PopUpWidget(QFrame):
@@ -28,7 +40,7 @@ class PopUpWidgetAction(QAction):
         self.triggered.connect(self.widget.popup)
 
 
-class OpenMenuAction(QAction):
+class PopUpMenuAction(QAction):
     def __init__(self, icon, text, menu, parent):
         super().__init__(icon, text)
         self.parent = parent

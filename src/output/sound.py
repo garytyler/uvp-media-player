@@ -1,3 +1,5 @@
+import logging
+
 from PyQt5.QtCore import QObject, QPoint, QSize, Qt, pyqtSignal
 from PyQt5.QtWidgets import (
     QAction,
@@ -11,9 +13,11 @@ from PyQt5.QtWidgets import (
 )
 
 from .. import vlcqt
-from ..controls import base
 from ..gui import icons
+from ..gui.components import PopUpWidget, PopUpWidgetAction
 from ..util import config
+
+log = logging.getLogger(__name__)
 
 
 class VolumeController(QObject):
@@ -79,19 +83,17 @@ class VolumeSlider(QSlider):
         self.widgethidden.emit(vol_val)
 
 
-class VolumeSliderPopUpWidget(base.PopUpWidget):
+class VolumeSliderPopUpWidget(PopUpWidget):
     def __init__(self, parent, slider):
         super().__init__(parent)
         self.slider = slider
         self.layout = QHBoxLayout(self)
         self.layout.addWidget(self.slider)
-        print(slider.width())
-        print(slider.height())
 
 
-class VolumePopUpAction(base.PopUpWidgetAction):
+class VolumePopUpAction(PopUpWidgetAction):
     def __init__(
-        self, widget: base.PopUpWidget, button: QToolButton, vol_ctrlr: VolumeController
+        self, widget: PopUpWidget, button: QToolButton, vol_ctrlr: VolumeController
     ):
         super().__init__(text="Volume", widget=widget, button=button)
         self.widget = widget

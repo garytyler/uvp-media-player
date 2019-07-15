@@ -4,8 +4,8 @@ from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QSlider
 
 from .. import vlcqt
-from ..frame.items import MediaFrameItem
 from ..gui import icons
+from ..output.frame import MediaFrameItem
 from ..util import config
 
 log = logging.getLogger(__name__)
@@ -81,43 +81,39 @@ class PlayPauseAction(QAction):
     @pyqtSlot()
     def on_triggered(self):
         if self.mp.is_playing():
-            # self.lp.pause()
             self.mp.pause()
-            # self.playlist_ctrlr.pause()
         else:
-            # self.lp.play()
             self.mp.play()
-            # self.playlist_ctrlr.play()
 
 
 class PreviousMediaAction(QAction):
-    def __init__(self, parent, playlist_ctrlr):
+    def __init__(self, parent, playlist_player):
         super().__init__(parent=parent)
         self.setToolTip("Previous Media")
         self.setIcon(icons.previous_media)
 
-        self.playlist_ctrlr = playlist_ctrlr
+        self.playlist_player = playlist_player
 
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.playlist_ctrlr.previous()
+        self.playlist_player.load_previous()
 
 
 class NextMediaAction(QAction):
-    def __init__(self, parent, playlist_ctrlr):
+    def __init__(self, parent, playlist_player):
         super().__init__(parent=parent)
         self.setToolTip("Next Media")
         self.setIcon(icons.next_media)
 
-        self.playlist_ctrlr = playlist_ctrlr
+        self.playlist_player = playlist_player
 
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.playlist_ctrlr.next()
+        self.playlist_player.load_next()
 
 
 class FrameResPlaybackSlider(QSlider):
@@ -147,8 +143,8 @@ class FrameResPlaybackSlider(QSlider):
         self.newframe_conn = self.mp.newframe.connect(self.on_newframe)
 
     def conform_to_media(self, media):
-        mv = MediaFrameItem(media)
-        rate = mv.get_media_rate()  # FPS if video, default if audio
+        media_frame_item = MediaFrameItem(media)
+        rate = media_frame_item.get_media_rate()  # FPS if video, default if audio
         duration_secs = media.get_duration() / 1000
         self.total_frames = duration_secs * rate
         self.proportion_per_frame = 1 / self.total_frames
@@ -207,7 +203,6 @@ class FrameResPlaybackSlider(QSlider):
         # This only matters for setting ticks. Can also just be set to 1.
         self.setMaximum(min((value, 2147483647)))
         self.length = self.maximum() - self.minimum()
-        self.setTickInterval(1 / self.length)
 
     def get_mouse_pos(self, e):
         slider_min, slider_max = self.minimum(), self.maximum()

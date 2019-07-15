@@ -2,17 +2,10 @@ import logging
 
 from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QFontMetrics, QGuiApplication
-from PyQt5.QtWidgets import (
-    QAction,
-    QActionGroup,
-    QLabel,
-    QMenu,
-    QSizePolicy,
-    QToolButton,
-)
+from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QSizePolicy, QToolButton
 
-from ..controls import base
 from ..gui import icons
+from ..gui.components import PopUpMenuAction
 
 log = logging.getLogger(__name__)
 
@@ -26,23 +19,23 @@ class FullscreenController(QObject):
     fullscreenstarted = pyqtSignal(QAction)
     fullscreenstopped = pyqtSignal()
 
-    def __init__(self, content_frame_layout, viewpoint_manager):
+    def __init__(self, content_frame_manager, viewpoint_manager):
         super().__init__()
         self.vp_manager = viewpoint_manager
         self._is_fullscreen = False
-        self.content_frame_layout = content_frame_layout
+        self.content_frame_manager = content_frame_manager
 
-        self.fullscreenstarted.connect(self.vp_manager.trigger_redraw)
-        self.fullscreenstopped.connect(self.vp_manager.trigger_redraw)
+        # self.fullscreenstarted.connect(self.vp_manager.trigger_redraw)
+        # self.fullscreenstopped.connect(self.vp_manager.trigger_redraw)
 
     def start(self, action):
         qscreen = action.qscreen
-        self.content_frame_layout.start_fullscreen(qscreen)
+        self.content_frame_manager.start_fullscreen(qscreen)
         self._is_fullscreen = True
         self.fullscreenstarted.emit(action)
 
     def stop(self):
-        self.content_frame_layout.stop_fullscreen()
+        self.content_frame_manager.stop_fullscreen()
         self._is_fullscreen = False
         self.fullscreenstopped.emit()
 
@@ -161,7 +154,7 @@ class FullscreenMenu(QMenu):
         self.refresh_items()
 
 
-class FullscreenMenuAction(base.OpenMenuAction):
+class FullscreenMenuAction(PopUpMenuAction):
     def __init__(self, parent, fullscreen_menu, fullscreen_ctrlr):
         super().__init__(
             icons.fullscreen_enter,

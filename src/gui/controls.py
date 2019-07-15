@@ -5,13 +5,6 @@ from ..gui import icons
 from ..util import config
 
 
-class ExitApp(QAction):
-    def __init__(self, parent=None):
-        super().__init__(text="Exit", parent=parent)
-        self.qapp = QApplication.instance()
-        self.triggered.connect(self.qapp.closeAlls)
-
-
 class AlwaysOnTopAction(QAction):
     def __init__(self, main_win=None):
         super().__init__(text="Always On Top", parent=main_win)

@@ -7,6 +7,8 @@ from PyQt5.QtWidgets import (
     QHBoxLayout,
     QMainWindow,
     QMenu,
+    QSizePolicy,
+    QSplitter,
     QToolButton,
     QVBoxLayout,
     QWidget,
@@ -14,32 +16,7 @@ from PyQt5.QtWidgets import (
 
 from . import vlcqt
 from .comm.client import RemoteInputClient
-from .controls.base import OpenMenuAction
-from .controls.connect import ServerConnectionAction, ServerConnectionButton
-from .controls.files import FileListLoader, OpenFileAction, OpenMultipleAction
-from .controls.fullscreen import (
-    FullscreenController,
-    FullscreenLabeledButton,
-    FullscreenMenu,
-)
-from .controls.playback import (  # PlaybackModeAction,
-    FrameResPlaybackSlider,
-    NextMediaAction,
-    PlayPauseAction,
-    PreviousMediaAction,
-)
-from .controls.scale import (
-    FrameScaleController,
-    FrameScaleMenu,
-    FrameScaleMenuButton,
-    FrameSizeController,
-    ZoomInAction,
-    ZoomOutAction,
-)
-from .controls.sound import VolumeController, VolumeSliderPopUpButton
-from .controls.window import AlwaysOnTopAction
-from .frame.layout import MainContentFrameLayout
-from .frame.viewpoint import ViewpointManager
+from .comm.connect import ServerConnectionAction, ServerConnectionButton
 from .gui import icons
 from .gui.buttons import (  # PlaybackModeButton,
     AlwaysOnTopButton,
@@ -51,7 +28,33 @@ from .gui.buttons import (  # PlaybackModeButton,
     ZoomInButton,
     ZoomOutButton,
 )
-from .playlist.interf import PlaylistController
+from .gui.components import PopUpMenuAction
+from .gui.controls import AlwaysOnTopAction
+from .output.frame import ContentFrameManager
+from .output.fullscreen import (
+    FullscreenController,
+    FullscreenLabeledButton,
+    FullscreenMenu,
+)
+from .output.playback import (  # PlaybackModeAction,
+    FrameResPlaybackSlider,
+    NextMediaAction,
+    PlayPauseAction,
+    PreviousMediaAction,
+)
+from .output.size import (
+    FrameSizeController,
+    FrameZoomController,
+    FrameZoomMenu,
+    FrameZoomMenuButton,
+    ZoomInAction,
+    ZoomOutAction,
+)
+from .output.sound import VolumeController, VolumeSliderPopUpButton
+from .output.viewpoint import ViewpointManager
+from .playlist.files import OpenFileAction, OpenMultipleAction
+from .playlist.player import PlaylistPlayer
+from .playlist.view import PlaylistView
 from .util import config
 
 log = logging.getLogger(__name__)
@@ -66,7 +69,7 @@ class MainMenuButton(QToolButton):
         self.setAutoRaise(True)
         self.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
-        self.action = OpenMenuAction(
+        self.action = PopUpMenuAction(
             icon=icons.main_menu_button, text=menu.title(), menu=self.menu, parent=self
         )
 
@@ -107,7 +110,7 @@ class AppWindow(QMainWindow):
         self.create_action_buttons()
         self.create_main_window()
 
-        self.file_loader.load_media_paths(media_paths)
+        self.playlist_view.add_media(media_paths)
 
         self.initialized.emit()
 
@@ -117,17 +120,17 @@ class AppWindow(QMainWindow):
         self.frame_size_ctrlr = FrameSizeController(
             main_win=self, viewpoint_manager=self.vp_manager
         )
-        self.frame_scale_ctrlr = FrameScaleController(
+        self.frame_zoom_ctrlr = FrameZoomController(
             main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
-        self.content_frame_layout = MainContentFrameLayout(
-            window=self, frame_size_ctrlr=self.frame_size_ctrlr
+        self.content_frame_manager = ContentFrameManager(
+            main_win=self, frame_size_ctrlr=self.frame_size_ctrlr
         )
         self.fullscreen_ctrlr = FullscreenController(
-            content_frame_layout=self.content_frame_layout,
+            content_frame_manager=self.content_frame_manager,
             viewpoint_manager=self.vp_manager,
         )
-        self.playback_slider_components = PlaybackSliderComponents(self)
+        self.pb_slider_comp = PlaybackSliderComponents(self)
         self.vol_ctrlr = VolumeController(parent=self)
         self.connection_action = ServerConnectionAction(
             client=self.client, viewpoint_manager=self.vp_manager, parent=self
@@ -135,26 +138,24 @@ class AppWindow(QMainWindow):
         self.connection_button = ServerConnectionButton(
             action=self.connection_action, parent=self, size=32
         )
-        self.playlist_ctrlr = PlaylistController(
-            content_frame_layout=self.content_frame_layout,
+        self.playlist_player = PlaylistPlayer(
+            content_frame_manager=self.content_frame_manager,
             frame_size_ctrlr=self.frame_size_ctrlr,
         )
-        self.file_loader = FileListLoader(
-            content_frame_layout=self.content_frame_layout,
-            frame_size_ctrlr=self.frame_size_ctrlr,
-            playlist_ctrlr=self.playlist_ctrlr,
+        self.playlist_view = PlaylistView(
+            playlist_player=self.playlist_player, parent=self
         )
 
     def create_menus(self):
-        self.frame_scale_menu = FrameScaleMenu(
-            main_win=self, frame_scale_ctrlr=self.frame_scale_ctrlr
+        self.frame_scale_menu = FrameZoomMenu(
+            main_win=self, frame_zoom_ctrlr=self.frame_zoom_ctrlr
         )
         self.fullscreen_menu = FullscreenMenu(
             main_win=self, fullscreen_ctrlr=self.fullscreen_ctrlr
         )
 
     def create_menu_buttons(self):
-        self.frame_scale_menu_button = FrameScaleMenuButton(
+        self.frame_scale_menu_button = FrameZoomMenuButton(
             parent=self, frame_scale_menu=self.frame_scale_menu, size=32
         )
         self.fullscreen_menu_button = FullscreenLabeledButton(
@@ -169,21 +170,21 @@ class AppWindow(QMainWindow):
 
     def create_actions(self):
         # self.playback_mode_action = PlaybackModeAction(parent=self)
-        self.open_file_action = OpenFileAction(self, self.file_loader)
-        self.open_multiple_action = OpenMultipleAction(self, self.file_loader)
+        self.open_file_action = OpenFileAction(self, self.playlist_view)
+        self.open_multiple_action = OpenMultipleAction(self, self.playlist_view)
         self.always_on_top_action = AlwaysOnTopAction(main_win=self)
         self.play_pause_action = PlayPauseAction(parent=self)
         self.prev_media_action = PreviousMediaAction(
-            parent=self, playlist_ctrlr=self.playlist_ctrlr
+            parent=self, playlist_player=self.playlist_player
         )
         self.next_media_action = NextMediaAction(
-            parent=self, playlist_ctrlr=self.playlist_ctrlr
+            parent=self, playlist_player=self.playlist_player
         )
         self.zoom_in_action = ZoomInAction(
-            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr
+            parent=self, frame_zoom_ctrlr=self.frame_zoom_ctrlr
         )
         self.zoom_out_action = ZoomOutAction(
-            parent=self, frame_scale_ctrlr=self.frame_scale_ctrlr
+            parent=self, frame_zoom_ctrlr=self.frame_zoom_ctrlr
         )
 
     def create_main_menu(self):
@@ -217,10 +218,10 @@ class AppWindow(QMainWindow):
             parent=self, action=self.always_on_top_action, size=32
         )
         self.zoom_out_button = ZoomOutButton(
-            parent=self, action=self.zoom_in_action, size=32
+            parent=self, action=self.zoom_out_action, size=32
         )
         self.zoom_in_button = ZoomInButton(
-            parent=self, action=self.zoom_out_action, size=32
+            parent=self, action=self.zoom_in_action, size=32
         )
 
     def create_main_window(self):
@@ -231,7 +232,13 @@ class AppWindow(QMainWindow):
         self.setCentralWidget(self.widget)
 
         # Media frame
-        self.layout.addLayout(self.content_frame_layout, 0)
+        self.content_view_splitter = QSplitter(self)
+        self.content_view_splitter.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding
+        )
+        self.content_view_splitter.addWidget(self.playlist_view)
+        self.content_view_splitter.addWidget(self.content_frame_manager)
+        self.layout.addWidget(self.content_view_splitter, 0)
 
         # Controls layout
         self.ctrls_widget = QWidget(self)
@@ -242,10 +249,9 @@ class AppWindow(QMainWindow):
         self.frame_ctrls = QWidget(self)
         self.frame_ctrls_lo = QHBoxLayout(self.frame_ctrls)
         self.frame_ctrls_lo.setContentsMargins(0, 0, 0, 0)
-        self.frame_ctrls_lo.addWidget(self.connection_button, Qt.AlignLeft)
+        self.frame_ctrls_lo.addWidget(self.connection_button)
         self.ctrls_layout.addWidget(self.frame_ctrls, 1, 0, 1, -1, Qt.AlignBottom)
-
-        self.ctrls_layout.addWidget(self.playback_slider_components, 2, 0, 1, -1)
+        self.ctrls_layout.addWidget(self.pb_slider_comp, 2, 0, 1, -1, Qt.AlignBottom)
 
         self.playback_bttns = QWidget(self)
         self.playback_bttns_lo = QHBoxLayout(self.playback_bttns)
@@ -254,6 +260,7 @@ class AppWindow(QMainWindow):
         self.playback_bttns_lo.addWidget(self.play_pause_button)
         self.playback_bttns_lo.addWidget(self.next_media_button)
         self.ctrls_layout.addWidget(self.playback_bttns, 3, 0, 1, -1, Qt.AlignCenter)
+        # self.ctrls_layout.addWidget(self.playlist_view, 5, 0, 1, -1, Qt.AlignCenter)
 
         self.lower_bttns = QWidget(self)
         self.lower_bttns_lo = QHBoxLayout(self.lower_bttns)
@@ -343,13 +350,15 @@ class AppWindow(QMainWindow):
 
     def sizeHint(self):
         try:
-            return self.size_hint_qsize
+            result = self.size_hint_qsize
         except AttributeError:
             media_w, media_h = self.frame_size_ctrlr.get_current_media_size()
             scale = config.state.view_scale
             targ_w, targ_h = self.calculate_resize_values(
                 media_w * scale, media_h * scale
             )
-            self.size_hint_qsize = QSize(targ_w, targ_h)
+            print(targ_w, targ_h)
+            result = QSize(targ_w, targ_h)
         finally:
+            self.size_hint_qsize = result
             return self.size_hint_qsize
