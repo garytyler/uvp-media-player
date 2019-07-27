@@ -15,7 +15,7 @@
 
 # Build
 
->**NOTE: This build requires a virtual environment created using using `virtualenv==16.1.0`. See [`pyinstaller` issue #4064](https://github.com/pyinstaller/pyinstaller/issues/4064) for an update on this limitation and other workarounds. To avoid modifying your system `virtualenv` installation, you can create the build virtual environment from a separate temporary virtual environment which itself uses `virtualenv==16.1.0`.**
+> **NOTE: This build requires a virtual environment created using using `virtualenv==16.1.0`. See [`pyinstaller` issue #4064](https://github.com/pyinstaller/pyinstaller/issues/4064) for an update on this limitation and other workarounds. To avoid modifying your system `virtualenv` installation, you can create the build virtual environment from a separate temporary virtual environment which itself uses `virtualenv==16.1.0`.**
 
 ## Build for Windows (.exe)
 

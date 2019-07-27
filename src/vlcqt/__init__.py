@@ -1,5 +1,6 @@
 from . import vlc_facades
-
+from ffmpeg import probe
+from os import path
 import sys
 import vlc
 from PyQt5.QtCore import pyqtSlot
@@ -26,6 +27,7 @@ class MediaPlayer(vlc_facades.MediaPlayerFacade):
 
     def set_output_widget(self, widget):
         state = self.get_state()
+        time = self.get_time()
         if state in [vlc.State.Buffering, vlc.State.Playing]:
             time = self.get_time()
             self.stop()
@@ -57,27 +59,27 @@ class MediaPlayer(vlc_facades.MediaPlayerFacade):
 media_player = MediaPlayer()
 
 
-class MediaListPlayer(vlc_facades.MediaListPlayerFacade):
-    def __init__(self):
-        super().__init__()
-        self.mp = media_player
-        self.set_media_player(self.mp)
+# class MediaListPlayer(vlc_facades.MediaListPlayerFacade):
+#     def __init__(self):
+#         super().__init__()
+#         self.mp = media_player
+#         self.set_media_player(self.mp)
 
-    def set_mrls(self, media_paths):
-        self.ml = vlc.MediaList(media_paths)
-        self.set_media_list(self.ml)
+#     def set_mrls(self, media_paths):
+#         self.ml = vlc.MediaList(media_paths)
+#         self.set_media_list(self.ml)
 
-    @pyqtSlot(str)
-    def on_setplaybackmode(self, value):
-        enums = {
-            "off": vlc.PlaybackMode.default,
-            "one": vlc.PlaybackMode.loop,
-            "all": vlc.PlaybackMode.repeat,
-        }
-        self.set_playback_mode(enums[value])
+#     @pyqtSlot(str)
+#     def on_setplaybackmode(self, value):
+#         enums = {
+#             "off": vlc.PlaybackMode.default,
+#             "one": vlc.PlaybackMode.loop,
+#             "all": vlc.PlaybackMode.repeat,
+#         }
+#         self.set_playback_mode(enums[value])
 
 
-list_player = MediaListPlayer()
+# list_player = MediaListPlayer()
 
 
 class Media(vlc_facades.MediaFacade):
@@ -106,9 +108,11 @@ class Media(vlc_facades.MediaFacade):
         self._parse_with_options(parse_flag, timeout)
 
     def on_mediaparsedchanged(self, e):
-        self.mediaparsedchanged.disconnect(self.mediaparsedchanged_connection)
+        self.mediaparsedchanged.disconnect()
         self.mp.stop()
-        self.mediaparsedchanged.emit(e)
+        del self.vlc_instance
+        del self.mp
+        del self.frame
 
 
 def __getattr__(attribute):

@@ -15,8 +15,9 @@ _SETTINGS = {
     "stay_on_top": {"options": (True, False), "default": False},
     "view_scale": {"options": (0.25, 0.5, 1, 2), "default": 1},
     "color_theme": {"options": ("light", "dark"), "default": "dark"},
-    "url": {"options": (), "default": None},
+    "url": {"options": (), "default": "ws://eventvr.herokuapp.com/mediaplayer"},
     "volume": {"options": (), "default": 50},  # number between 1 and 100
+    "tool_bar_area": {"options": ("top", "bottom"), "default": "bottom"},
 }
 
 

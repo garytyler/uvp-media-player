@@ -2,7 +2,7 @@ import logging
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import QFrame, QSizePolicy, QStackedLayout
+from PyQt5.QtWidgets import QFrame, QSizePolicy, QSplitter, QStackedLayout
 
 from .. import vlcqt
 from ..util import config
@@ -10,75 +10,19 @@ from ..util import config
 log = logging.getLogger(__name__)
 
 
-class ContentFrameItem:
-    def __new__(cls, media=None):
-        if media:
-            return MediaFrameItem(media)
-        else:
-            return super().__new__(cls)
-
-    def __init__(self, media=None):
-        self.media = media
-        pass
-
-    def get_media_rate(self):
-        return None
-
-    def width(self):
-        return 600
-
-    def height(self):
-        return 360
-
-
-class MediaFrameItem(ContentFrameItem):
-    def __new__(cls, media):
-        if not media.is_parsed():
-            media.parse()
-
-        tracks = list(media.tracks_get())
-        if tracks[0].type == vlcqt.TrackType.video:
-            return super().__new__(VideoFrameItem)
-        elif tracks[0].type == vlcqt.TrackType.audio:
-            return super().__new__(AudioFrameItem)
-
-    def __init__(self, media):
-        super().__init__(media)
-        self.media = media
-        self.tracks = [t for t in self.media.tracks_get()]
-        self.num_tracks = self.media.get_meta(vlcqt.Meta.TrackTotal)
-
-    def get_media_rate(self):
-        return 30
-
-
-class AudioFrameItem(MediaFrameItem):
-    def __init__(self, media):
-        super().__init__(media)
-
-
-class VideoFrameItem(MediaFrameItem):
-    def __init__(self, media):
-        super().__init__(media)
-        self.track = self.tracks[0]
-
-    def width(self):
-        return self.tracks[0].video.contents.width
-
-    def height(self):
-        return self.tracks[0].video.contents.height
-
-    def get_media_rate(self):
-        return self.tracks[0].video.contents.frame_rate_num
-
-
 class BaseContentFrame(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.setObjectName("output_surface")
         self.mp = vlcqt.media_player
-        self.setAttribute(Qt.WA_OpaquePaintEvent)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.set_fill_color(0, 0, 0)
+        self.black_color = QColor(0, 0, 0)
+        self.fill_black()
+
+    def fill_black(self):
+        p = self.palette()
+        p.setColor(QPalette.Window, self.black_color)
+        self.setPalette(self.palette())
 
     def set_fill_color(self, r, g, b):
         p = self.palette()
@@ -95,50 +39,54 @@ class FullscreenContentFrame(BaseContentFrame):
         self.mp.set_output_widget(self)
 
 
-class MainContentFrame(BaseContentFrame):
-    def __init__(self, main_win, frame_size_ctrlr):
+class MediaPlayerContentFrame(BaseContentFrame):
+    def __init__(self, main_win, frame_size_mngr):
         super().__init__(parent=main_win)
         self.main_win = main_win
-        self.frame_size_ctrlr = frame_size_ctrlr
+        self.frame_size_mngr = frame_size_mngr
         self.mp = vlcqt.media_player
         self.mp.set_output_widget(self)
         self.content_qsize = QSize()
 
-    def sizeHint(self):
-        # self.mp.get_media()
-        w, h = self.frame_size_ctrlr.get_current_media_size()
-        scale = config.state.view_scale
-        self.content_qsize.setWidth(w * scale)
-        self.content_qsize.setHeight(h * scale)
-        return QSize(w, h)
+    def start_fullscreen(self, qscreen):
+        self.setParent(None)
+        self.setWindowState(Qt.WindowFullScreen)  # Lets geo map to non-primary screens
+        self.setGeometry(qscreen.geometry())
+        self.showFullScreen()
+
+    def stop_fullscreen(self):
+        self.hide()
+        self.main_win.setCentralWidget(self)
+        self.show()
 
 
-class ContentFrameManager(QFrame):
-    def __init__(self, main_win, frame_size_ctrlr):
+class MainContentFrame(QFrame):
+    def __init__(self, main_win, frame_size_mngr):
         super().__init__()
+
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setLayout(QStackedLayout(self))
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.main_win = main_win
-        self.frame_size_ctrlr = frame_size_ctrlr
+        self.frame_size_mngr = frame_size_mngr
         self.filler_frame = BaseContentFrame(parent=self.main_win)
         self.layout().insertWidget(1, self.filler_frame)
-        # self.filler_frame.hide()
-        # self._new_main_content_frame()
+        self.filler_frame.hide()
+        self._new_mp_content_frame()
 
-    def _new_main_content_frame(self):
+    def _new_mp_content_frame(self):
         self.clear_main_content_frame()
-        new_mp_frame = MainContentFrame(
-            main_win=self.main_win, frame_size_ctrlr=self.frame_size_ctrlr
+        new_mp_content_frame = MediaPlayerContentFrame(
+            main_win=self.main_win, frame_size_mngr=self.frame_size_mngr
         )
-        self.mp_frame = new_mp_frame
-
-        self.layout().insertWidget(0, self.mp_frame)
+        self.mp_content_frame = new_mp_content_frame
+        self.layout().insertWidget(0, self.mp_content_frame)
         self.layout().setCurrentIndex(0)
 
     def clear_main_content_frame(self):
         if hasattr(self, "main_content_frame"):
             self.mp_content_frame.hide()
-            self.layout().removeWidget(self.mp_frame)
+            self.layout().removeWidget(self.mp_content_frame)
             del self.mp_content_frame
         if isinstance(self.layout().widget(0), BaseContentFrame):
             _w = self.layout().widget(0)
@@ -147,19 +95,46 @@ class ContentFrameManager(QFrame):
             del _w
 
     def reset_main_content_frame(self):
-        self._new_main_content_frame()
-        self.frame_size_ctrlr.conform_to_media()
+        self._new_mp_content_frame()
+        self.frame_size_mngr.conform_to_media()
 
     def start_fullscreen(self, qscreen):
-
         self.fs_frame = FullscreenContentFrame(qscreen)
         self.fs_frame.show()
         self.layout().setCurrentIndex(1)
-        # del self.mp_frame
 
-    #
     def stop_fullscreen(self):
         self.fs_frame.hide()
         self.layout().setCurrentIndex(0)
-        # self.reset_main_content_frame()
         del self.fs_frame
+
+
+class SplitView(QSplitter):
+    def __init__(self, playlist_editor, main_content_frame, parent):
+        super().__init__(parent)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
+        self.playlist_editor = playlist_editor
+        self.main_content_frame = main_content_frame
+        self.setStretchFactor(0, 0)
+
+        self.insertWidget(0, self.playlist_editor)
+        self.setStretchFactor(1, 1)
+
+        self.insertWidget(1, self.main_content_frame)
+        self.orig_state = self.saveState()
+
+    def toggle_playlist(self, value):
+
+        for n in range(self.count()):
+            w = self.widget(n)
+            if w:
+                w.setParent(None)
+        if value:
+            self.insertWidget(0, self.playlist_editor)
+            self.insertWidget(1, self.main_content_frame)
+            self.moveSplitter(self.playlist_editor.sizeHint().width(), 0)
+        else:
+            self.insertWidget(0, self.main_content_frame)
+            self.moveSplitter(0, 0)
+        self.main_content_frame.reset_main_content_frame()

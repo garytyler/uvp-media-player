@@ -1,6 +1,6 @@
 import logging
 
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, pyqtSignal
 
 from .. import vlcqt
 
@@ -8,18 +8,38 @@ log = logging.getLogger(__name__)
 
 
 class PlaylistPlayer:
-    def __init__(self, content_frame_manager, frame_size_ctrlr):
-        self.content_frame_manager = content_frame_manager
-        self.frame_size_ctrlr = frame_size_ctrlr
+    listplayerstatechanged = pyqtSignal()
+
+    def __init__(self, vp_manager, playback_mode_mngr, main_content_frame=None):
+        self.vp_manager = vp_manager
+        self.playback_mode_mngr = playback_mode_mngr
+        self.main_content_frame = main_content_frame
         self.mp = vlcqt.media_player
         self.index = None
         self.mp.endreached.connect(self.on_mp_endreached)
 
     def on_mp_endreached(self):
-        self.load_next()
+        self.handle_media_end_reached()
 
-    def load_previous(self):
-        assert self.index
+    def handle_media_end_reached(self):
+        next_index = self.index.siblingAtRow(self.index.row() + 1)
+        if not next_index.isValid():
+            self.handle_playlist_end_reached()
+        else:
+            self.index = next_index
+            self.load_media(self.index)
+
+    def handle_playlist_end_reached(self):
+        playback_mode = self.playback_mode_mngr.get_mode()
+        if playback_mode == "off":
+            self.mp.stop()
+        elif playback_mode == "one":
+            self.load_media(self.index, play=True)
+        elif playback_mode == "all":
+            first_item_index = self.index.model().item(0).index()
+            self.load_media(first_item_index, play=True)
+
+    def skip_previous(self):
         prev_index = self.index.siblingAtRow(self.index.row() - 1)
         if not prev_index.isValid():
             log.info(f"LOAD PREV MEDIA Index Invalid row={prev_index.row()}")
@@ -27,25 +47,31 @@ class PlaylistPlayer:
             self.index = prev_index
             self.load_media(self.index)
 
-    def load_next(self):
-        assert self.index
+    def skip_next(self):
         next_index = self.index.siblingAtRow(self.index.row() + 1)
         if not next_index.isValid():
             log.info(f"LOAD NEXT MEDIA Index Invalid row={next_index.row()}")
+            first_item_index = self.index.model().item(0).index()
+            self.load_media(first_item_index)
         else:
             self.index = next_index
             self.load_media(self.index)
 
-    def load_media(self, index):
+    def load_media(self, index, play=True):
         if not index.isValid():
             log.info(f"LOAD MEDIA Index Invalid row={index.row()}")
         else:
             self.index = index
-            media = self.index.data(Qt.UserRole)
-            # media = self.index.data(Qt.UserRole)
-            print(media)
-            self.content_frame_manager.clear_main_content_frame()
+            media = self.index.data(Qt.VlcMedia)
+            is_spherical = self.index.data(Qt.IsSpherical)
+            self.vp_manager.enable_per_frame_updates(is_spherical)
             self.mp.stop()
             self.mp.set_media(media)
-            self.content_frame_manager.reset_main_content_frame()
-            self.mp.play()
+            if play:
+                self.mp.play()
+
+
+def get_media_codec(vlc_media, track_num=0):
+    track = [t for t in vlc_media.tracks_get()][track_num]
+    description = vlcqt.libvlc_media_get_codec_description(track.type, track.codec)
+    return description

@@ -1,119 +1,102 @@
+import logging
+
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFontMetrics, QIcon
-from PyQt5.QtWidgets import QAction, QApplication, QLabel, QSizePolicy, QToolButton
+from PyQt5.QtWidgets import (
+    QAbstractButton,
+    QAction,
+    QApplication,
+    QFormLayout,
+    QHBoxLayout,
+    QInputDialog,
+    QLabel,
+    QPushButton,
+    QSizePolicy,
+    QToolButton,
+    QWidget,
+)
 
+from ..base.buttons import ActionButton
 from ..gui import icons
+from ..util import config
+
+# from ..output.status import StatusLabel
+
+log = logging.getLogger(__name__)
 
 
-class ServerConnectionAction(QAction):
-    startedconnecting = pyqtSignal()
-    connected = pyqtSignal()
+class ConnectToServerAction(QAction):
+    stoppedconnecting = pyqtSignal(bool)
     disconnected = pyqtSignal()
 
-    def __init__(self, client, viewpoint_manager, parent):
+    DisconnectedMode = 0
+    ConnectingMode = 1
+    ConnectedMode = 2
+
+    def __init__(self, auto_connect_socket, connect_status_widget, parent):
         super().__init__(parent=parent)
-        self.setIcon(icons.server_connected)
-        self.setIconText("Disconnected")
-        self.setToolTip("Server is disconnected")
+        self.socket = auto_connect_socket
+        self.connect_status_widget = connect_status_widget
+        self.parent = parent
+        self.setIcon(icons.connect_to_server_status)
         self.setCheckable(True)
+        self.icon = icons.connect_to_server_status
+        self.set_mode(self.DisconnectedMode)
 
-        self.client = client
-        self.vp_manger = viewpoint_manager
+        self.socket.stoppedconnecting.connect(self.on_stoppedconnecting)
+        self.socket.disconnected.connect(self.on_disconnected)
+        self.triggered.connect(self.on_triggered)
 
-        self.client.socket.connected.connect(self.on_connected)
-        self.client.socket.disconnected.connect(self.on_disconnected)
+    def on_triggered(self, checked):
+        if checked:
+            self.socket.connect(config.state.url)
+            self.set_mode(self.ConnectingMode)
+        else:
+            self.socket.disconnect()
 
-        self.startedconnecting.connect(self.on_startedconnecting)
-
-        self.setDisabled(True)
-
-        self.start_connecting()
-
-    def start_connecting(self, url="wss://eventvr.herokuapp.com/mediaplayer"):
-        self.client.socket.attempt_open_on_interval(url=url)
-        self.startedconnecting.emit()
-
-    def on_startedconnecting(self):
-        self.setIconText("Connecting...")
-
-    @pyqtSlot()
-    def on_connected(self,):
-        self.connected.emit()
-        self.setChecked(True)
+    @pyqtSlot(bool)
+    def on_stoppedconnecting(self, is_connected):
+        if is_connected:
+            self.set_mode(self.ConnectedMode)
+        else:
+            self.set_mode(self.DisconnectedMode)
 
     @pyqtSlot()
     def on_disconnected(self):
-        self.disconnected.emit()
-        self.setChecked(False)
+        self.set_mode(self.DisconnectedMode)
 
+    def get_status_txt(self, status, url=""):
+        # url_line = f"({url})" if url else ""
+        return f"{status} {url}"
 
-class ServerConnectionButton(QToolButton):
-    def __init__(self, action, parent, size):
-        super().__init__(parent=parent)
-        self.action = action
-        self.setStyleSheet("font-size:8;")
-        self.setDefaultAction(self.action)
-        self.setIconSize(QSize(size, size))
-        self.setAutoRaise(True)
-        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.action.setDisabled(True)
-
-        self.setMinimumSize(self.sizeHint())
-        self.url = None
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.action.connected.connect(self.on_connected)
-        self.action.disconnected.connect(self.on_disconnected)
-
-    @pyqtSlot()
-    def on_connected(self):
-        self.url = self.action.client.socket.qurl.toDisplayString()
-        self.action.setIconText(f"Connected")
-        self.update_url_display()
-
-    @pyqtSlot()
-    def on_disconnected(self):
-        self.url = None
-        self.action.setIconText("Disconnected")
-
-    def update_url_display(self):
-        if self.url:
-            elided_txt = self.get_elided_txt(self.url)
-            self.action.setIconText(f"Connected:\n{elided_txt}")
-
-    def get_elided_txt(self, string):
-        return QFontMetrics(self.font()).elidedText(
-            string, Qt.ElideRight, self.sizeHint().width()
-        )
-
-    def resizeEvent(self, e):
-        self.update_url_display()
-
-
-class ServerConnectionWidget(QLabel):
-    def __init__(self, client, viewpoint_manager):
-        super().__init__()
-        self.client = client
-        self.vp_manger = viewpoint_manager
-        self.client.socket.disconnected.connect(self.on_disconnected)
-
-        self.qapp = QApplication.instance()
-        self.setToolTip("Server is disconnected.")
-        self.set_icons()
-
-    def set_icons(self):
-        self.icon_size = QSize(48, 48)
-        self.connected_icon = icons.server_connected.pixmap(
-            self.icon_size, QIcon.Normal, QIcon.On
-        )
-        self.disconnected_icon = icons.server_connected.pixmap(
-            self.icon_size, QIcon.Normal, QIcon.Off
-        )
-        self.setPixmap(self.disconnected_icon)
-
-    def on_disconnected(self):
-        self.setToolTip("Server is disconnected.")
-        self.setPixmap(self.disconnected_icon)
-
-    def on_connected(self):
-        self.setToolTip("Server is connected.")
-        self.setPixmap(self.connected_icon)
+    def set_mode(self, mode):
+        if mode == self.DisconnectedMode:
+            self.setEnabled(True)
+            self.setChecked(False)
+            self.setText("Connect")
+            self.setToolTip("Connect to server")
+            self.connect_status_widget.set_status(
+                text=f"Disconnected ({config.state.url})",
+                mode=QIcon.Normal,
+                state=QIcon.Off,
+            )
+        elif mode == self.ConnectingMode:
+            self.setEnabled(False)
+            self.setText("Connecting...")
+            self.setToolTip("Connecting to server")
+            self.connect_status_widget.set_status(
+                text=f"Connecting... ({config.state.url})",
+                mode=QIcon.Disabled,
+                state=QIcon.Off,
+            )
+        elif mode == self.ConnectedMode:
+            self.setEnabled(True)
+            self.setChecked(True)
+            self.setText("Disconnect")
+            self.setToolTip("Disconnect from server")
+            self.connect_status_widget
+            self.connect_status_widget.set_status(
+                text=f"Connected ({config.state.url})",
+                mode=QIcon.Normal,
+                state=QIcon.On,
+            )

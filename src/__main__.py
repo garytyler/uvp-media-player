@@ -20,8 +20,10 @@ def main():
     qapp = QApplication(qt_args)
 
     initialize_style(qapp)
+    qapp.setApplicationDisplayName("Media Player")
 
     player_win = AppWindow(media_paths=sys.argv[1:])
+
     player_win.show()
 
     sys.exit(qapp.exec_())

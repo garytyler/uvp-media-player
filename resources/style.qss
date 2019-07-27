@@ -1,3 +1,24 @@
+* {
+    font-family: 10pt;
+    font-family: helvetica;
+}
+
+QMainWindow::separator {
+    border-bottom: 1px groove palette(base);
+}
+
+
+/*
+ * QWidget
+ */
+
+QWidget#popup {
+    background-color: palette(base);
+    border: inset rgb(21, 21, 21);
+    border-width: 4px;
+}
+
+
 /*
  * QGroupBox
  */
@@ -17,6 +38,10 @@ QGroupBox::title {
  * QMenu
  */
 
+QMenu {
+    font-size: 10pt;
+}
+
 QMenu:disabled {
     color: transparent;
 }
@@ -25,45 +50,55 @@ QMenu:item {
     background-color: palette(midlight);
 }
 
-QMenu {
-    font-size: 11pt;
+
+/*
+ * QLabel
+ */
+
+QLabel {
+    font-size: 10pt;
+}
+
+QLabel#horizontal-dock-title-bar {
+    border: 1px outset palette(base);
+    color: palette(light);
+}
+
+QLabel#vertical-dock-title-bar {
+    border: 1px outset palette(base);
+    color: palette(light);
+}
+
+QLabel#icon_status {
+    border: 2px groove palette(base);
+    border-top: none;
+    border-bottom: none;
+    border-right: none;
+    padding-left: .5em;
+}
+
+QLabel#text_status {
+    /* border: 1px ridge palette(base); */
+    color: palette(light);
 }
 
 
 /*
- * QWidget
+ * QFrame
  */
 
-QFrame#popup {
+QFrame#output_surface {
+    /* background-color: rgb(0, 0, 0); */
+    /* background-image: rgb(0, 0, 0); */
+    background-clip: content-box;
+    background-color: black;
+}
+
+QFrame#popupcontrolwin {
     background-color: palette(base);
     border: inset rgb(21, 21, 21);
     border-width: 1px;
 }
-
-
-/* QWidget#popup {
-    background-color: palette(base);
-    border: inset rgb(21, 21, 21);
-    border-width: 4px;
-} */
-
-
-/* QWidget#popup { */
-
-
-/* background-color: palette(base); */
-
-
-/* border: rgb(21, 21, 21); */
-
-
-/* border: inset rgb(21, 21, 21); */
-
-
-/* border-width: 1px; */
-
-
-/* } */
 
 
 /*
@@ -75,9 +110,14 @@ QAction::title {
 }
 
 
-/* QPushButton {
-    font-size: 10pt;
-} */
+/*
+ * QStatusBar
+ */
+
+QStatusBar {
+    border-top: 1px outset palette(base);
+    color: palette(light)
+}
 
 
 /*
@@ -85,14 +125,21 @@ QAction::title {
  */
 
 QToolBar {
-    border: none;
+    border: 1px outset palette(base);
+}
+
+QToolBar::separator {
+    margin: 2ex;
+    width: 0.5px;
+    border: 1px outset palette(base);
+}
+
+QToolButton#qt_toolbar_ext_button {
+    border: ridge 1px palette(base);
 }
 
 QToolButton {
-    font-size: 11pt;
-    background-color: transparent;
     border: none;
-    padding: 0px;
 }
 
 
@@ -122,8 +169,8 @@ QTabBar::tab:selected:disabled {
 
 
 /*
-   * QScrollBar
-   */
+ * QScrollBar
+ */
 
 QScrollBar:vertical {
     background: palette(base);
@@ -204,8 +251,8 @@ QScrollArea #scrollAreaWidgetContents {
 
 
 /*
-   * QSlider
-   */
+ * QSlider
+ */
 
 QSlider::groove:horizontal {
     /* border: 1px solid #999999; */

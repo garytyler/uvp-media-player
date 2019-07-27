@@ -1,12 +1,17 @@
+import logging
 from array import array
 
 from PyQt5.QtCore import QByteArray
 
 from . import socks
+from .. import vlcqt
+from ..util import config
+
+log = logging.getLogger(__name__)
 
 
-class RemoteInputClient:
-    def __init__(self, url):
+class RemoteInputManager:
+    def __init__(self):
         self.motion_state = None
         self.state_changed = False
         self.socket = socks.AutoConnectSocket()
@@ -16,14 +21,11 @@ class RemoteInputClient:
 
         self.socket.binaryMessageReceived.connect(self.received_bytes)
 
-    def stop_connecting(self):
-        self.socket.stop_attempting()
-
     def received_bytes(self, qbytearray):
         self._curr_motion_state = qbytearray
 
     def get_new_motion_state(self):
         if self._curr_motion_state == self._last_motion_state:
-            return
+            return None
         motion_state_array = array("d", self._curr_motion_state.data())
         return motion_state_array

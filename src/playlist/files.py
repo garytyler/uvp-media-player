@@ -38,6 +38,34 @@ def get_media_items(paths):
     return media_items
 
 
+def get_media_paths(paths):
+    if isinstance(paths, str):
+        paths = [paths]
+
+    file_paths = []
+    for p in paths:
+        if not os.path.exists(p):
+            log.error(f"PATH NOT FOUND path={p}")
+        if os.path.isfile(p):
+            file_paths.append(p)
+            continue
+        for i in os.scandir(p):
+            if i.is_file():
+                file_paths.append(i.path)
+
+    media_paths = []
+    for p in file_paths:
+        _media = vlcqt.Media(p)
+        _media.parse()
+        iter_tracks = _media.tracks_get()
+        if not iter_tracks:
+            continue
+        media_paths.append(os.path.abspath(p))
+        del _media
+
+    return media_paths
+
+
 class OpenFileAction(QAction):
     def __init__(self, parent, playlist_view):
         super().__init__(parent=parent)
@@ -65,7 +93,7 @@ class OpenMultipleAction(QAction):
         self.parent = parent
         self.playlist_view = playlist_view
         self.setIcon(icons.open_multiple)
-        self.setText("Open multiple files")
+        self.setText("Open Multiple Files")
         self.setShortcut("Ctrl+M")
         self.setShortcutContext(Qt.WidgetWithChildrenShortcut)
         self.setShortcutVisibleInContextMenu(True)

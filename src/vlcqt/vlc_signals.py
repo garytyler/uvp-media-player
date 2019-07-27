@@ -3,8 +3,6 @@ import logging
 import vlc
 from PyQt5.QtCore import QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 
-from ..output.frame import MediaFrameItem
-
 log = logging.getLogger(__name__)
 
 
@@ -46,19 +44,19 @@ class MediaPlayerVlclibSignals(QObject):
         super().__init__()
 
         type_slot_pairs = [
-            (vlc.EventType.MediaPlayerAudioDevice, self._audiodevice),
+            # (vlc.EventType.MediaPlayerAudioDevice, self._audiodevice),
             (vlc.EventType.MediaPlayerAudioVolume, self._audiovolume),
-            (vlc.EventType.MediaPlayerBackward, self._backward),
+            # (vlc.EventType.MediaPlayerBackward, self._backward),
             (vlc.EventType.MediaPlayerBuffering, self._buffering),
-            (vlc.EventType.MediaPlayerChapterChanged, self._chapterchanged),
-            (vlc.EventType.MediaPlayerCorked, self._corked),
-            (vlc.EventType.MediaPlayerESAdded, self._esadded),
-            (vlc.EventType.MediaPlayerESDeleted, self._esdeleted),
-            (vlc.EventType.MediaPlayerESSelected, self._esselected),
-            (vlc.EventType.MediaPlayerEncounteredError, self._encounterederror),
+            # (vlc.EventType.MediaPlayerChapterChanged, self._chapterchanged),
+            # (vlc.EventType.MediaPlayerCorked, self._corked),
+            # (vlc.EventType.MediaPlayerESAdded, self._esadded),
+            # (vlc.EventType.MediaPlayerESDeleted, self._esdeleted),
+            # (vlc.EventType.MediaPlayerESSelected, self._esselected),
+            # (vlc.EventType.MediaPlayerEncounteredError, self._encounterederror),
             (vlc.EventType.MediaPlayerEndReached, self._endreached),
-            (vlc.EventType.MediaPlayerForward, self._forward),
-            (vlc.EventType.MediaPlayerLengthChanged, self._lengthchanged),
+            # (vlc.EventType.MediaPlayerForward, self._forward),
+            # (vlc.EventType.MediaPlayerLengthChanged, self._lengthchanged),
             (vlc.EventType.MediaPlayerMediaChanged, self._mediachanged),
             (vlc.EventType.MediaPlayerMuted, self._muted),
             (vlc.EventType.MediaPlayerNothingSpecial, self._nothingspecial),
@@ -67,14 +65,14 @@ class MediaPlayerVlclibSignals(QObject):
             (vlc.EventType.MediaPlayerPaused, self._paused),
             (vlc.EventType.MediaPlayerPlaying, self._playing),
             (vlc.EventType.MediaPlayerPositionChanged, self._positionchanged),
-            (vlc.EventType.MediaPlayerScrambledChanged, self._scrambledchanged),
-            (vlc.EventType.MediaPlayerSeekableChanged, self._seekablechanged),
-            (vlc.EventType.MediaPlayerSnapshotTaken, self._snapshottaken),
+            # (vlc.EventType.MediaPlayerScrambledChanged, self._scrambledchanged),
+            # (vlc.EventType.MediaPlayerSeekableChanged, self._seekablechanged),
+            # (vlc.EventType.MediaPlayerSnapshotTaken, self._snapshottaken),
             (vlc.EventType.MediaPlayerStopped, self._stopped),
-            (vlc.EventType.MediaPlayerTimeChanged, self._timechanged),
-            (vlc.EventType.MediaPlayerTitleChanged, self._titlechanged),
-            (vlc.EventType.MediaPlayerUncorked, self._uncorked),
-            (vlc.EventType.MediaPlayerUnmuted, self._unmuted),
+            # (vlc.EventType.MediaPlayerTimeChanged, self._timechanged),
+            # (vlc.EventType.MediaPlayerTitleChanged, self._titlechanged),
+            # (vlc.EventType.MediaPlayerUncorked, self._uncorked),
+            # (vlc.EventType.MediaPlayerUnmuted, self._unmuted),
             (vlc.EventType.MediaPlayerVout, self._vout),
         ]
         event_manager = vlc_media_player.event_manager()
@@ -184,7 +182,7 @@ class MediaPlayerVlclibSignals(QObject):
     @pyqtSlot(vlc.Event)
     def _positionchanged(self, e):
         self.positionchanged.emit(e)
-        log.debug("VLCQT SIGNAL name='positionchanged'")
+        # log.debug("VLCQT SIGNAL name='positionchanged'")
 
     @pyqtSlot(vlc.Event)
     def _scrambledchanged(self, e):
@@ -234,50 +232,43 @@ class MediaPlayerVlclibSignals(QObject):
 
 class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
     newframe = pyqtSignal()
+    slider_precision = 100
 
     def __init__(self, vlc_media_player: vlc.MediaPlayer):
         super().__init__(vlc_media_player=vlc_media_player)
-
         self.timer = QTimer()
-        self.timer.setTimerType(Qt.PreciseTimer)
+        self.timer.setTimerType(Qt.CoarseTimer)
         self.timer.timeout.connect(self.on_timeout)
 
         self.playing.connect(self.timer.start)
         self.stopped.connect(self.timer.stop)
         self.paused.connect(self.timer.stop)
 
-        self.__has_media = True if self._vlc_obj.get_media() else False
         self.mediachanged.connect(self.on_mediachanged)
 
     def on_timeout(self):
         self.newframe.emit()
 
-    @property
     def has_media(self):
-        return self.__has_media
-
-    @property
-    def media_size(self):
-        return self.__has_media
+        return True if self._vlc_obj.get_media() else False
 
     def on_mediachanged(self, e):
-        media = self._vlc_obj.get_media()
-
-        # Update common has_media bool
-        self.__has_media = True if self._vlc_obj.get_media() else False
-
-        # Set timer
-        media_frame_item = MediaFrameItem(media)
-        media_rate = media_frame_item.get_media_rate()
-        playback_rate = media_rate * self.get_rate() if media_rate else 30
-        self.timer.setInterval(1000 / playback_rate)
+        media = self.get_media()
+        if not media.is_parsed():
+            media.parse()
+        media_fps = self._get_media_fps(media)
+        playback_fps = media_fps * self.get_rate()
+        self.timer.setInterval(self.slider_precision / playback_fps)
 
     def _get_media_fps(self, vlc_media: vlc.Media) -> float:
         if not vlc_media:
-            return None
+            return 30
         if not vlc_media.is_parsed():
             vlc_media.parse()
-        track = [t for t in vlc_media.tracks_get()][0]
+        tracks = vlc_media.tracks_get()
+        if not tracks:
+            return 30
+        track = [t for t in tracks if t is not None][0]
         return track.video.contents.frame_rate_num
 
 

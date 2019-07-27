@@ -1,27 +1,20 @@
 import logging
 
-from PyQt5.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QSlider
 
 from .. import vlcqt
 from ..gui import icons
-from ..output.frame import MediaFrameItem
 from ..util import config
 
 log = logging.getLogger(__name__)
 
 
-class PlaybackModeAction(QAction):
-    setplaybackmode = pyqtSignal(str)
+class PlaybackModeManager(QObject):
+    playbackmodechanged = pyqtSignal(str)
 
     def __init__(self, parent):
         super().__init__(parent=parent)
-        self.setText("Toggle Playback Mode")
-        self.setToolTip("Toggle Playback Mode")
-        self.setIconText("Playback Mode")
-
-        self.lp = vlcqt.list_player
-        self.setCheckable(True)
 
         self.option_names = ["off", "one", "all"]
         for index, item in enumerate(self.option_names):
@@ -29,35 +22,90 @@ class PlaybackModeAction(QAction):
                 self.rotate_list(self.option_names, index)
                 break
 
-        option_name = self.option_names[0]
-        self.setIcon(icons.playback_mode[option_name])
-
-        self.triggered.connect(self.on_triggered)
-        self.setplaybackmode.connect(self.lp.on_setplaybackmode)
-        self.setplaybackmode.connect(self.lp.on_setplaybackmode)
-
-    def on_triggered(self):
-        self.rotate_list(self.option_names, 1)
-        option_name = self.option_names[0]
-        self.setIcon(icons.playback_mode[option_name])
-        config.state.playback_mode = option_name
-        self.setplaybackmode.emit(option_name)
-        self.setChecked(True if option_name != "off" else False)
-
     @staticmethod
     def rotate_list(l, n):
         l[:] = l[n:] + l[:n]
 
+    def rotate_mode(self):
+        self.rotate_list(self.option_names, 1)
+        option_name = self.option_names[0]
+        self.playbackmodechanged.emit(option_name)
+        config.state.playback_mode = option_name
+
+    def get_mode(self):
+        return self.option_names[0]
+
+
+class PlaybackModeAction(QAction):
+    def __init__(self, parent, playback_mode_mngr):
+        super().__init__(parent=parent)
+        self.playback_mode_mngr = playback_mode_mngr
+        self.icons = {
+            "off": icons.playback_mode_off,
+            "one": icons.playback_mode_one,
+            "all": icons.playback_mode_all,
+        }
+        self.setText("Toggle Playback Mode")
+        self.setToolTip("Toggle Playback Mode")
+        self.setIconText("Playback Mode")
+        self.setCheckable(True)
+        self.setIcon(self.icons[self.playback_mode_mngr.get_mode()])
+
+        self.triggered.connect(self.playback_mode_mngr.rotate_mode)
+        self.playback_mode_mngr.playbackmodechanged.connect(self.on_playbackmodechanged)
+
+    def on_playbackmodechanged(self, mode: str):
+        self.setIcon(self.icons[mode])
+        self.setChecked(True if mode != "off" else False)
+
+
+# class PlaybackModeAction(QAction):
+#     # setplaybackmode = pyqtSignal(str)
+
+#     def __init__(self, parent):
+#         super().__init__(parent=parent)
+#         self.setText("Toggle Playback Mode")
+#         self.setToolTip("Toggle Playback Mode")
+#         self.setIconText("Playback Mode")
+
+#         self.lp = vlcqt.list_player
+#         self.setCheckable(True)
+
+#         self.option_names = ["off", "one", "all"]
+#         for index, item in enumerate(self.option_names):
+#             if item == config.state.playback_mode:
+#                 self.rotate_list(self.option_names, index)
+#                 break
+
+#         option_name = self.option_names[0]
+#         self.setIcon(icons.playback_mode[option_name])
+
+#         self.triggered.connect(self.on_triggered)
+#         # self.setplaybackmode.connect(self.lp.on_setplaybackmode)
+#         # self.setplaybackmode.connect(self.lp.on_setplaybackmode)
+
+#     def on_triggered(self):
+#         self.rotate_list(self.option_names, 1)
+#         option_name = self.option_names[0]
+#         self.setIcon(icons.playback_mode[option_name])
+#         config.state.playback_mode = option_name
+#         self.setplaybackmode.emit(option_name)
+#         self.setChecked(True if option_name != "off" else False)
+
+#     @staticmethod
+#     def rotate_list(l, n):
+#         l[:] = l[n:] + l[:n]
+
 
 class PlayPauseAction(QAction):
-    def __init__(self, parent):
+    def __init__(self, parent, playlist_player):
         super().__init__(parent=parent)
+        self.playlist_player = playlist_player
+        self.mp = vlcqt.media_player
+
         self.setToolTip("Play/Pause")
         self.setCheckable(True)
-
         self.setIcon(icons.play_pause)
-
-        self.mp = vlcqt.media_player
 
         if self.mp.is_playing():
             self.on_playing()
@@ -80,6 +128,7 @@ class PlayPauseAction(QAction):
 
     @pyqtSlot()
     def on_triggered(self):
+        # self.playlist_player.play_pause()
         if self.mp.is_playing():
             self.mp.pause()
         else:
@@ -98,7 +147,7 @@ class PreviousMediaAction(QAction):
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.playlist_player.load_previous()
+        self.playlist_player.skip_previous()
 
 
 class NextMediaAction(QAction):
@@ -113,12 +162,11 @@ class NextMediaAction(QAction):
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.playlist_player.load_next()
+        self.playlist_player.skip_next()
 
 
 class FrameResPlaybackSlider(QSlider):
-
-    default_values = {"length": 1, "proportion_per_frame": 1}
+    slider_precision = 100  # Must match multiplier used by timer
 
     def __init__(self, parent):
         super().__init__(Qt.Horizontal, parent)
@@ -128,9 +176,9 @@ class FrameResPlaybackSlider(QSlider):
         self.mp_pos = None
         self.mouse_down = False
 
-        # # Might be useful for playlist
-        # self.proportion_per_frame = self.default_values["proportion_per_frame"]
-        # self.length = self.default_values["length"]
+        self.slider_precision = self.slider_precision
+        self.proportion_per_frame = 1
+        self.length = 1
 
         _media = self.mp.get_media()
         if _media:
@@ -138,15 +186,13 @@ class FrameResPlaybackSlider(QSlider):
 
         self.mp.mediachanged.connect(self.on_mediachanged)
         self.mp.positionchanged.connect(self.on_positionchanged)
-        # self.mp.endreached.connect(self.on_endreached) # Might be useful for playlist
+        self.mp.stopped.connect(self.on_stopped)
 
         self.newframe_conn = self.mp.newframe.connect(self.on_newframe)
 
     def conform_to_media(self, media):
-        media_frame_item = MediaFrameItem(media)
-        rate = media_frame_item.get_media_rate()  # FPS if video, default if audio
-        duration_secs = media.get_duration() / 1000
-        self.total_frames = duration_secs * rate
+        duration_secs = media.get_duration() / self.slider_precision
+        self.total_frames = duration_secs * self.get_media_fps(media)
         self.proportion_per_frame = 1 / self.total_frames
         self.set_length(self.total_frames)
         self.curr_pos = self.mp_pos = self.mp.get_position()
@@ -154,6 +200,9 @@ class FrameResPlaybackSlider(QSlider):
     def setValue(self, value):
         if not self.mouse_down:
             super().setValue(value)
+
+    def on_stopped(self, e):
+        self.setValue(0)
 
     @pyqtSlot(vlcqt.Event)
     def on_mediachanged(self, e):
@@ -200,7 +249,7 @@ class FrameResPlaybackSlider(QSlider):
     def set_length(self, value):
         self.setMinimum(0)
         # If length more than float max use float max.
-        # This only matters for setting ticks. Can also just be set to 1.
+        # This is for setting ticks. Can also just be set to 1.
         self.setMaximum(min((value, 2147483647)))
         self.length = self.maximum() - self.minimum()
 
@@ -210,3 +259,12 @@ class FrameResPlaybackSlider(QSlider):
         pos_as_proportion = e.pos().x() / self.width()
         pos_as_slider_val = slider_range * pos_as_proportion + slider_min
         return pos_as_proportion, pos_as_slider_val
+
+    @staticmethod
+    def get_media_fps(vlc_media):
+        if not vlc_media:
+            return None
+        if not vlc_media.is_parsed():
+            vlc_media.parse()
+        track = [t for t in vlc_media.tracks_get()][0]
+        return track.video.contents.frame_rate_num

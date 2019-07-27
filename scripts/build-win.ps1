@@ -36,7 +36,7 @@ Remove-Item "$working_dir\build" -Force  -Recurse -ErrorAction SilentlyContinue
 
 # Define default args
 $default_args = @(
-    # '--debug'
+    # '--debug=imports'
     # '--console'
     '--windowed'
     '--log-level=INFO'
@@ -45,6 +45,7 @@ $default_args = @(
     '--onedir'
     '--name=player'
     '--hidden-import=PyQt5.QtNetwork'
+    '--hidden-import=PyQt5.Qtcore'
     "--paths=${env:PROGRAMFILES}/VideoLAN/VLC/"
     "--add-data=./media/*;media"
     "--add-data=./resources/*;resources"
