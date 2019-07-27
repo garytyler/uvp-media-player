@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
 )
 
 from . import vlcqt
-from .base.docking import DockableTabbedWidget, ToolBar
+from .base.docking import DockableTabbedWidget, DockableWidget, ToolBar
 from .comm.client import RemoteInputManager
 from .comm.connect import ConnectToServerAction
 from .comm.socks import AutoConnectSocket
@@ -31,8 +31,8 @@ from .output.playback import (
 )
 from .output.size import (
     FrameSizeManager,
-    FrameZoomManager,
     FrameZoomMenu,
+    ZoomControlManager,
     ZoomInAction,
     ZoomOutAction,
 )
@@ -41,7 +41,6 @@ from .output.status import StatusBar
 from .playlist.files import OpenMediaMenu
 from .playlist.player import PlaylistPlayer
 from .playlist.view import DockablePlaylist, PlaylistView
-from .util import config
 from .util.settings import OpenSettingsAction
 
 log = logging.getLogger(__name__)
@@ -55,7 +54,7 @@ class AppWindow(QMainWindow):
 
         QMainWindow.__init__(self, flags)
         self.qapp = QApplication.instance()
-        self.mp = vlcqt.media_player
+        vlcqt.media_player = vlcqt.media_player
 
         self.setDockNestingEnabled(True)
         self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
@@ -77,19 +76,19 @@ class AppWindow(QMainWindow):
         self.remote_input_mngr = RemoteInputManager()
         self.vp_manager = ViewpointManager(remote_input_mngr=self.remote_input_mngr)
         self.frame_size_mngr = FrameSizeManager(
-            main_win=self, viewpoint_manager=self.vp_manager
+            main_win=self, viewpoint_mngr=self.vp_manager
         )
-        self.mp_content_frame = MediaPlayerContentFrame(
+        vlcqt.media_player_content_frame = MediaPlayerContentFrame(
             main_win=self, frame_size_mngr=self.frame_size_mngr
         )
-        self.setCentralWidget(self.mp_content_frame)
-        self.frame_zoom_mngr = FrameZoomManager(
+        self.setCentralWidget(vlcqt.media_player_content_frame)
+        self.zoom_ctrl_mngr = ZoomControlManager(
             main_win=self, frame_size_mngr=self.frame_size_mngr
         )
         self.fullscreen_mngr = FullscreenManager(
-            main_content_frame=self.mp_content_frame,
+            main_content_frame=vlcqt.media_player_content_frame,
             status_widget=self.statusBar().fullscreen_status_widget,
-            viewpoint_manager=self.vp_manager,
+            viewpoint_mngr=self.vp_manager,
         )
         self.playback_mode_mngr = PlaybackModeManager(parent=self)
         self.vol_mngr = VolumeManager(parent=self)
@@ -118,11 +117,9 @@ class AppWindow(QMainWindow):
         self.next_media_act = NextMediaAction(
             parent=self, playlist_player=self.playlist_player
         )
-        self.zoom_in_act = ZoomInAction(
-            parent=self, frame_zoom_mngr=self.frame_zoom_mngr
-        )
+        self.zoom_in_act = ZoomInAction(parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr)
         self.zoom_out_act = ZoomOutAction(
-            parent=self, frame_zoom_mngr=self.frame_zoom_mngr
+            parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
         )
         self.open_settings_act = OpenSettingsAction(main_win=self)
         self.connect_to_server_act = ConnectToServerAction(
@@ -136,7 +133,7 @@ class AppWindow(QMainWindow):
             parent=self, playlist_view=self.playlist_view
         )
         self.frame_scale_menu = FrameZoomMenu(
-            main_win=self, frame_zoom_mngr=self.frame_zoom_mngr
+            main_win=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
         )
         self.fullscreen_menu = FullscreenMenu(
             main_win=self, fullscreen_mngr=self.fullscreen_mngr
@@ -230,7 +227,9 @@ class AppWindow(QMainWindow):
         filters_widget = QWidget(self)
         filters_widget.setContentsMargins(0, 0, 0, 0)
         filters_widget.setLayout(QHBoxLayout(filters_widget))
-        filters_dock_widget = DockableTabbedWidget(title="Filters", parent=self)
+        filters_dock_widget = DockableWidget(
+            title="Filters", parent=self, widget=filters_widget, w_titlebar=False
+        )
         filters_dock_widget.setWidget(filters_widget)
 
         pb_widget = QWidget(self)
@@ -240,7 +239,9 @@ class AppWindow(QMainWindow):
         pb_widget.layout().addWidget(self.pb_ctrls_tbar, 2, 1, 1, 1, Qt.AlignHCenter)
         pb_widget.layout().addWidget(self.pb_options_tbar, 2, 2, 1, 1, Qt.AlignBottom)
 
-        pb_dock_widget = DockableTabbedWidget(title="Playback", parent=self)
+        pb_dock_widget = DockableWidget(
+            title="Playback", parent=self, widget=pb_widget, w_titlebar=False
+        )
         pb_dock_widget.setWidget(pb_widget)
 
         # Add lower dock widgets
@@ -255,19 +256,12 @@ class AppWindow(QMainWindow):
     def create_window_shortcuts(self):
         self.ctrl_w = QShortcut("Ctrl+W", self, self.close)
         self.ctrl_plus = QShortcut(
-            QKeySequence.ZoomIn, self, self.frame_zoom_mngr.zoom_in
+            QKeySequence.ZoomIn, self, self.zoom_ctrl_mngr.zoom_in
         )
-        self.ctrl_i = QShortcut("Ctrl+I", self, self.frame_zoom_mngr.zoom_in)
+        self.ctrl_i = QShortcut("Ctrl+I", self, self.zoom_ctrl_mngr.zoom_in)
         self.ctrl_minus = QShortcut(
-            QKeySequence.ZoomOut, self, self.frame_zoom_mngr.zoom_out
+            QKeySequence.ZoomOut, self, self.zoom_ctrl_mngr.zoom_out
         )
-
-    def calculate_resize_values(self, scale) -> (int, int):
-        """Calculate total window resize values from current compoment displacement"""
-        media_w, media_h = vlcqt.libvlc_video_get_size(self.mp, 0)
-        layout_size = self.layout().totalSizeHint()
-        layout_h = layout_size.height()
-        return media_w * scale, media_h * scale + layout_h
 
     def screen_size_threshold_filter(self, target_width, target_height):
         main_win_geo = self.geometry()
@@ -279,31 +273,33 @@ class AppWindow(QMainWindow):
         h = target_height if target_height < screen_h else screen_h
         return w, h
 
+    def get_proper_win_size(self, scale) -> (int, int):
+        """Calculate total window resize values from current compoment displacement"""
+        media_w, media_h = vlcqt.libvlc_video_get_size(vlcqt.media_player, 0)
+        layout_size = self.layout().totalSizeHint()
+        layout_h = layout_size.height()
+        if media_h:
+            return media_w * scale, media_h * scale + layout_h
+        else:
+            return 600 * scale, 360 * scale + layout_h
+
     @pyqtSlot(int, int)
     def resize_to_media(self, scale):
-        win_w, win_h = self.calculate_resize_values(scale)
+        win_w, win_h = self.get_proper_win_size(scale)
         targ_w, targ_h = self.screen_size_threshold_filter(win_w, win_h)
         self.showNormal()
         self.resize(targ_w, targ_h)
-        self.size_hint_qsize = QSize(targ_w, targ_h)
+        self._size_hint = QSize(targ_w, targ_h)
 
     def showEvent(self, e):
-        if 1 < config.state.view_scale:
-            scale = config.state.view_scale = 1
-        else:
-            scale = config.state.view_scale
-        media_w, media_h = vlcqt.libvlc_video_get_size(self.mp, 0)
-        targ_w, targ_h = self.calculate_resize_values(scale)
-        self.resize(targ_w, targ_h)
-        self.size_hint_qsize = QSize(targ_w, targ_h)
+        scale = self.frame_size_mngr.get_media_scale()
+        self.resize_to_media(scale)
 
     def sizeHint(self):
         try:
-            return self.size_hint_qsize
+            return self._size_hint
         except AttributeError:
-            media_w, media_h = vlcqt.libvlc_video_get_size(self.mp, 0)
-            scale = config.state.view_scale
-            targ_w, targ_h = self.calculate_resize_values(scale)
-            self.size_hint_qsize = QSize(targ_w, targ_h)
+            scale = self.frame_size_mngr.get_media_scale()
+            self._size_hint = QSize(*self.get_proper_win_size(scale))
         finally:
-            return self.size_hint_qsize
+            return self._size_hint

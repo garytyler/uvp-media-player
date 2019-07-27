@@ -122,9 +122,7 @@ class PopupPlaylistAction(PopupWindowAction):
 class DockablePlaylist(DockableWidget):
     def __init__(self, parent, playlist_view):
         super().__init__(title="Playlist", parent=parent)
-        self.setLayout(QVBoxLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().addWidget(playlist_view)
+        self.setContentsMargins(0, 0, 0, 0)
         self.setWidget(playlist_view)
         self.setVisible(False)
 

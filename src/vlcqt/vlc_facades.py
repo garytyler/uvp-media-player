@@ -11,6 +11,7 @@ class Instance:
     _vlc_obj: vlc.Instance = None
 
     def __new__(cls, args=[]):
+        args = [i for i in args if i.strip()]
         return cls._vlc_obj if cls._vlc_obj else vlc.Instance(args)
 
     def __init__(self, args=[]):

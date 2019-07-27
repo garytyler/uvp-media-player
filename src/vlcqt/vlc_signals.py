@@ -8,19 +8,19 @@ log = logging.getLogger(__name__)
 
 class MediaPlayerVlclibSignals(QObject):
 
-    audiodevice = pyqtSignal(vlc.Event)
+    # audiodevice = pyqtSignal(vlc.Event)
     audiovolume = pyqtSignal(vlc.Event)
-    backward = pyqtSignal(vlc.Event)
+    # backward = pyqtSignal(vlc.Event)
     buffering = pyqtSignal(vlc.Event)
-    chapterchanged = pyqtSignal(vlc.Event)
-    corked = pyqtSignal(vlc.Event)
-    esadded = pyqtSignal(vlc.Event)
-    esdeleted = pyqtSignal(vlc.Event)
-    esselected = pyqtSignal(vlc.Event)
+    # chapterchanged = pyqtSignal(vlc.Event)
+    # corked = pyqtSignal(vlc.Event)
+    # esadded = pyqtSignal(vlc.Event)
+    # esdeleted = pyqtSignal(vlc.Event)
+    # esselected = pyqtSignal(vlc.Event)
     encounterederror = pyqtSignal(vlc.Event)
     endreached = pyqtSignal(vlc.Event)
     forward = pyqtSignal(vlc.Event)
-    lengthchanged = pyqtSignal(vlc.Event)
+    # lengthchanged = pyqtSignal(vlc.Event)
     mediachanged = pyqtSignal(vlc.Event)
     muted = pyqtSignal(vlc.Event)
     nothingspecial = pyqtSignal(vlc.Event)
@@ -30,9 +30,9 @@ class MediaPlayerVlclibSignals(QObject):
     playing = pyqtSignal(vlc.Event)
     stopped = pyqtSignal(vlc.Event)
     positionchanged = pyqtSignal(vlc.Event)
-    scrambledchanged = pyqtSignal(vlc.Event)
-    seekablechanged = pyqtSignal(vlc.Event)
-    snapshottaken = pyqtSignal(vlc.Event)
+    # scrambledchanged = pyqtSignal(vlc.Event)
+    # seekablechanged = pyqtSignal(vlc.Event)
+    # snapshottaken = pyqtSignal(vlc.Event)
     stopped = pyqtSignal(vlc.Event)
     timechanged = pyqtSignal(vlc.Event)
     titlechanged = pyqtSignal(vlc.Event)
@@ -53,9 +53,9 @@ class MediaPlayerVlclibSignals(QObject):
             # (vlc.EventType.MediaPlayerESAdded, self._esadded),
             # (vlc.EventType.MediaPlayerESDeleted, self._esdeleted),
             # (vlc.EventType.MediaPlayerESSelected, self._esselected),
-            # (vlc.EventType.MediaPlayerEncounteredError, self._encounterederror),
+            (vlc.EventType.MediaPlayerEncounteredError, self._encounterederror),
             (vlc.EventType.MediaPlayerEndReached, self._endreached),
-            # (vlc.EventType.MediaPlayerForward, self._forward),
+            (vlc.EventType.MediaPlayerForward, self._forward),
             # (vlc.EventType.MediaPlayerLengthChanged, self._lengthchanged),
             (vlc.EventType.MediaPlayerMediaChanged, self._mediachanged),
             (vlc.EventType.MediaPlayerMuted, self._muted),
@@ -69,10 +69,10 @@ class MediaPlayerVlclibSignals(QObject):
             # (vlc.EventType.MediaPlayerSeekableChanged, self._seekablechanged),
             # (vlc.EventType.MediaPlayerSnapshotTaken, self._snapshottaken),
             (vlc.EventType.MediaPlayerStopped, self._stopped),
-            # (vlc.EventType.MediaPlayerTimeChanged, self._timechanged),
-            # (vlc.EventType.MediaPlayerTitleChanged, self._titlechanged),
-            # (vlc.EventType.MediaPlayerUncorked, self._uncorked),
-            # (vlc.EventType.MediaPlayerUnmuted, self._unmuted),
+            (vlc.EventType.MediaPlayerTimeChanged, self._timechanged),
+            (vlc.EventType.MediaPlayerTitleChanged, self._titlechanged),
+            (vlc.EventType.MediaPlayerUncorked, self._uncorked),
+            (vlc.EventType.MediaPlayerUnmuted, self._unmuted),
             (vlc.EventType.MediaPlayerVout, self._vout),
         ]
         event_manager = vlc_media_player.event_manager()
@@ -321,7 +321,7 @@ class MediaVlclibSignals(QObject):
     mediastatechanged = pyqtSignal(vlc.Event)
     mediasubitemadded = pyqtSignal(vlc.Event)
     mediasubitemtreeadded = pyqtSignal(vlc.Event)
-    mediathumbnailgenerated = pyqtSignal(vlc.Event)
+    # mediathumbnailgenerated = pyqtSignal(vlc.Event)
     metadataready = pyqtSignal(dict)
 
     def __init__(self, vlc_media: vlc.Media):

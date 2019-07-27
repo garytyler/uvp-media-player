@@ -50,8 +50,6 @@ class ToolBar(QToolBar):
         if not collapsible:
             self.minimumSizeHint = lambda: self.sizeHint()
 
-        self.topLevelChanged.connect(self.on_topLevelChanged)
-
     def add_spacer(self):
         w = QWidget(self)
         w.setMinimumWidth(5)
@@ -75,11 +73,6 @@ class ToolBar(QToolBar):
         button = self.widgetForAction(action)
         button.setPopupMode(QToolButton.InstantPopup)
 
-    def on_topLevelChanged(self, topLevel):
-        print(self.allowedAreas())
-        # for area in self.allowedAreas():
-        # print(area)  # self.
-
 
 class CornerToolBar(ToolBar):
     def __init__(self, *args, **kwargs):
@@ -91,12 +84,8 @@ class CornerToolBar(ToolBar):
 
 
 class DockableToolBarWidget(QDockWidget):
-    def __init__(self, toolbar: ToolBar, titlebar=True, minimum=False):
-        super().__init__(
-            toolbar.toggleViewAction().text(),
-            parent=toolbar.parent(),
-            # flags=Qt.AlignRight,
-        )
+    def __init__(self, toolbar: ToolBar, titlebar: bool = True):
+        super().__init__(toolbar.toggleViewAction().text(), parent=toolbar.parent())
         self.setWidget(toolbar)
 
         self.setFeatures(QDockWidget.DockWidgetMovable)
@@ -119,41 +108,20 @@ class DockableToolBarWidget(QDockWidget):
             self.title_bar = HorizontalDockableWidgetTitleBar(title, self)
             self.setTitleBarWidget(self.title_bar)
 
-    # @pyqtSlot(Qt.DockWidgetArea)
-    # def on_dockLocationChanged(self, area):
-    #     print("dockwidget on_dockLocationChanged", area)
-
-    # @pyqtSlot(QDockWidget.DockWidgetFeatures)
-    # def on_featuresChanged(self, features):
-    #     print("dockwidget on_featuresChanged", features)
-
-    # @pyqtSlot(bool)
-    # def on_topLevelChanged(self, topLevel):
-    #     print("dockwidget on_topLevelChanged", topLevel)
-
-
-class CornerToolbarWidget(DockableToolBarWidget):
-    def __init__(self, toolbar):
-        super().__init__(self, toolbar, titlebar=False)
-        print("Asdf")
-
 
 class DockableWidget(QDockWidget):
-    def __init__(self, title="", parent=None, titlebar=False):
+    def __init__(self, title="", parent=None, widget=None, w_titlebar: bool = False):
         super().__init__(title, parent=parent)
         self._title = title
-        self._parent = parent
-
-        # self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        # self.setFeatures(
-        #     QDockWidget.DockWidgetVerticalTitleBar | QDockWidget.DockWidgetMovable
-        # )
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setFeatures(QDockWidget.NoDockWidgetFeatures)
-        self.setTitleBarWidget(QWidget(None))
-
-        # self.dockLocationChanged.connect(self.on_dockLocationChanged)
-        # self.featuresChanged.connect(self.on_featuresChanged)
-        # self.topLevelChanged.connect(self.on_topLevelChanged)
+        if widget:
+            self.setWidget(widget)
+        if w_titlebar:
+            self.setup_title_bar()
+        else:
+            self.setTitleBarWidget(QWidget(None))
 
     def setup_title_bar(self):
         if self.features() & QDockWidget.DockWidgetVerticalTitleBar:
@@ -162,56 +130,17 @@ class DockableWidget(QDockWidget):
         else:
             self.title_bar = HorizontalDockableWidgetTitleBar(self._title, self)
             self.setTitleBarWidget(self.title_bar)
-
-    # @pyqtSlot(Qt.DockWidgetArea)
-    # def on_dockLocationChanged(self, area):
-    #     print("dockwidget on_dockLocationChanged", area)
-
-    # @pyqtSlot(QDockWidget.DockWidgetFeatures)
-    # def on_featuresChanged(self, features):
-    #     print("dockwidget on_featuresChanged", features)
-
-    # @pyqtSlot(bool)
-    # def on_topLevelChanged(self, topLevel):
-    #     print("dockwidget on_topLevelChanged", topLevel)
 
 
 class DockableTabbedWidget(QDockWidget):
-    def __init__(self, title="", parent=None, titlebar=False):
-        super().__init__(title, parent=parent)
-        self._title = title
-        self._parent = parent
+    def __init__(self, title="", parent=None, widget=None, w_titlebar: bool = False):
+        super().__init__(
+            title=title, parent=parent, widget=widget, w_titlebar=w_titlebar
+        )
 
         self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        # self.setFeatures(
-        #     QDockWidget.DockWidgetVerticalTitleBar | QDockWidget.DockWidgetMovable
-        # )
         self.setFeatures(QDockWidget.NoDockWidgetFeatures)
         self.setTitleBarWidget(QWidget(None))
-
-        # self.dockLocationChanged.connect(self.on_dockLocationChanged)
-        # self.featuresChanged.connect(self.on_featuresChanged)
-        # self.topLevelChanged.connect(self.on_topLevelChanged)
-
-    def setup_title_bar(self):
-        if self.features() & QDockWidget.DockWidgetVerticalTitleBar:
-            self.title_bar = VerticalDockableWidgetTitleBar(self._title, self)
-            self.setTitleBarWidget(self.title_bar)
-        else:
-            self.title_bar = HorizontalDockableWidgetTitleBar(self._title, self)
-            self.setTitleBarWidget(self.title_bar)
-
-    # @pyqtSlot(Qt.DockWidgetArea)
-    # def on_dockLocationChanged(self, area):
-    #     print("dockwidget on_dockLocationChanged", area)
-
-    # @pyqtSlot(QDockWidget.DockWidgetFeatures)
-    # def on_featuresChanged(self, features):
-    #     print("dockwidget on_featuresChanged", features)
-
-    # @pyqtSlot(bool)
-    # def on_topLevelChanged(self, topLevel):
-    #     print("dockwidget on_topLevelChanged", topLevel)
 
 
 class HorizontalDockableWidgetTitleBar(QLabel):
@@ -258,19 +187,6 @@ class VerticalDockableWidgetTitleBar(QLabel):
         size = super().sizeHint()
         return QSize(size.height(), size.width())
 
-    # def sizeHint(self):
-    #     if self.text_rect:
-    #         return QSize(self._margin_height, self.height())
-    #     else:
-    #         return QSize(self._margin_height, self.height())
-
-    # def sizeHint(self):
-    #     size = super().sizeHint()
-    #     if self.text_rect:
-    #         return QSize(self.text_rect.height(), size.height())
-    #     else:
-    #         return QSize(size.height(), size.height())
-
 
 class ElidedTabTextProxyStyle(QProxyStyle):
     """Set tab text to elided on a QTabBar on tabbed QDockWidgets"""
@@ -279,7 +195,6 @@ class ElidedTabTextProxyStyle(QProxyStyle):
         QProxyStyle.__init__(self)
 
     def styleHint(self, hint, opt=0, widget=0, returnData=0):
-        # curr_shape = QTabBar.TriangularEast
         if hint == QStyle.SH_TabBar_Alignment and isinstance(widget, QTabBar):
             widget.setElideMode(Qt.ElideRight)
         return super().styleHint(hint, opt, widget, returnData)

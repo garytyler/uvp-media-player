@@ -78,4 +78,4 @@ class StatusBar(QStatusBar):
         )
 
         for widget in [self.fullscreen_status_widget, self.connect_status_widget]:
-            self.insertPermanentWidget(-1, widget)
+            self.addPermanentWidget(widget)

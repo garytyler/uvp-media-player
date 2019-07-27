@@ -19,9 +19,9 @@ class FullscreenManager(QObject):
     fullscreenstarted = pyqtSignal(QAction)
     fullscreenstopped = pyqtSignal()
 
-    def __init__(self, main_content_frame, status_widget, viewpoint_manager):
+    def __init__(self, main_content_frame, status_widget, viewpoint_mngr):
         super().__init__()
-        self.vp_manager = viewpoint_manager
+        self.vp_manager = viewpoint_mngr
         self.main_content_frame = main_content_frame
         self.status_widget = status_widget
 
