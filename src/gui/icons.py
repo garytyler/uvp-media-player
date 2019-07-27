@@ -20,11 +20,10 @@ dark_defaults = DarkColors()
 
 class AppIcons:
     def __init__(self):
-        self.fullscreen_menu_bttn = qta.icon("mdi.fullscreen", offset=(0, -0.08))
+        self.fullscreen_menu_bttn = qta.icon("mdi.fullscreen", offset=(0, -0.06))
         self.fullscreen = qta.icon("mdi.fullscreen", scale_factor=1.1)
         self.fullscreen_exit = qta.icon("mdi.fullscreen-exit")
         self.fullscreen_enter = qta.icon("mdi.fullscreen")
-        # self.fullscreen_exit = qta.icon("mdi.fullscreen-exit")
         self.display_screen = qta.icon("mdi.desktop-mac")
         self.playback_mode_off = qta.icon("mdi.repeat-off")
         self.playback_mode_one = qta.icon("mdi.repeat-once")
@@ -48,18 +47,11 @@ class AppIcons:
         self.previous_media = qta.icon("mdi.skip-backward")
         self.zoom_in_button = qta.icon("mdi.magnify-plus-outline")
         self.zoom_out_button = qta.icon("mdi.magnify-minus-outline")
+        self.zoom_menu_button = qta.icon(
+            "mdi.magnify", scale_factor=0.9, offset=(0, -0.05)
+        )
         self.zoom_in_menu_item = qta.icon("mdi.magnify-plus")
         self.zoom_out_menu_item = qta.icon("mdi.magnify-minus")
-        self.zoom_menu_button = qta.icon(
-            "mdi.magnify", scale_factor=0.9, offset=(0, -0.045)
-        )
-        self.connection_status_indicator = qta.icon(
-            "mdi.server-network",
-            on="mdi.server-network",
-            off="mdi.server-network-off",
-            color_on="green",
-            color_off="red",
-        )
         self.connect_to_server_status = qta.icon(
             "mdi.server-network",
             on="mdi.server-network",
@@ -72,38 +64,8 @@ class AppIcons:
             color_on="green",
             color_off="red",
         )
-        # self.connect_to_server_status = qta.icon(
-        #     "mdi.server-network",
-        #     on="mdi.server-network",
-        #     off="mdi.server-network-off",
-        #     off_active="mdi.power-plug",
-        #     disabled="mdi.power-plug",
-        #     on_active="mdi.power-plug-off",
-        #     color_on_active="red",
-        #     color_off_active="red",
-        #     color_on="green",
-        #     color_off="red",
-        # )
-        # self.connect_to_server_status = qta.icon(
-        #     "mdi.server-network",
-        #     on="mdi.server-network",
-        #     off="mdi.server-network-off",
-        #     off_active="mdi.server-network",
-        #     disabled="mdi.power-plug",
-        #     on_active="mdi.power-plug-off",
-        #     color_on_active="red",
-        #     color_on="green",
-        #     color_off="red",
-        # )
-        self.connect_to_server_button = qta.icon(
-            "mdi.power-plug",
-            on_active="mdi.power-plug-off",
-            color_on_active="red",
-            color_on="green",
-        )
-
         self.server_disconnected = qta.icon("mdi.server-network-off")
-        open_file_bg_scale = 0.9
+        open_file_bg_scale = 0.8
         open_many_bg_scale = 0.8
         bg_fg_multiplier = 0.7
         self.open_file = qta.icon(
@@ -134,13 +96,16 @@ class AppIcons:
                 },
             ],
         )
+        self.open_file_menu = qta.icon(
+            "mdi.file-plus", scale_factor=0.70, offset=(0, -0.06)
+        )
         self.volume_button = {
             "mute": qta.icon("mdi.volume-mute", disabled="mdi.volume-off"),
             "low": qta.icon("mdi.volume-low", disabled="mdi.volume-off"),
             "medium": qta.icon("mdi.volume-medium", disabled="mdi.volume-off"),
             "high": qta.icon("mdi.volume-high", disabled="mdi.volume-off"),
         }
-        self.always_on_top = qta.icon("mdi.window-restore", scale_factor=1.2)
+        self.always_on_top = qta.icon("mdi.window-restore", scale_factor=1)
         self.open_playlist = qta.icon("mdi.format-list-bulleted")
         self.open_split_view = qta.icon("mdi.view-split-vertical")
         self.open_settings = qta.icon("mdi.cogs")

@@ -21,22 +21,22 @@ class TextStatusLabel(QLabel):
         super().__init__(parent)
         self.setObjectName("text_status")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-
-        self.metrics = QFontMetrics(self.font())
         self._text = ""
+        self._elide_mode = Qt.ElideRight
 
-    def setText(self, text):
+    def setText(self, text, elide_mode=Qt.ElideRight):
         self._text = text
-        self.update_elided_text(width=self.sizeHint().width())
+        self._elide_mode = elide_mode
+        self.parent().adjustSize()
+        self.update_output(width=self.sizeHint().width())
 
     def resizeEvent(self, e):
-        self.update_elided_text(width=e.size().width())
+        self.update_output(width=e.size().width())
 
-    def update_elided_text(self, width):
-        super().setText(self.get_elided(self._text, width))
-
-    def get_elided(self, string, width):
-        return self.metrics.elidedText(string, Qt.ElideRight, width)
+    def update_output(self, width):
+        font_metrics = QFontMetrics(self.font())
+        elided_text = font_metrics.elidedText(self._text, self._elide_mode, width)
+        super().setText(elided_text)
 
 
 class IconStatusLabel(QLabel):
@@ -58,8 +58,8 @@ class IconStatusLabel(QLabel):
         self.icon_size = self.parent().sizeHint().height() * 0.9
         self.layout().insertWidget(0, self.icon_lbl, stretch=0, alignment=Qt.AlignLeft)
 
-    def set_status(self, text, mode, state):
-        self.text_lbl.setText(text)
+    def set_status(self, text, mode, state, elide_mode=Qt.ElideRight):
+        self.text_lbl.setText(text, elide_mode)
         pixmap = self.icon.pixmap(self.icon_size, mode, state)
         self.icon_lbl.setPixmap(pixmap)
 

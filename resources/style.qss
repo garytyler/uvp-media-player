@@ -125,7 +125,13 @@ QStatusBar {
  */
 
 QToolBar {
-    border: 1px outset palette(base);
+    /* border: 1px outset palette(base); */
+    border: none;
+}
+
+QDockableWidget QToolBar {
+    border: none;
+    align-items: flex-end
 }
 
 QToolBar::separator {

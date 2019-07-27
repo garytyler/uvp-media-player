@@ -181,8 +181,8 @@ class FrameZoomMenu(QMenu):
 
         self.conform_to_media()
 
-        # self.frame_zoom_mngr.zoomchanged.connect(self.on_zoomchanged)
-        # vlcqt.media_player.mediachanged.connect(self.on_mediachanged)
+        self.frame_zoom_mngr.zoomchanged.connect(self.on_zoomchanged)
+        vlcqt.media_player.mediachanged.connect(self.on_mediachanged)
 
     def on_zoomchanged(self, value):
         self.option_action_map[value].setChecked(True)

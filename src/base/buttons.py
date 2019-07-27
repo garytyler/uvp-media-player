@@ -18,9 +18,7 @@ class MenuButton(QToolButton):
     def __init__(self, parent, menu, icon, size):
         super().__init__(parent=parent)
         self.setMenu(menu)
-        print(self.menu().title())
         self.setText(self.menu().title())
-        # self.setDefaultAction(self.action)
         self.setIcon(icon)
         self.setIconSize(QSize(size, size))
         # self.setPopupMode(QToolButton.InstantPopup)

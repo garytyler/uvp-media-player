@@ -2,7 +2,7 @@ import logging
 import os
 
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QAction, QFileDialog
+from PyQt5.QtWidgets import QAction, QFileDialog, QMenu
 
 from .. import vlcqt
 from ..gui import icons
@@ -106,3 +106,23 @@ class OpenMultipleAction(QAction):
         )
         if file_paths:
             self.playlist_view.add_media(file_paths)
+
+
+class OpenMediaMenu(QMenu):
+    def __init__(self, parent, playlist_view):
+        super().__init__(parent=parent)
+        self.parent = parent
+        self.playlist_view = playlist_view
+        self.setIcon(icons.open_file_menu)
+        self.setTitle("Open Media")
+        self.addAction(OpenMultipleAction(parent=self, playlist_view=playlist_view))
+        self.addAction(OpenFileAction(parent=self, playlist_view=playlist_view))
+
+    #     self.triggered.connect(self.on_triggered)
+
+    # def on_triggered(self):
+    #     file_paths, filter_desc = QFileDialog.getOpenFileNames(
+    #         self.parent, self.text(), directory="media"
+    #     )
+    #     if file_paths:
+    #         self.playlist_view.add_media(file_paths)

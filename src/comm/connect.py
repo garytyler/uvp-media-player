@@ -79,6 +79,7 @@ class ConnectToServerAction(QAction):
                 text=f"Disconnected ({config.state.url})",
                 mode=QIcon.Normal,
                 state=QIcon.Off,
+                elide_mode=Qt.ElideMiddle,
             )
         elif mode == self.ConnectingMode:
             self.setEnabled(False)
@@ -88,6 +89,7 @@ class ConnectToServerAction(QAction):
                 text=f"Connecting... ({config.state.url})",
                 mode=QIcon.Disabled,
                 state=QIcon.Off,
+                elide_mode=Qt.ElideMiddle,
             )
         elif mode == self.ConnectedMode:
             self.setEnabled(True)
@@ -99,4 +101,5 @@ class ConnectToServerAction(QAction):
                 text=f"Connected ({config.state.url})",
                 mode=QIcon.Normal,
                 state=QIcon.On,
+                elide_mode=Qt.ElideMiddle,
             )

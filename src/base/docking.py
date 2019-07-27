@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import (
     QMenu,
     QProxyStyle,
     QSizePolicy,
+    QSpacerItem,
     QStyle,
     QTabBar,
     QToolBar,
@@ -19,10 +20,12 @@ from ..gui import icons
 
 class ToolBar(QToolBar):
 
-    Separator = 12
+    Separator = 11
+    Spacer = 12
 
-    def __init__(self, title, parent=None, objects=[], collapsible=True):
+    def __init__(self, title, parent=None, objects=[], collapsible=True, icon_size=36):
         super().__init__(parent=parent)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
 
         for i in objects:
             if isinstance(i, QMenu):
@@ -34,9 +37,11 @@ class ToolBar(QToolBar):
             elif isinstance(i, int):
                 if i == self.Separator:
                     self.addSeparator()
+                elif i == self.Spacer:
+                    self.add_spacer()
 
         self.set_title(title)
-        self.setIconSize(QSize(36, 36))
+        self.setIconSize(QSize(icon_size, icon_size))
         self.setMovable(True)
         self.setFloatable(True)
         self.setAllowedAreas(Qt.TopToolBarArea | Qt.BottomToolBarArea)
@@ -44,6 +49,13 @@ class ToolBar(QToolBar):
 
         if not collapsible:
             self.minimumSizeHint = lambda: self.sizeHint()
+
+        self.topLevelChanged.connect(self.on_topLevelChanged)
+
+    def add_spacer(self):
+        w = QWidget(self)
+        w.setMinimumWidth(5)
+        self.addWidget(w)
 
     def set_ext_bttn_icon(self):
         ext_bttn = self.findChild(
@@ -55,34 +67,95 @@ class ToolBar(QToolBar):
 
     def set_title(self, title):
         title = title.strip().lower().capitalize()
-        if "toolbar" not in title.lower():
-            title = title + " Toolbar"
         self.toggleViewAction().setText(title)
-
-    @pyqtSlot(bool)
-    def on_topLevelChanged(self, topLevel):
-        print("toolbar on_topLevelChanged", topLevel)
 
     def add_menu(self, menu):
         action = menu.menuAction()
         self.addAction(action)
         button = self.widgetForAction(action)
         button.setPopupMode(QToolButton.InstantPopup)
-        # self.addWidget(button)
-        # button
+
+    def on_topLevelChanged(self, topLevel):
+        print(self.allowedAreas())
+        # for area in self.allowedAreas():
+        # print(area)  # self.
+
+
+class CornerToolBar(ToolBar):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setMaximumWidth(self.sizeHint().width())
+        self.setMovable(False)
+        self.setFloatable(False)
+        self.setAllowedAreas(Qt.TopToolBarArea | Qt.BottomToolBarArea)
+
+
+class DockableToolBarWidget(QDockWidget):
+    def __init__(self, toolbar: ToolBar, titlebar=True, minimum=False):
+        super().__init__(
+            toolbar.toggleViewAction().text(),
+            parent=toolbar.parent(),
+            # flags=Qt.AlignRight,
+        )
+        self.setWidget(toolbar)
+
+        self.setFeatures(QDockWidget.DockWidgetMovable)
+
+        if titlebar:
+            self.setFeatures(
+                QDockWidget.DockWidgetVerticalTitleBar | QDockWidget.DockWidgetMovable
+            )
+            self.setup_title_bar(title=toolbar.toggleViewAction().text(), vertical=True)
+        else:
+            self.setFeatures(QDockWidget.NoDockWidgetFeatures)
+            self.setTitleBarWidget(QWidget(None))
+
+    def setup_title_bar(self, title, vertical=True):
+
+        if self.features() & QDockWidget.DockWidgetVerticalTitleBar:
+            self.title_bar = VerticalDockableWidgetTitleBar(title, self)
+            self.setTitleBarWidget(self.title_bar)
+        else:
+            self.title_bar = HorizontalDockableWidgetTitleBar(title, self)
+            self.setTitleBarWidget(self.title_bar)
+
+    # @pyqtSlot(Qt.DockWidgetArea)
+    # def on_dockLocationChanged(self, area):
+    #     print("dockwidget on_dockLocationChanged", area)
+
+    # @pyqtSlot(QDockWidget.DockWidgetFeatures)
+    # def on_featuresChanged(self, features):
+    #     print("dockwidget on_featuresChanged", features)
+
+    # @pyqtSlot(bool)
+    # def on_topLevelChanged(self, topLevel):
+    #     print("dockwidget on_topLevelChanged", topLevel)
+
+
+class CornerToolbarWidget(DockableToolBarWidget):
+    def __init__(self, toolbar):
+        super().__init__(self, toolbar, titlebar=False)
+        print("Asdf")
 
 
 class DockableWidget(QDockWidget):
-    def __init__(self, title="", parent=None):
+    def __init__(self, title="", parent=None, titlebar=False):
         super().__init__(title, parent=parent)
         self._title = title
         self._parent = parent
 
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
-        self.setFeatures(
-            QDockWidget.DockWidgetVerticalTitleBar | QDockWidget.DockWidgetMovable
-        )
+        # self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        # self.setFeatures(
+        #     QDockWidget.DockWidgetVerticalTitleBar | QDockWidget.DockWidgetMovable
+        # )
+        self.setFeatures(QDockWidget.NoDockWidgetFeatures)
+        self.setTitleBarWidget(QWidget(None))
 
+        # self.dockLocationChanged.connect(self.on_dockLocationChanged)
+        # self.featuresChanged.connect(self.on_featuresChanged)
+        # self.topLevelChanged.connect(self.on_topLevelChanged)
+
+    def setup_title_bar(self):
         if self.features() & QDockWidget.DockWidgetVerticalTitleBar:
             self.title_bar = VerticalDockableWidgetTitleBar(self._title, self)
             self.setTitleBarWidget(self.title_bar)
@@ -90,38 +163,62 @@ class DockableWidget(QDockWidget):
             self.title_bar = HorizontalDockableWidgetTitleBar(self._title, self)
             self.setTitleBarWidget(self.title_bar)
 
-        self.dockLocationChanged.connect(self.on_dockLocationChanged)
-        self.featuresChanged.connect(self.on_featuresChanged)
-        self.topLevelChanged.connect(self.on_topLevelChanged)
+    # @pyqtSlot(Qt.DockWidgetArea)
+    # def on_dockLocationChanged(self, area):
+    #     print("dockwidget on_dockLocationChanged", area)
 
-    # def hideEvent(self, e):
-    #     central_widget = self.parent().centralWidget()
-    #     if central_widget:
-    #         central_widget.update_frame()
-    #     # e.ignore()
+    # @pyqtSlot(QDockWidget.DockWidgetFeatures)
+    # def on_featuresChanged(self, features):
+    #     print("dockwidget on_featuresChanged", features)
 
-    # def toggleViewAction(self):
-    #     # action = super().toggleViewAction()
-    #     # action.toggled.connect(self.parent().update_frame)
-    #     return action
+    # @pyqtSlot(bool)
+    # def on_topLevelChanged(self, topLevel):
+    #     print("dockwidget on_topLevelChanged", topLevel)
 
-    @pyqtSlot(Qt.DockWidgetArea)
-    def on_dockLocationChanged(self, area):
-        print("dockwidget on_dockLocationChanged", area)
 
-    @pyqtSlot(QDockWidget.DockWidgetFeatures)
-    def on_featuresChanged(self, features):
-        print("dockwidget on_featuresChanged", features)
+class DockableTabbedWidget(QDockWidget):
+    def __init__(self, title="", parent=None, titlebar=False):
+        super().__init__(title, parent=parent)
+        self._title = title
+        self._parent = parent
 
-    @pyqtSlot(bool)
-    def on_topLevelChanged(self, topLevel):
-        print("dockwidget on_topLevelChanged", topLevel)
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
+        # self.setFeatures(
+        #     QDockWidget.DockWidgetVerticalTitleBar | QDockWidget.DockWidgetMovable
+        # )
+        self.setFeatures(QDockWidget.NoDockWidgetFeatures)
+        self.setTitleBarWidget(QWidget(None))
+
+        # self.dockLocationChanged.connect(self.on_dockLocationChanged)
+        # self.featuresChanged.connect(self.on_featuresChanged)
+        # self.topLevelChanged.connect(self.on_topLevelChanged)
+
+    def setup_title_bar(self):
+        if self.features() & QDockWidget.DockWidgetVerticalTitleBar:
+            self.title_bar = VerticalDockableWidgetTitleBar(self._title, self)
+            self.setTitleBarWidget(self.title_bar)
+        else:
+            self.title_bar = HorizontalDockableWidgetTitleBar(self._title, self)
+            self.setTitleBarWidget(self.title_bar)
+
+    # @pyqtSlot(Qt.DockWidgetArea)
+    # def on_dockLocationChanged(self, area):
+    #     print("dockwidget on_dockLocationChanged", area)
+
+    # @pyqtSlot(QDockWidget.DockWidgetFeatures)
+    # def on_featuresChanged(self, features):
+    #     print("dockwidget on_featuresChanged", features)
+
+    # @pyqtSlot(bool)
+    # def on_topLevelChanged(self, topLevel):
+    #     print("dockwidget on_topLevelChanged", topLevel)
 
 
 class HorizontalDockableWidgetTitleBar(QLabel):
     def __init__(self, title, parent):
         super().__init__(title, parent)
         self.setObjectName("horizontal-dock-title-bar")
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self._margin_height = 20
         self.adjustSize()
 
@@ -137,6 +234,7 @@ class VerticalDockableWidgetTitleBar(QLabel):
     def __init__(self, text, parent):
         super().__init__(text, parent)
         self.setObjectName("vertical-dock-title-bar")
+        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.text = text
         self._margin_height = 20
         self.text_rect = None
