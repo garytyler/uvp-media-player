@@ -87,18 +87,18 @@ class AutoReconnectSocket(ClientSocketBase):
     def _on_state_changed(self, state: QAbstractSocket.SocketState):
         log.info(f"SOCKET STATE CHANGED state={self.state_str()} qurl={self.qurl}")
 
+        # Send busy state to view
+        if state == QAbstractSocket.ConnectingState:
+            self.startedconnecting.emit()
+        else:
+            self.stoppedconnecting.emit(state == QAbstractSocket.ConnectedState)
+
+        # Perform next action
         if state == QAbstractSocket.UnconnectedState:
             if self.__connection_expected:
                 self._attempt_open()
-
         elif state == QAbstractSocket.ConnectedState:
             self.__connection_expected = True
-
-        elif state == QAbstractSocket.ConnectingState:
-            self.startedconnecting.emit()
-        elif state != QAbstractSocket.ConnectingState:
-            is_connected = bool(state == QAbstractSocket.ConnectedState)
-            self.stoppedconnecting.emit(is_connected)
 
     def connect(self, url):
         self.qurl = QUrl(url)
