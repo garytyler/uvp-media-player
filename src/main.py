@@ -16,7 +16,7 @@ from . import vlcqt
 from .base.docking import DockableTabbedWidget, DockableWidget, ToolBar
 from .comm.client import RemoteInputManager
 from .comm.connect import ConnectToServerAction
-from .comm.socks import AutoConnectSocket
+from .comm.socks import AutoReconnectSocket
 from .gui.window import AlwaysOnTopAction
 from .output.frame import MediaPlayerContentFrame
 from .output.fullscreen import FullscreenManager, FullscreenMenu
@@ -72,7 +72,7 @@ class AppWindow(QMainWindow):
         self.initialized.emit()
 
     def create_interface(self):
-        self.auto_connect_socket = AutoConnectSocket()
+        self.auto_connect_socket = AutoReconnectSocket()
         self.remote_input_mngr = RemoteInputManager()
         self.vp_manager = ViewpointManager(remote_input_mngr=self.remote_input_mngr)
         self.frame_size_mngr = FrameSizeManager(

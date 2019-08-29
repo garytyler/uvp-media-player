@@ -14,7 +14,7 @@ class RemoteInputManager:
     def __init__(self):
         self.motion_state = None
         self.state_changed = False
-        self.socket = socks.AutoConnectSocket()
+        self.socket = socks.AutoReconnectSocket()
 
         self._curr_motion_state = QByteArray()
         self._last_motion_state = QByteArray()

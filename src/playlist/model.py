@@ -1,4 +1,5 @@
 import logging
+from os.path import exists
 from pprint import pprint
 
 from ffmpeg import probe
@@ -23,7 +24,11 @@ class MediaItem(QStandardItem):
         self.setEditable(False)
         self.setDragEnabled(True)
 
-        self.meta = {"vlc": {}, "ffmpeg": probe(path)}
+        self.meta = {"vlc": {}, "ffmpeg": {}}
+        try:
+            self.meta["ffmpeg"] = probe(path)
+        except FileNotFoundError as e:
+            log.error(e)
 
         for enum in sorted(self.meta_enum_names.keys()):
             self.setChild(enum, 0, QStandardItem())
@@ -33,8 +38,6 @@ class MediaItem(QStandardItem):
 
         self.get_media().mediaparsedchanged.connect(self.update_vlc_meta)
         self.get_media().parse_with_options(vlcqt.MediaParseFlag.local, timeout=2)
-
-        self.meta = {"vlc": {}, "ffmpeg": probe(path)}
 
     def get_media(self):
         return self._media

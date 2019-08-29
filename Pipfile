@@ -15,7 +15,7 @@ click = "*"
 colorama = "*"
 colorlog = "*"
 python-vlc = "*"
-pyqt5 = "5.12.2"
+pyqt5 = "==5.12.2"
 qtawesome = "*"
 ffmpeg-python = "*"
 

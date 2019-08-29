@@ -43,6 +43,7 @@ class ConnectToServerAction(QAction):
         self.icon = icons.connect_to_server_status
         self.set_mode(self.DisconnectedMode)
 
+        # self.socket.startedconnecting.connect(self.on_startedconnecting)
         self.socket.stoppedconnecting.connect(self.on_stoppedconnecting)
         self.socket.disconnected.connect(self.on_disconnected)
         self.triggered.connect(self.on_triggered)

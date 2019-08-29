@@ -1,6 +1,6 @@
 import json
 import logging
-from os import getenv
+from os import environ, getenv
 from os.path import join
 from tempfile import gettempdir
 
@@ -15,7 +15,12 @@ _SETTINGS = {
     "stay_on_top": {"options": (True, False), "default": False},
     "view_scale": {"options": (0.25, 0.5, 1, 2), "default": 1},
     "color_theme": {"options": ("light", "dark"), "default": "dark"},
-    "url": {"options": (), "default": "ws://eventvr.herokuapp.com/mediaplayer"},
+    "url": {
+        "options": (),
+        "default": environ.get(
+            "VR_PLAYER_REMOTE_URL", default="wss://eventvr.herokuapp.com/mediaplayer"
+        ),
+    },
     "volume": {"options": (), "default": 50},  # number between 1 and 100
     "tool_bar_area": {"options": ("top", "bottom"), "default": "bottom"},
 }
