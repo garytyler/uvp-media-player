@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
 
 from . import vlcqt
 from .base.docking import DockableTabbedWidget, DockableWidget, ToolBar
-from .comm.client import RemoteInputManager
+from .comm.client import IOController
 from .comm.connect import ConnectToServerAction
 from .comm.socks import AutoReconnectSocket
 from .gui.window import AlwaysOnTopAction
@@ -73,8 +73,8 @@ class AppWindow(QMainWindow):
 
     def create_interface(self):
         self.auto_connect_socket = AutoReconnectSocket()
-        self.remote_input_mngr = RemoteInputManager()
-        self.vp_manager = ViewpointManager(remote_input_mngr=self.remote_input_mngr)
+        self.io_ctrlr = IOController(socket=self.auto_connect_socket)
+        self.vp_manager = ViewpointManager(io_ctrlr=self.io_ctrlr)
         self.frame_size_mngr = FrameSizeManager(
             main_win=self, viewpoint_mngr=self.vp_manager
         )

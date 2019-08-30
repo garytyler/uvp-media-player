@@ -11,10 +11,10 @@ log = logging.getLogger(__name__)
 class ViewpointManager(QObject):
     """Handles setting viewpoint in vlcqt media player object."""
 
-    def __init__(self, remote_input_mngr):
+    def __init__(self, io_ctrlr):
         super().__init__()
         self.mp = vlcqt.media_player
-        self.remote_input_mngr = remote_input_mngr
+        self.io_ctrlr = io_ctrlr
 
         self.vp = vlcqt.VideoViewpoint()
         self.vp.field_of_view = 80
@@ -39,7 +39,7 @@ class ViewpointManager(QObject):
     def on_newframe(self):
         if not self.is_enabled:
             return
-        new_motion_state = self.remote_input_mngr.get_new_motion_state()
+        new_motion_state = self.io_ctrlr.get_new_motion_state()
         if new_motion_state:
             self.set_new_viewpoint(*new_motion_state)
         else:

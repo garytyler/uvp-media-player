@@ -2,19 +2,16 @@ import logging
 from array import array
 
 from PyQt5.QtCore import QByteArray
-
-from . import socks
-from .. import vlcqt
-from ..util import config
+from PyQt5.QtWebSockets import QWebSocket
 
 log = logging.getLogger(__name__)
 
 
-class RemoteInputManager:
-    def __init__(self):
+class IOController:
+    def __init__(self, socket: QWebSocket):
+        self.socket = socket
         self.motion_state = None
         self.state_changed = False
-        self.socket = socks.AutoReconnectSocket()
 
         self._curr_motion_state = QByteArray()
         self._last_motion_state = QByteArray()
