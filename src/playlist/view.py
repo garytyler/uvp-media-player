@@ -49,16 +49,14 @@ class PlaylistView(QTreeView):
             item = MediaItem(path.abspath(p))
             items.append(item)
 
-        model = self.model()
-        if model:
+        if self.model():
             for i in items:
-                model.appendRow(i)
+                self.model().appendRow(i)
         else:
-            model = PlaylistModel(parent=self)
-            self.setModel(model)
+            self.setModel(PlaylistModel(parent=self))
             for i in items:
-                model.appendRow(i)
-            self.pl_player.load_media(index=items[0].index(), play=False)
+                self.model().appendRow(i)
+            self.pl_player.load_media(index=self.model().item(0).index())
 
 
 class PopupPlaylistWindow(PopupWindowWidget):
