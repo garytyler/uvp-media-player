@@ -46,3 +46,7 @@ pip install -r requirements.txt
 # Run windows build script from project root
 .\scripts\build-win.ps1
 ```
+
+### Troubleshooting build
+
+- Build without `--windowed` and with `--debug=imports` `--console`

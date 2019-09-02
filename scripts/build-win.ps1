@@ -36,8 +36,6 @@ Remove-Item "$working_dir\build" -Force  -Recurse -ErrorAction SilentlyContinue
 
 # Define default args
 $default_args = @(
-    # '--debug=imports'
-    # '--console'
     '--windowed'
     '--log-level=INFO'
     '--noconfirm'
