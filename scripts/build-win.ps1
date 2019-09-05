@@ -26,7 +26,7 @@ else {
 
 ### Prep ###
 
-Write-Output "Prep: Removing existing `'dist/`' contents"
+Write-Output "Prep: Removing existing `'dist/`' contents" -Foreg
 Remove-Item "$working_dir\dist" -Force  -Recurse -ErrorAction SilentlyContinue
 Write-Output "Prep: Removing existing `'build/`' contents"
 Remove-Item "$working_dir\build" -Force  -Recurse -ErrorAction SilentlyContinue
@@ -36,7 +36,6 @@ Remove-Item "$working_dir\build" -Force  -Recurse -ErrorAction SilentlyContinue
 
 # Define default args
 $default_args = @(
-    '--windowed'
     '--log-level=INFO'
     '--noconfirm'
     '--clean'
