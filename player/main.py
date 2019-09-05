@@ -13,7 +13,8 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from . import vlcqt
+from player import vlcqt
+
 from .base.docking import DockableWidget, ToolBar
 from .comm.client import RemoteInputManager
 from .comm.connect import ConnectToServerAction

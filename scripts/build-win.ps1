@@ -1,6 +1,6 @@
 $directions = "Run script from project root using `'$MyInvocation.MyCommand.Name`'"
 
-$app_module = "src"
+$app_module = "player"
 $_name = 'player'
 
 
