@@ -2,6 +2,7 @@ import os
 import sys
 
 from PyQt5.QtWidgets import QApplication
+
 from src import vlcqt
 from src.gui.style import initialize_style
 from src.main import AppWindow

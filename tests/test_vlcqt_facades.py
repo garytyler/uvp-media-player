@@ -1,4 +1,4 @@
-from player.vlc_facades import Instance, MediaListPlayer, MediaPlayer
+from src.vlcqt.vlc_facades import Instance, MediaPlayerFacade
 
 
 def instance_is_singleton():
@@ -8,7 +8,7 @@ def instance_is_singleton():
 
 def test_implicit_instances():
     instance = Instance()
-    media_list_player = MediaListPlayer()
-    media_player = MediaPlayer()
+    media_list_player = MediaPlayerFacade()
+    media_player = MediaPlayerFacade()
     assert instance == media_list_player.get_instance()
     assert instance == media_player.get_instance()

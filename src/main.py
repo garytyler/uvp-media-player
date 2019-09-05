@@ -1,4 +1,5 @@
 import logging
+from typing import Tuple
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QKeySequence
@@ -13,7 +14,7 @@ from PyQt5.QtWidgets import (
 )
 
 from . import vlcqt
-from .base.docking import DockableTabbedWidget, DockableWidget, ToolBar
+from .base.docking import DockableWidget, ToolBar
 from .comm.client import RemoteInputManager
 from .comm.connect import ConnectToServerAction
 from .comm.socks import AutoConnectSocket
@@ -54,7 +55,7 @@ class AppWindow(QMainWindow):
 
         QMainWindow.__init__(self, flags)
         self.qapp = QApplication.instance()
-        vlcqt.media_player = vlcqt.media_player
+        self.media_player = vlcqt.media_player
 
         self.setDockNestingEnabled(True)
         self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
@@ -273,7 +274,7 @@ class AppWindow(QMainWindow):
         h = target_height if target_height < screen_h else screen_h
         return w, h
 
-    def get_proper_win_size(self, scale) -> (int, int):
+    def get_proper_win_size(self, scale) -> Tuple[int, int]:
         """Calculate total window resize values from current compoment displacement"""
         media_w, media_h = vlcqt.libvlc_video_get_size(vlcqt.media_player, 0)
         layout_size = self.layout().totalSizeHint()

@@ -4,8 +4,6 @@ from array import array
 from PyQt5.QtCore import QByteArray
 
 from . import socks
-from .. import vlcqt
-from ..util import config
 
 log = logging.getLogger(__name__)
 

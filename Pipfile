@@ -4,9 +4,10 @@ url = "https://pypi.org/simple"
 verify_ssl = true
 
 [dev-packages]
-flake8 = "*"
 pre-commit = "*"
 isort = {extras = ["pipfile"],version = "*"}
+flake8 = "*"
+mypy = "*"
 pytest = "*"
 pyinstaller = {git = "https://github.com/pyinstaller/PyInstaller",ref = "46286a1f455d8e0837f7c2b9e1bbdff1ef858f0f"}
 

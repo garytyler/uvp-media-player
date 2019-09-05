@@ -12,11 +12,11 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from . import files
 from .. import vlcqt
 from ..base.docking import DockableWidget
 from ..base.popup import PopupWindowAction, PopupWindowWidget
 from ..gui import icons
+from . import files
 from .model import MediaItem, PlaylistModel
 
 log = logging.getLogger(__name__)
