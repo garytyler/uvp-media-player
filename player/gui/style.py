@@ -49,7 +49,6 @@ def _get_dark_palette() -> QPalette:
     p.setColor(QPalette.ButtonText, QColor(175, 175, 175))
     p.setColor(QPalette.Base, QColor(42, 42, 42))
     p.setColor(QPalette.Window, QColor(53, 53, 53))
-    # p.setColor(QPalette.Shadow, QColor(20, 20, 20))
     p.setColor(QPalette.Shadow, QColor(0, 0, 0))
     p.setColor(QPalette.Highlight, QColor(42, 130, 218))
     p.setColor(QPalette.HighlightedText, QColor(175, 175, 175))

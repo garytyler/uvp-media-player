@@ -42,13 +42,3 @@ class AlwaysOnTopAction(QAction):
         set_always_on_top(self.main_win, checked)
         config.state.stay_on_top = checked
         self.setChecked(checked)
-
-    # def _enable(self):
-    #     _args = self.main_win.windowFlags() | Qt.WindowStaysOnTopHint
-    #     self.main_win.setWindowFlags(_args)
-    #     self.main_win.show()
-
-    # def _disable(self):
-    #     _args = self.main_win.windowFlags() & ~Qt.WindowStaysOnTopHint
-    #     self.main_win.setWindowFlags(_args)
-    #     self.main_win.show()

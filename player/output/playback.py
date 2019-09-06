@@ -128,7 +128,6 @@ class PlayPauseAction(QAction):
 
     @pyqtSlot()
     def on_triggered(self):
-        # self.playlist_player.play_pause()
         if self.mp.is_playing():
             self.mp.pause()
         else:

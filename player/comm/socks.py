@@ -6,8 +6,6 @@ from PyQt5.QtCore import Qt, QTimer, QUrl, pyqtSignal
 from PyQt5.QtNetwork import QAbstractSocket
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
 
-# from .. import util
-
 log = logging.getLogger(__name__)
 
 

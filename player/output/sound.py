@@ -74,7 +74,7 @@ class VolumeSlider(QSlider):
 
     def showEvent(self, e):
         curr_value = self.vol_mngr.get_volume()
-        # if curr_value:
+        # if curr_value: # TODO: Improve volume control
         self.setValue(curr_value if curr_value else config.state.volume)
 
     def hideEvent(self, e):

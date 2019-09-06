@@ -20,8 +20,6 @@ from ..base.buttons import ActionButton
 from ..gui import icons
 from ..util import config
 
-# from ..output.status import StatusLabel
-
 log = logging.getLogger(__name__)
 
 

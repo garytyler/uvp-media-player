@@ -117,12 +117,3 @@ class OpenMediaMenu(QMenu):
         self.setTitle("Open Media")
         self.addAction(OpenMultipleAction(parent=self, playlist_view=playlist_view))
         self.addAction(OpenFileAction(parent=self, playlist_view=playlist_view))
-
-    #     self.triggered.connect(self.on_triggered)
-
-    # def on_triggered(self):
-    #     file_paths, filter_desc = QFileDialog.getOpenFileNames(
-    #         self.parent, self.text(), directory="media"
-    #     )
-    #     if file_paths:
-    #         self.playlist_view.add_media(file_paths)

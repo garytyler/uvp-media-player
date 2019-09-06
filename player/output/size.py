@@ -86,37 +86,6 @@ class ZoomControlManager(QMenu):
             self.set_scale(value)
 
 
-# class FrameSizeManager(QObject):
-#     mediaframeresized = pyqtSignal(float)
-
-#     def __init__(self, main_win, viewpoint_mngr):
-#         super().__init__()
-#         self.vp_manager = viewpoint_mngr
-#         self.main_win = main_win
-#         self.mp = vlcqt.media_player
-#         self.media = self.mp.get_media()
-#         self.mediaframeresized.connect(self.vp_manager.trigger_redraw)
-#         self.mp.mediachanged.connect(self.conform_to_media)
-#         # self.mediaframeresized.connect(self.vp_manager.trigger_redraw)
-#         # self.mp.mediachanged.connect(self.vp_manager.trigger_redraw)
-
-#         # self._main_win.initialized.connect(self.conform_to_media)
-
-#     def set_scale(self, scale) -> float:
-#         config.state.view_scale = scale
-#         self._apply_rescale(scale)
-
-#     def conform_to_media(self, media: vlcqt.Media = None):
-#         """If media arg is None, current media_player media is used"""
-#         self.media = media if media else self.mp.get_media()
-#         self._apply_rescale(scale=config.state.view_scale)
-#         self.vp_manager.trigger_redraw()
-
-#     def _apply_rescale(self, scale):
-#         self.main_win.resize_to_media(scale)
-#         self.mediaframeresized.emit(scale)
-
-
 class ZoomInAction(QAction):
     def __init__(self, parent, zoom_ctrl_mngr, size=None):
         super().__init__(parent=parent)
