@@ -9,7 +9,7 @@ isort = {extras = ["pipfile"],version = "*"}
 flake8 = "*"
 mypy = "*"
 pytest = "*"
-pyinstaller = {git = "https://github.com/pyinstaller/PyInstaller",ref = "46286a1f455d8e0837f7c2b9e1bbdff1ef858f0f"}
+pyinstaller = {git = "git://github.com/pyinstaller/pyinstaller.git",ref = "8196c57ab37e94ea5735479d04a5fd2169e638d8"}
 
 [packages]
 click = "*"

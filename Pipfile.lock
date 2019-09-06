@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1977a1705f0b26b82725be09b76ae1218dc54087caa4b5074c782394a41b6367"
+            "sha256": "d971f22ad30a0cd65107b8c339b983410eb3680f1ab09e3cb2ee56824b140b18"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -380,8 +380,8 @@
             "version": "==2.1.1"
         },
         "pyinstaller": {
-            "git": "https://github.com/pyinstaller/PyInstaller",
-            "ref": "46286a1f455d8e0837f7c2b9e1bbdff1ef858f0f"
+            "git": "git://github.com/pyinstaller/pyinstaller.git",
+            "ref": "8196c57ab37e94ea5735479d04a5fd2169e638d8"
         },
         "pyparsing": {
             "hashes": [
