@@ -27,7 +27,7 @@ _SETTINGS = {
 
 
 class _State:
-    _handlers = {}
+    _handlers: dict = {}
 
     def __init__(self):
         super(_State, self).__setattr__("_state", {})

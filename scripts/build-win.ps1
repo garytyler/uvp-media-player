@@ -1,6 +1,6 @@
 $directions = "Run script from project root using `'$MyInvocation.MyCommand.Name`'"
 
-$app_module = "src"
+$app_module = "player"
 $_name = 'player'
 
 
@@ -26,9 +26,9 @@ else {
 
 ### Prep ###
 
-Write-Output "Prep: Removing existing `'dist/`' contents"
+Write-Host -ForegroundColor DarkCyan "Prep: Removing existing `'dist/`' contents"
 Remove-Item "$working_dir\dist" -Force  -Recurse -ErrorAction SilentlyContinue
-Write-Output "Prep: Removing existing `'build/`' contents"
+Write-Host -ForegroundColor DarkCyan "Prep: Removing existing `'build/`' contents"
 Remove-Item "$working_dir\build" -Force  -Recurse -ErrorAction SilentlyContinue
 
 
@@ -36,13 +36,11 @@ Remove-Item "$working_dir\build" -Force  -Recurse -ErrorAction SilentlyContinue
 
 # Define default args
 $default_args = @(
-    # '--debug=imports'
-    # '--console'
-    '--windowed'
     '--log-level=INFO'
     '--noconfirm'
     '--clean'
     '--onedir'
+    '--windowed'
     '--name=player'
     '--hidden-import=PyQt5.QtNetwork'
     '--hidden-import=PyQt5.Qtcore'
@@ -56,11 +54,14 @@ $default_args = @(
 # Append passed args and application script path to default args
 $pyinstaller_args = $default_args + $args + "$app_script"
 
-Write-Output "Building `'$_name`' with script `'$app_script`' and pyinstaller arguments: [$pyinstaller_args]"
-
+Write-Host -ForegroundColor DarkCyan "Building `'$_name`': `'$app_script`' and pyinstaller arguments: [$pyinstaller_args]"
 Invoke-Command { pyinstaller @args } -args $pyinstaller_args
 
 ### Cleanup ###
 
-Write-Output "Clean-up: Removing `'*.pyo`' files from project directory"
+Write-Host -ForegroundColor DarkCyan "Clean-up: Removing `'*.pyo`' files from project directory"
 Get-ChildItem -Path "*.pyo" -Recurse  -ErrorAction SilentlyContinue -File | Remove-Item
+
+### Done ###
+
+Write-Host -ForegroundColor DarkCyan "Done"

@@ -13,8 +13,8 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from . import config
 from ..gui import icons, window
+from . import config
 
 
 class SettingsDialog(QDialog):

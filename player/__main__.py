@@ -2,11 +2,12 @@ import os
 import sys
 
 from PyQt5.QtWidgets import QApplication
-from src import vlcqt
-from src.gui.style import initialize_style
-from src.main import AppWindow
-from src.util import config
-from src.util.logs import initialize_logging
+
+from player import vlcqt
+from player.gui.style import initialize_style
+from player.main import AppWindow
+from player.util import config
+from player.util.logs import initialize_logging
 
 
 def main():

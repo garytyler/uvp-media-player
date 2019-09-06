@@ -1,11 +1,13 @@
-from . import vlc_facades
-from ffmpeg import probe
-from os import path
 import sys
+from os import path
+
 import vlc
+from ffmpeg import probe
 from PyQt5.QtCore import pyqtSlot
 from PyQt5.QtWidgets import QFrame
+
 from ..output.frame import MainContentFrame
+from . import vlc_facades
 
 Instance = vlc_facades.Instance
 
