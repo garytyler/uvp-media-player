@@ -40,6 +40,7 @@ $default_args = @(
     '--noconfirm'
     '--clean'
     '--onedir'
+    '--windowed'
     '--name=player'
     '--hidden-import=PyQt5.QtNetwork'
     '--hidden-import=PyQt5.Qtcore'

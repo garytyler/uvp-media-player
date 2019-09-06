@@ -2,8 +2,6 @@ import qtawesome as qta
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QApplication
 
-APP_ICONS = None
-
 
 class DarkColors:
     def __init__(self):
@@ -14,8 +12,8 @@ class DarkColors:
         self.color_disabled = QColor(100, 100, 100)
 
 
-light_defaults = qta.iconic_font._default_options
-dark_defaults = DarkColors()
+DEFAULT_ICON_OPTIONS_LIGHT = qta.iconic_font._default_options
+DEFAULT_ICON_OPTIONS_DARK = DarkColors()
 
 
 class AppIcons:
@@ -35,11 +33,6 @@ class AppIcons:
             off="mdi.play",
             on_active="mdi.pause",
             off_active="mdi.play",
-            color=dark_defaults.color,
-            color_on=dark_defaults.color,
-            color_off=dark_defaults.color,
-            color_on_active=dark_defaults.color_off_active,
-            color_off_active=dark_defaults.color_off_active,
         )
         self.main_menu_button = qta.icon("mdi.dots-vertical")
         self.stop = qta.icon("mdi.stop")
@@ -116,12 +109,15 @@ class AppIcons:
         return qapp.palette()
 
 
+_APP_ICONS = None
+
+
 def __getattr__(name: str):
-    global APP_ICONS
-    try:
-        return getattr(APP_ICONS, name)
+    global _APP_ICONS
+    try:  # If QApplication is needed but not loaded, reinstantialize
+        return getattr(_APP_ICONS, name)
     except AttributeError:
-        if APP_ICONS:
+        if _APP_ICONS:
             raise
-        APP_ICONS = AppIcons()
-        return getattr(APP_ICONS, name)
+        _APP_ICONS = AppIcons()
+        return getattr(_APP_ICONS, name)
