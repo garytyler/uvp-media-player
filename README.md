@@ -1,8 +1,4 @@
-# eventvr-player
-
-## Requirements
-
-- python-vlc requires a local installation of [VLC Media Player](https://www.videolan.org/vlc/) (64-bit)
+# seevr-player
 
 ## Environment Variables
 
@@ -19,7 +15,7 @@ As with any `pyinstaller` build, the build process must be run using the targete
 
 ## Build for Windows
 
-### Build Requirements (Windows)
+### Requirements
 
 - Windows 10
 - [VLC 3.0.8](https://www.videolan.org/vlc/)
@@ -27,13 +23,11 @@ As with any `pyinstaller` build, the build process must be run using the targete
 - [pip](https://pip.readthedocs.io/en/stable/installing/)
 - [Pipenv](https://pipenv.readthedocs.io/en/latest/install/#installing-pipenv) (to verify dependency hashes)
 
-### Build Options (Windows)
+### Options
 
-The build script (`build-win.ps1`) accepts [pyinstaller options](https://pyinstaller.readthedocs.io/en/stable/usage.html#options) as arguments. In the case of a conflict, these args will override those already called in the script.
+The build script for Windows (`build-win.ps1`) accepts [pyinstaller options](https://pyinstaller.readthedocs.io/en/stable/usage.html#options) as arguments. In the case of a conflict, these args will override those already called in the script.
 
-- To build the project as one `.exe` file, run the build script with `--onefile`. This will override the `--onedir` call that is default in the script.
-
-### Build Instructions (Windows)
+### Instructions
 
 ```ps
 # Create a virtual environment with dependencies
@@ -46,8 +40,4 @@ pipenv shell
 .\scripts\build-win.ps1
 ```
 
-### Troubleshooting
-
-- Run the build script with `--console` to open a console for monitoring standard i/o.
-- Run the build script with `--console` and `--debug=imports` to monitor standard i/o and imports.
-- Submit an issue
+To debug the build, run the build script with `--console` to open a console to monitor standard i/o, and use `--debug=imports` to also monitor imports. Also, submit an issue.
