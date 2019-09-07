@@ -1,7 +1,7 @@
 import logging
 
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QAction, QSlider
+from PyQt5.QtWidgets import QAction, QActionGroup, QSlider
 
 from .. import vlcqt
 from ..gui import icons
@@ -10,7 +10,7 @@ from ..util import config
 log = logging.getLogger(__name__)
 
 
-class PlaybackModeManager(QObject):
+class LoopModeManager(QObject):
     playbackmodechanged = pyqtSignal(str)
 
     def __init__(self, parent):
@@ -37,9 +37,10 @@ class PlaybackModeManager(QObject):
 
 
 class PlaybackModeAction(QAction):
-    def __init__(self, parent, playback_mode_mngr):
+    def __init__(self, parent, loop_mode_mngr):
         super().__init__(parent=parent)
-        self.playback_mode_mngr = playback_mode_mngr
+        self.loop_mode_mngr = loop_mode_mngr
+
         self.icons = {
             "off": icons.playback_mode_off,
             "one": icons.playback_mode_one,
@@ -49,52 +50,30 @@ class PlaybackModeAction(QAction):
         self.setToolTip("Toggle Playback Mode")
         self.setIconText("Playback Mode")
         self.setCheckable(True)
-        self.setIcon(self.icons[self.playback_mode_mngr.get_mode()])
 
-        self.triggered.connect(self.playback_mode_mngr.rotate_mode)
-        self.playback_mode_mngr.playbackmodechanged.connect(self.on_playbackmodechanged)
+        self.update()
+        self.triggered.connect(self.loop_mode_mngr.rotate_mode)
+        self.loop_mode_mngr.playbackmodechanged.connect(self.on_playbackmodechanged)
 
     def on_playbackmodechanged(self, mode: str):
+        self.update(mode)
+
+    def update(self, mode: str = None):
+        mode = self.loop_mode_mngr.get_mode()
         self.setIcon(self.icons[mode])
         self.setChecked(True if mode != "off" else False)
 
 
-# class PlaybackModeAction(QAction):
-#     # setplaybackmode = pyqtSignal(str)
-
-#     def __init__(self, parent):
-#         super().__init__(parent=parent)
-#         self.setText("Toggle Playback Mode")
-#         self.setToolTip("Toggle Playback Mode")
-#         self.setIconText("Playback Mode")
-
-#         self.lp = vlcqt.list_player
-#         self.setCheckable(True)
-
-#         self.option_names = ["off", "one", "all"]
-#         for index, item in enumerate(self.option_names):
-#             if item == config.state.playback_mode:
-#                 self.rotate_list(self.option_names, index)
-#                 break
-
-#         option_name = self.option_names[0]
-#         self.setIcon(icons.playback_mode[option_name])
-
-#         self.triggered.connect(self.on_triggered)
-#         # self.setplaybackmode.connect(self.lp.on_setplaybackmode)
-#         # self.setplaybackmode.connect(self.lp.on_setplaybackmode)
-
-#     def on_triggered(self):
-#         self.rotate_list(self.option_names, 1)
-#         option_name = self.option_names[0]
-#         self.setIcon(icons.playback_mode[option_name])
-#         config.state.playback_mode = option_name
-#         self.setplaybackmode.emit(option_name)
-#         self.setChecked(True if option_name != "off" else False)
-
-#     @staticmethod
-#     def rotate_list(l, n):
-#         l[:] = l[n:] + l[:n]
+class PlayActions(QActionGroup):
+    def __init__(self, parent, playlist_player):
+        super().__init__(parent)
+        self.prev = PreviousMediaAction(parent=parent, playlist_player=playlist_player)
+        self.play = PlayPauseAction(parent=parent, playlist_player=playlist_player)
+        self.next = NextMediaAction(parent=parent, playlist_player=playlist_player)
+        self.addAction(self.prev)
+        self.addAction(self.play)
+        self.addAction(self.next)
+        self.setEnabled(False)
 
 
 class PlayPauseAction(QAction):
@@ -107,15 +86,9 @@ class PlayPauseAction(QAction):
         self.setCheckable(True)
         self.setIcon(icons.play_pause)
 
-        if self.mp.is_playing():
-            self.on_playing()
-        else:
-            self.on_paused()
-
         self.mp.playing.connect(self.on_playing)
         self.mp.paused.connect(self.on_paused)
         self.mp.stopped.connect(self.on_paused)
-
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot()
@@ -126,12 +99,13 @@ class PlayPauseAction(QAction):
     def on_paused(self):
         self.setChecked(False)
 
-    @pyqtSlot()
-    def on_triggered(self):
+    @pyqtSlot(bool)
+    def on_triggered(self, checked):
         if self.mp.is_playing():
             self.mp.pause()
         else:
             self.mp.play()
+        self.setChecked(checked)
 
 
 class PreviousMediaAction(QAction):
@@ -139,7 +113,6 @@ class PreviousMediaAction(QAction):
         super().__init__(parent=parent)
         self.setToolTip("Previous Media")
         self.setIcon(icons.previous_media)
-
         self.playlist_player = playlist_player
 
         self.triggered.connect(self.on_triggered)
@@ -154,7 +127,6 @@ class NextMediaAction(QAction):
         super().__init__(parent=parent)
         self.setToolTip("Next Media")
         self.setIcon(icons.next_media)
-
         self.playlist_player = playlist_player
 
         self.triggered.connect(self.on_triggered)
@@ -265,5 +237,5 @@ class FrameResPlaybackSlider(QSlider):
             return None
         if not vlc_media.is_parsed():
             vlc_media.parse()
-        track = [t for t in vlc_media.tracks_get()][0]
-        return track.video.contents.frame_rate_num
+        # track = [t for t in vlc_media.tracks_get()][0]
+        return 30

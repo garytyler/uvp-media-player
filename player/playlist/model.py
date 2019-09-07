@@ -1,6 +1,5 @@
 import logging
 from os.path import exists
-from pprint import pprint
 
 from ffmpeg import probe
 from PyQt5.QtCore import Qt
@@ -35,7 +34,6 @@ class MediaItem(QStandardItem):
 
         self._media = vlcqt.Media(path)
         self.update_vlc_meta()
-
         self.get_media().mediaparsedchanged.connect(self.update_vlc_meta)
         self.get_media().parse_with_options(vlcqt.MediaParseFlag.local, timeout=2)
 

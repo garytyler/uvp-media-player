@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import (
 )
 
 from .. import vlcqt
-from ..base.popup import PopupControlAction, PopupControlWidget
+from ..base.popup import PopupControlWidget
 from ..gui import icons
 from ..util import config
 
@@ -26,7 +26,7 @@ class VolumeManager(QObject):
     def __init__(self, parent):
         super().__init__(parent)
         self.mp = vlcqt.media_player
-        self.mp.audio_set_volume(config.state.volume)
+        vlcqt.libvlc_audio_set_volume(self.mp, config.state.volume)
         self.mp.audiovolume.connect(self.on_audiovolume)
         self.mp.mediachanged.connect(self.on_mediachanged)
 
@@ -40,13 +40,14 @@ class VolumeManager(QObject):
 
     def get_volume(self):
         if self.mp.has_media():
-            _value = self.mp.audio_get_volume()
+            volume = self.mp.audio_get_volume()
         else:
-            _value = config.state.volume
-        return _value
+            volume = config.state.volume
+        return volume
 
-    def on_audiovolume(self, value):
-        self.volumechanged.emit(value)
+    def on_audiovolume(self, e):
+        volume = self.get_volume()
+        self.volumechanged.emit(volume)
 
     def on_mediachanged(self):
         self.mp.audio_set_volume(self.get_volume())
@@ -55,11 +56,10 @@ class VolumeManager(QObject):
 class VolumeSlider(QSlider):
     """Initializes and updates media player volume value"""
 
-    widgethidden = pyqtSignal(int)
-
     def __init__(self, parent, vol_mngr):
-        super().__init__(parent)
+        super().__init__(parent=parent)
         self.vol_mngr = vol_mngr
+        self.vol_mngr.set_volume(100)
 
         self.setToolTip("Volume")
         self.setMinimum(0)
@@ -72,37 +72,48 @@ class VolumeSlider(QSlider):
     def on_slider_valueChanged(self, value):
         self.vol_mngr.set_volume(value)
 
+
+class VolumePopupWidget(PopupControlWidget):
+    def __init__(self, parent, vol_mngr: VolumeManager):
+        super().__init__(parent=parent)
+        self.vol_mngr = vol_mngr
+        self.slider = VolumeSlider(parent=parent, vol_mngr=self.vol_mngr)
+        self.setLayout(QHBoxLayout())
+        self.layout().addWidget(self.slider)
+        self._hideclick = False
+
     def showEvent(self, e):
-        curr_value = self.vol_mngr.get_volume()
-        # if curr_value: # TODO: Improve volume control
-        self.setValue(curr_value if curr_value else config.state.volume)
+        value = self.vol_mngr.get_volume()
+        if value:
+            self.slider.setValue(value)
 
     def hideEvent(self, e):
-        vol_val = self.value()
-        config.state.volume = vol_val
-        self.widgethidden.emit(vol_val)
+        config.state.volume = self.slider.value()
+
+    def mouseReleaseEvent(self, e):
+        """Make certain that when a user clicks outside of the widget while it's open,
+        the widget closes nicely. Depends on state recorded in 'mousePressEvent' call.
+        """
+        if self._hideclick is True:
+            self.hide()
+            self._hideclick = False
+
+    def mousePressEvent(self, e):
+        if e.source() != self and not self.isHidden():
+            self._hideclick = True
 
 
-class VolumeSliderPopupControlWidget(PopupControlWidget):
-    def __init__(self, parent, slider):
-        super().__init__(parent)
-        self.slider = slider
-        self.layout = QHBoxLayout(self)
-        self.layout.addWidget(self.slider)
-
-
-class VolumePopupAction(PopupControlAction):
-    def __init__(
-        self, widget: PopupControlWidget, button: QToolButton, vol_mngr: VolumeManager
-    ):
-        super().__init__(text="Volume", widget=widget, button=button)
-        self.widget = widget
+class VolumePopupAction(QAction):
+    def __init__(self, parent, vol_mngr: VolumeManager):
+        super().__init__(text="Volume")
         self.vol_mngr = vol_mngr
         self.icons = icons.volume_button
-        self.mp = vlcqt.media_player
+        self.vol_widget = VolumePopupWidget(parent=parent, vol_mngr=self.vol_mngr)
 
-        self.vol_mngr.volumechanged.connect(self.update_icon)
         self.update_icon(config.state.volume)
+
+        self.triggered.connect(self.vol_widget.popup)
+        self.vol_mngr.volumechanged.connect(self.update_icon)
 
     def update_icon(self, vol_val):
         vol_max = 100
@@ -119,21 +130,10 @@ class VolumePopupAction(PopupControlAction):
             self.setIcon(self.icons["high"])
 
 
-class VolumeSliderPopupButton(QToolButton):
-    def __init__(self, parent, size, vol_mngr):
+class VolumePopupButton(QToolButton):
+    def __init__(self, parent, vol_mngr):
         super().__init__(parent=parent)
         self.vol_mngr = vol_mngr
-
         self.setToolTip("Zoom")
-        self.setCheckable(False)
-        self.setIconSize(QSize(size, size))
-        self.setAutoRaise(True)
-        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
-
-        self.slider = VolumeSlider(self, vol_mngr=self.vol_mngr)
-        self.widget = VolumeSliderPopupControlWidget(parent=self, slider=self.slider)
-        self.action = VolumePopupAction(
-            widget=self.widget, button=self, vol_mngr=self.vol_mngr
-        )
-
+        self.action = VolumePopupAction(parent=self, vol_mngr=self.vol_mngr)
         self.setDefaultAction(self.action)

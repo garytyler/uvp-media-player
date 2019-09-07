@@ -23,10 +23,10 @@ log = logging.getLogger(__name__)
 
 
 class PlaylistView(QTreeView):
-    def __init__(self, playlist_player, parent):
+    def __init__(self, playlist_player, play_ctrls, parent):
         super().__init__(parent=parent)
         self.pl_player = playlist_player
-
+        self.play_ctrls = play_ctrls
         self.setSelectionBehavior(self.SelectRows)
         self.setEditTriggers(self.NoEditTriggers)
         self.setExpandsOnDoubleClick(False)
@@ -34,10 +34,25 @@ class PlaylistView(QTreeView):
         self.setAllColumnsShowFocus(True)
         self.setRootIsDecorated(False)
 
+        self.setModel(PlaylistModel(parent=self))
+
         self.doubleClicked.connect(self.on_doubleClicked)
 
     def on_doubleClicked(self, index):
         self.pl_player.load_media(index=index)
+
+    def on_model_dataChanged(self, topLeft, bottomRight):
+        """Enable/disable playback controls according to contents"""
+        self.play_ctrls.setEnabled(bool(self.model().item(0)))
+
+    def setModel(self, model):
+        # Disconnect old model
+        old_model = self.model()
+        if old_model:
+            old_model.dataChanged.disconnect(self.on_model_dataChanged)
+        # Connect new model
+        model.dataChanged.connect(self.on_model_dataChanged)
+        super().setModel(model)
 
     def add_media(self, paths):
         paths = files.get_media_paths(paths)
@@ -49,14 +64,12 @@ class PlaylistView(QTreeView):
             item = MediaItem(path.abspath(p))
             items.append(item)
 
-        if self.model():
-            for i in items:
-                self.model().appendRow(i)
-        else:
-            self.setModel(PlaylistModel(parent=self))
-            for i in items:
-                self.model().appendRow(i)
-            self.pl_player.load_media(index=self.model().item(0).index())
+        for i in items:
+            self.model().appendRow(i)
+
+        first_item = self.model().item(0)
+        if first_item:
+            self.pl_player.load_media(index=first_item.index(), play=False)
 
 
 class PopupPlaylistWindow(PopupWindowWidget):

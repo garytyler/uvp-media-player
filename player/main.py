@@ -4,6 +4,7 @@ from typing import Tuple
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
+    QActionGroup,
     QApplication,
     QGridLayout,
     QHBoxLayout,
@@ -24,9 +25,10 @@ from .output.fullscreen import FullscreenManager, FullscreenMenu
 from .output.orientation import ViewpointManager
 from .output.playback import (
     FrameResPlaybackSlider,
+    LoopModeManager,
     NextMediaAction,
+    PlayActions,
     PlaybackModeAction,
-    PlaybackModeManager,
     PlayPauseAction,
     PreviousMediaAction,
 )
@@ -37,7 +39,7 @@ from .output.size import (
     ZoomInAction,
     ZoomOutAction,
 )
-from .output.sound import VolumeManager, VolumeSliderPopupButton
+from .output.sound import VolumeManager, VolumePopupButton
 from .output.status import StatusBar
 from .playlist.files import OpenMediaMenu
 from .playlist.player import PlaylistPlayer
@@ -58,12 +60,11 @@ class AppWindow(QMainWindow):
         self.media_player = vlcqt.media_player
 
         self.setDockNestingEnabled(True)
-        self.setCorner(Qt.BottomLeftCorner, Qt.LeftDockWidgetArea)
 
         self.setStatusBar(StatusBar(self))
 
         self.create_interface()
-        self.create_actions()
+        self.create_playback_components()
         self.create_other_components()
         self.create_gui_layout()
         self.create_window_shortcuts()
@@ -91,33 +92,30 @@ class AppWindow(QMainWindow):
             status_widget=self.statusBar().fullscreen_status_widget,
             viewpoint_mngr=self.vp_manager,
         )
-        self.playback_mode_mngr = PlaybackModeManager(parent=self)
+        self.loop_mode_mngr = LoopModeManager(parent=self)
         self.vol_mngr = VolumeManager(parent=self)
+
+    def create_playback_components(self):
         self.playlist_player = PlaylistPlayer(
-            vp_manager=self.vp_manager, playback_mode_mngr=self.playback_mode_mngr
+            vp_manager=self.vp_manager, loop_mode_mngr=self.loop_mode_mngr
+        )
+        self.play_actions = PlayActions(
+            parent=self, playlist_player=self.playlist_player
         )
         self.playlist_view = PlaylistView(
-            playlist_player=self.playlist_player, parent=self
+            playlist_player=self.playlist_player,
+            play_ctrls=self.play_actions,
+            parent=self,
         )
         self.dockable_playlist = DockablePlaylist(
             parent=self, playlist_view=self.playlist_view
         )
         self.toggle_playlist_act = self.dockable_playlist.toggleViewAction()
 
-    def create_actions(self):
         self.playback_mode_act = PlaybackModeAction(
-            parent=self, playback_mode_mngr=self.playback_mode_mngr
+            parent=self, loop_mode_mngr=self.loop_mode_mngr
         )
         self.always_on_top_act = AlwaysOnTopAction(main_win=self)
-        self.play_pause_act = PlayPauseAction(
-            parent=self, playlist_player=self.playlist_player
-        )
-        self.prev_media_act = PreviousMediaAction(
-            parent=self, playlist_player=self.playlist_player
-        )
-        self.next_media_act = NextMediaAction(
-            parent=self, playlist_player=self.playlist_player
-        )
         self.zoom_in_act = ZoomInAction(parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr)
         self.zoom_out_act = ZoomOutAction(
             parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
@@ -139,29 +137,23 @@ class AppWindow(QMainWindow):
         self.fullscreen_menu = FullscreenMenu(
             main_win=self, fullscreen_mngr=self.fullscreen_mngr
         )
-        self.vol_slider_popup_bttn = VolumeSliderPopupButton(
-            vol_mngr=self.vol_mngr, parent=self, size=32
-        )
-        self.pb_slider = FrameResPlaybackSlider(parent=self)
+        self.vol_popup_bttn = VolumePopupButton(parent=self, vol_mngr=self.vol_mngr)
+        self.pb_ctrls_slider = FrameResPlaybackSlider(parent=self)
 
     def create_gui_layout(self):
-        ##############
-        # Upper area #
-        ##############
-
-        self.media_tbar = ToolBar(
+        self.media_toolbar = ToolBar(
             title="Media",
             objects=[
-                self.toggle_playlist_act,
                 ToolBar.Separator,
                 self.open_media_menu,
                 ToolBar.Separator,
+                self.toggle_playlist_act,
             ],
             parent=self,
             collapsible=True,
             icon_size=32,
         )
-        self.view_tbar = ToolBar(
+        self.view_toolbar = ToolBar(
             title="View",
             objects=[
                 self.zoom_out_act,
@@ -176,7 +168,7 @@ class AppWindow(QMainWindow):
             collapsible=True,
             icon_size=32,
         )
-        self.corner_tbar = ToolBar(
+        self.corner_toolbar = ToolBar(
             title="corner",
             objects=[
                 ToolBar.Separator,
@@ -193,32 +185,31 @@ class AppWindow(QMainWindow):
         bttns_widget.setContentsMargins(0, 0, 0, 0)
         bttns_widget.setLayout(QHBoxLayout(bttns_widget))
         bttns_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        bttns_widget.layout().addWidget(self.media_tbar, 0, Qt.AlignLeft)
-        bttns_widget.layout().addWidget(self.view_tbar, 2, Qt.AlignCenter)
-        bttns_widget.layout().addWidget(self.corner_tbar, 0, Qt.AlignRight)
+        bttns_widget.layout().addWidget(self.view_toolbar, 0, Qt.AlignLeft)
+        bttns_widget.layout().addWidget(self.corner_toolbar, 2, Qt.AlignLeft)
+        bttns_widget.layout().addWidget(self.media_toolbar, 0, Qt.AlignRight)
 
         self.addToolBar(
             Qt.TopToolBarArea, ToolBar("Toolbar", parent=self, objects=[bttns_widget])
         )
 
-        ##############
-        # Lower area #
-        ##############
-
-        self.pb_ctrls_tbar = ToolBar(
+        self.pb_ctrls_left_toolbar = ToolBar(
+            title="Left Controle",
+            objects=[],
+            collapsible=False,
+            parent=self,
+            icon_size=32,
+        )
+        self.pb_ctrls_middle_toolbar = ToolBar(
             title="Playback Controls",
-            objects=[self.prev_media_act, self.play_pause_act, self.next_media_act],
+            objects=self.play_actions.actions(),
             parent=self,
             collapsible=False,
             icon_size=52,
         )
-        self.pb_options_tbar = ToolBar(
-            title="Playback Options",
-            objects=[
-                self.playback_mode_act,
-                ToolBar.Spacer,
-                self.vol_slider_popup_bttn,
-            ],
+        self.pb_ctrls_right_toolbar = ToolBar(
+            title="Right Controls",
+            objects=[self.playback_mode_act, self.vol_popup_bttn],
             collapsible=False,
             parent=self,
             icon_size=32,
@@ -233,26 +224,33 @@ class AppWindow(QMainWindow):
         )
         filters_dock_widget.setWidget(filters_widget)
 
-        pb_widget = QWidget(self)
-        pb_widget.setContentsMargins(0, 0, 0, 0)
-        pb_widget.setLayout(QGridLayout(pb_widget))
-        pb_widget.layout().addWidget(self.pb_slider, 1, 0, 1, -1)
-        pb_widget.layout().addWidget(self.pb_ctrls_tbar, 2, 1, 1, 1, Qt.AlignHCenter)
-        pb_widget.layout().addWidget(self.pb_options_tbar, 2, 2, 1, 1, Qt.AlignBottom)
-
-        pb_dock_widget = DockableWidget(
-            title="Playback", parent=self, widget=pb_widget, w_titlebar=False
+        pb_ctrls_widget = QWidget(self)
+        pb_ctrls_widget.setContentsMargins(0, 0, 0, 0)
+        pb_ctrls_widget.setLayout(QGridLayout(pb_ctrls_widget))
+        pb_ctrls_widget.layout().addWidget(self.pb_ctrls_slider, 1, 0, 1, -1)
+        pb_ctrls_widget.layout().addWidget(
+            self.pb_ctrls_left_toolbar, 2, 0, 1, 1, Qt.AlignJustify
         )
-        pb_dock_widget.setWidget(pb_widget)
+        pb_ctrls_widget.layout().addWidget(
+            self.pb_ctrls_middle_toolbar, 2, 1, 1, 1, Qt.AlignHCenter
+        )
+        pb_ctrls_widget.layout().addWidget(
+            self.pb_ctrls_right_toolbar, 2, 2, 1, 1, Qt.AlignJustify
+        )
+
+        pb_ctrls_dock_widget = DockableWidget(
+            title="Playback", parent=self, widget=pb_ctrls_widget, w_titlebar=False
+        )
+        pb_ctrls_dock_widget.setWidget(pb_ctrls_widget)
 
         # Add lower dock widgets
-        self.addDockWidget(Qt.BottomDockWidgetArea, pb_dock_widget)
+        self.addDockWidget(Qt.BottomDockWidgetArea, pb_ctrls_dock_widget)
         self.addDockWidget(Qt.BottomDockWidgetArea, filters_dock_widget)
-        self.tabifyDockWidget(pb_dock_widget, filters_dock_widget)
-        pb_dock_widget.raise_()
+        self.tabifyDockWidget(pb_ctrls_dock_widget, filters_dock_widget)
+        pb_ctrls_dock_widget.raise_()
 
         # Add playlist dock widget
-        self.addDockWidget(Qt.LeftDockWidgetArea, self.dockable_playlist)
+        self.addDockWidget(Qt.RightDockWidgetArea, self.dockable_playlist)
 
     def create_window_shortcuts(self):
         self.ctrl_w = QShortcut("Ctrl+W", self, self.close)

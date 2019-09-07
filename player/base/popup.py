@@ -6,7 +6,7 @@ from ..gui import window
 
 class PopupControlWidget(QFrame):
     def __init__(self, parent):
-        super().__init__(parent)
+        super().__init__(parent=parent)
         self.parent = parent
         self.setObjectName("popupcontrolwin")
         self.setFrameShape(QFrame.Box)
@@ -19,15 +19,6 @@ class PopupControlWidget(QFrame):
         x = butt_rect.x()
         y = butt_rect.y() - menu_size.height()
         self.move(self.parent.mapToGlobal(QPoint(x, y)))
-
-
-class PopupControlAction(QAction):
-    def __init__(self, text: str, widget: PopupControlWidget, button: QToolButton):
-        super().__init__(text, parent=widget)
-        self.button = button
-        self.text = text
-        self.widget = widget
-        self.triggered.connect(self.widget.popup)
 
 
 class PopupWindowWidget(QWidget):

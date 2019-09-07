@@ -10,10 +10,9 @@ log = logging.getLogger(__name__)
 class PlaylistPlayer:
     listplayerstatechanged = pyqtSignal()
 
-    def __init__(self, vp_manager, playback_mode_mngr, main_content_frame=None):
+    def __init__(self, vp_manager, loop_mode_mngr):
         self.vp_manager = vp_manager
-        self.playback_mode_mngr = playback_mode_mngr
-        self.main_content_frame = main_content_frame
+        self.loop_mode_mngr = loop_mode_mngr
         self.mp = vlcqt.media_player
         self.index = None
         self.mp.endreached.connect(self.on_mp_endreached)
@@ -30,11 +29,12 @@ class PlaylistPlayer:
             self.load_media(self.index)
 
     def handle_playlist_end_reached(self):
-        playback_mode = self.playback_mode_mngr.get_mode()
+        playback_mode = self.loop_mode_mngr.get_mode()
         if playback_mode == "off":
             self.mp.stop()
         elif playback_mode == "one":
-            self.load_media(self.index, play=True)
+            self.mp.set_position(0)
+            # self.load_media(self.index, play=True)
         elif playback_mode == "all":
             first_item_index = self.index.model().item(0).index()
             self.load_media(first_item_index, play=True)
@@ -42,6 +42,7 @@ class PlaylistPlayer:
     def skip_previous(self):
         prev_index = self.index.siblingAtRow(self.index.row() - 1)
         if not prev_index.isValid():
+            self.mp.set_time(0)
             log.info(f"LOAD PREV MEDIA Index Invalid row={prev_index.row()}")
         else:
             self.index = prev_index
@@ -64,6 +65,7 @@ class PlaylistPlayer:
             self.index = index
             media = self.index.data(Qt.VlcMedia)
             is_spherical = self.index.data(Qt.IsSpherical)
+
             self.vp_manager.enable_per_frame_updates(is_spherical)
             self.mp.stop()
             self.mp.set_media(media)

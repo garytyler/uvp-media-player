@@ -1,13 +1,12 @@
 import json
 import logging
-from os import environ, getenv
-from os.path import join
+from os import getenv, path
 from tempfile import gettempdir
 
 log = logging.getLogger(__name__)
 
 
-_CONFIG_FILE_PATH = getenv("VR_PLAYER_CONFIG", join(gettempdir(), ".vr_player_config"))
+_CONFIG_FILE_PATH = getenv("VR_PLAYER_CONFIG", ".user_config")
 
 
 _SETTINGS = {
@@ -15,12 +14,7 @@ _SETTINGS = {
     "stay_on_top": {"options": (True, False), "default": False},
     "view_scale": {"options": (0.25, 0.5, 1, 2), "default": 1},
     "color_theme": {"options": ("light", "dark"), "default": "dark"},
-    "url": {
-        "options": (),
-        "default": environ.get(
-            "VR_PLAYER_REMOTE_URL", default="wss://eventvr.herokuapp.com/mediaplayer"
-        ),
-    },
+    "url": {"options": (), "default": "wss://eventvr.herokuapp.com/mediaplayer"},
     "volume": {"options": (), "default": 50},  # number between 1 and 100
     "tool_bar_area": {"options": ("top", "bottom"), "default": "bottom"},
 }
@@ -30,7 +24,20 @@ class _State:
     _handlers: dict = {}
 
     def __init__(self):
-        super(_State, self).__setattr__("_state", {})
+        # Load config from environment variables
+        _state = {}
+        env_url = getenv("VR_PLAYER_REMOTE_URL", default=None)
+        if env_url:
+            _state["url"] = env_url
+
+        # Set values from env vars to local super var
+        # Do not call self.__setattr__
+        super(_State, self).__setattr__("_state", _state)
+
+        # Create empty config file if one does not exist
+        if not path.isfile(_CONFIG_FILE_PATH):
+            with open(_CONFIG_FILE_PATH, "w") as f:
+                f.write("{}")
 
     def load(self):
         try:
@@ -49,7 +56,6 @@ class _State:
         log.debug(f"LOADED CONFIG FROM FILE items={self._state}")
 
     def register_handler(self, key, callback):
-
         if key not in _SETTINGS.keys():
             raise ValueError
         handlers = self._handlers.get(key)
