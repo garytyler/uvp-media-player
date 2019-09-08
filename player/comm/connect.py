@@ -201,13 +201,15 @@ class ConnectToServerWidget(QToolButton):
         return max(mode_widths)
 
     def mousePressEvent(self, e):
-        self.set_proxy_buttons_pressed()
         e.accept()
+        self._pressed = True
+        self.set_proxy_buttons_pressed()
 
     def mouseReleaseEvent(self, e):
+        self._pressed = False
         self.set_proxy_buttons_unpressed()
-        self.action.triggered.emit(not self.action.isChecked())
-        e.accept()
+        if self._hovered:
+            self.action.triggered.emit(not self.action.isChecked())
 
     def set_proxy_buttons_pressed(self):
         self.text_bttn.setStyleSheet(self.mouse_press_style_sheets["pressed"]["text"])
@@ -222,6 +224,7 @@ class ConnectToServerWidget(QToolButton):
         self.text_bttn.setText(self.text_bttn.toolTip())
 
     def leaveEvent(self, e):
+        print("leave")
         self._hovered = False
         self.text_bttn.setText(self.text_bttn.statusTip())
 
