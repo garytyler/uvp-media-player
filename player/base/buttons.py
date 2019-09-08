@@ -9,8 +9,6 @@ class ActionButton(QToolButton):
         self.setDefaultAction(self.action)
         self.setToolTip(self.action.text())
         self.setIconSize(QSize(size, size))
-        self.setAutoRaise(True)
-        self.setToolButtonStyle(Qt.ToolButtonIconOnly)
 
 
 class MenuButton(QToolButton):
@@ -21,5 +19,5 @@ class MenuButton(QToolButton):
         self.setIcon(icon)
         self.setIconSize(QSize(size, size))
         self.setPopupMode(QToolButton.MenuButtonPopup)
-        self.setAutoRaise(True)
+        # self.setAutoRaise(True)
         self.setCheckable(True)

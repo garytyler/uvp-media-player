@@ -26,20 +26,20 @@ class SettingsDialog(QDialog):
         self.load()
 
     def load(self):
-        self.setLayout(QVBoxLayout(self))
-        self.form = QFormLayout(self)
-        self.layout().insertLayout(0, self.form)
+        self.setLayout(QVBoxLayout())
+        self.form_lo = QFormLayout()
+        self.layout().insertLayout(0, self.form_lo)
 
         # Settings
         self.server_url_edit = QLineEdit()
         self.server_url_edit.setText(config.state.url)
-        self.form.addRow(self.tr("Server URL"), self.server_url_edit)
+        self.form_lo.addRow(self.tr("Server URL"), self.server_url_edit)
 
         # Finish buttons
         self.save_bttn = QPushButton("Save", parent=self)
         self.cancel_bttn = QPushButton("Cancel", parent=self)
 
-        self.finish_bttns_lo = QHBoxLayout(self)
+        self.finish_bttns_lo = QHBoxLayout()
 
         self.finish_bttns_lo.addWidget(self.save_bttn, 1, Qt.AlignRight)
         self.finish_bttns_lo.addWidget(self.cancel_bttn, 0, Qt.AlignRight)

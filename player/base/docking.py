@@ -19,6 +19,7 @@ from ..gui import icons
 
 
 class ToolBar(QToolBar):
+    """Arg 'objects' can be QMenu, QAction, QWidget, or a tuple or list of those"""
 
     Separator = 11
     Spacer = 12

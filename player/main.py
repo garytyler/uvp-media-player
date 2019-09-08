@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (
 from . import vlcqt
 from .base.docking import DockableWidget, ToolBar
 from .comm.client import IOController
-from .comm.connect import ConnectToServerAction
+from .comm.connect import ConnectToServerAction, ConnectToServerWidget
 from .comm.socks import AutoReconnectSocket
 from .gui.window import AlwaysOnTopAction
 from .output.frame import MediaPlayerContentFrame
@@ -144,7 +144,7 @@ class AppWindow(QMainWindow):
         self.media_toolbar = ToolBar(
             title="Media",
             objects=[
-                ToolBar.Separator,
+                self.open_settings_act,
                 self.open_media_menu,
                 ToolBar.Separator,
                 self.toggle_playlist_act,
@@ -156,45 +156,51 @@ class AppWindow(QMainWindow):
         self.view_toolbar = ToolBar(
             title="View",
             objects=[
-                self.zoom_out_act,
-                self.zoom_in_act,
                 self.frame_scale_menu,
-                ToolBar.Separator,
                 self.always_on_top_act,
-                ToolBar.Separator,
                 self.fullscreen_menu,
             ],
             parent=self,
             collapsible=True,
             icon_size=32,
         )
-        self.corner_toolbar = ToolBar(
-            title="corner",
-            objects=[
-                ToolBar.Separator,
-                self.connect_to_server_act,
-                ToolBar.Separator,
-                self.open_settings_act,
-            ],
+        self.connect_to_server_widget = ConnectToServerWidget(
+            parent=self, connect_to_server_action=self.connect_to_server_act
+        )
+        self.connect_toolbar = ToolBar(
+            title="Connect",
+            objects=[self.connect_to_server_widget],
             parent=self,
             collapsible=True,
             icon_size=32,
         )
+        # connect_toolbar_bttn = self.connect_toolbar.widgetForAction(
+        #     self.connect_to_server_act
+        # )
+        # connect_toolbar_bttn.setObjectName("connect_toolbar_button")
+        # connect_toolbar_bttn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
 
-        bttns_widget = QWidget(self)
-        bttns_widget.setContentsMargins(0, 0, 0, 0)
-        bttns_widget.setLayout(QHBoxLayout(bttns_widget))
-        bttns_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        bttns_widget.layout().addWidget(self.view_toolbar, 0, Qt.AlignLeft)
-        bttns_widget.layout().addWidget(self.corner_toolbar, 2, Qt.AlignLeft)
-        bttns_widget.layout().addWidget(self.media_toolbar, 0, Qt.AlignRight)
+        button_bar_widget = QWidget(self)
+        button_bar_widget.setContentsMargins(0, 0, 0, 0)
+        button_bar_widget.setLayout(QGridLayout(button_bar_widget))
+        button_bar_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        button_bar_widget.layout().addWidget(
+            self.view_toolbar, 0, 0, 1, 1, Qt.AlignLeft
+        )
+        button_bar_widget.layout().addWidget(
+            self.connect_toolbar, 0, 1, 1, 1, Qt.AlignCenter
+        )
+        button_bar_widget.layout().addWidget(
+            self.media_toolbar, 0, 2, 1, 1, Qt.AlignRight
+        )
 
         self.addToolBar(
-            Qt.TopToolBarArea, ToolBar("Toolbar", parent=self, objects=[bttns_widget])
+            Qt.TopToolBarArea,
+            ToolBar("Toolbar", parent=self, objects=[button_bar_widget]),
         )
 
         self.pb_ctrls_left_toolbar = ToolBar(
-            title="Left Controle",
+            title="Left Control",
             objects=[],
             collapsible=False,
             parent=self,

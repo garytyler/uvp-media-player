@@ -88,8 +88,6 @@ QLabel#text_status {
  */
 
 QFrame#output_surface {
-    /* background-color: rgb(0, 0, 0); */
-    /* background-image: rgb(0, 0, 0); */
     background-clip: content-box;
     background-color: black;
 }
@@ -125,7 +123,6 @@ QStatusBar {
  */
 
 QToolBar {
-    /* border: 1px outset palette(base); */
     border: none;
 }
 
@@ -134,19 +131,64 @@ QDockableWidget QToolBar {
     align-items: flex-end
 }
 
-QToolBar::separator {
+QToolBar:separator {
     margin: 2ex;
     width: 0.5px;
     border: 1px outset palette(base);
 }
 
-QToolButton#qt_toolbar_ext_button {
-    border: ridge 1px palette(base);
-}
+
+/*
+ * QToolButton
+ */
 
 QToolButton {
     border: none;
 }
+
+QToolButton:checked,
+QToolButton#connect:checked {
+    color: darkgreen;
+}
+
+QToolButton:disabled,
+QToolButton:hover:disabled{
+    color: gray;
+}
+
+QToolButton:hover {
+    color: palette(button-text);
+}
+
+
+/*
+ * QToolButton#connect
+ */
+
+QToolButton#connect {
+    color: crimson;
+    font: 15px;
+    font-style: bold;
+    /* text-transform: uppercase; */
+}
+
+QToolButton#connect:checked {
+    color:darkgreen;
+}
+
+QToolButton#connect:disabled,
+QToolButton#connect:disabled:hover{
+    color:gray;
+}
+
+QToolButton#connect:!disabled:!hover:checked {
+    color: darkgreen;
+}
+
+QToolButton#connect:!disabled:!hover:!checked {
+    color: crimson;
+}
+
 
 
 /*
@@ -244,8 +286,8 @@ QScrollBar::sub-line:horizontal {
 
 
 /*
-   * QScrollArea
-   */
+ * QScrollArea
+ */
 
 QScrollArea {
     border-style: none;
