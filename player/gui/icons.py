@@ -44,6 +44,13 @@ class AppIcons:
         )
         self.zoom_in_menu_item = qta.icon("mdi.magnify-plus")
         self.zoom_out_menu_item = qta.icon("mdi.magnify-minus")
+        self.connect_to_server_hovered = qta.icon(
+            "mdi.server-network",
+            on="mdi.server-network",
+            off="mdi.server-network-off",
+            color_on="green",
+            color_off="red",
+        )
         self.connect_to_server_status = qta.icon(
             "mdi.server-network",
             on="mdi.server-network",

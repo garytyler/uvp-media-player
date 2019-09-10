@@ -60,8 +60,10 @@ class ClientSocketBase(QWebSocket):
 
 
 class AutoReconnectSocket(ClientSocketBase):
-    startedconnecting = pyqtSignal()
-    stoppedconnecting = pyqtSignal(bool)
+
+    ConnectedState = QAbstractSocket.ConnectedState
+    ConnectingState = QAbstractSocket.ConnectingState
+    UnconnectedState = QAbstractSocket.UnconnectedState
 
     def __init__(self):
         ClientSocketBase.__init__(self)
@@ -84,14 +86,6 @@ class AutoReconnectSocket(ClientSocketBase):
 
     def _on_state_changed(self, state: QAbstractSocket.SocketState):
         log.info(f"SOCKET STATE CHANGED state={self.state_str()} qurl={self.qurl}")
-
-        # Send busy state to view
-        if state == QAbstractSocket.ConnectingState:
-            self.startedconnecting.emit()
-        else:
-            self.stoppedconnecting.emit(state == QAbstractSocket.ConnectedState)
-
-        # Perform next action
         if state == QAbstractSocket.UnconnectedState:
             if self.__connection_expected:
                 self._attempt_open()
@@ -106,3 +100,52 @@ class AutoReconnectSocket(ClientSocketBase):
         self.__connection_expected = False
         self.connect_timer.stop()
         self.close()
+
+
+# class AutoReconnectSocket(ClientSocketBase):
+#     startedconnecting = pyqtSignal()
+#     stoppedconnecting = pyqtSignal(bool)
+
+#     def __init__(self):
+#         ClientSocketBase.__init__(self)
+#         self.KeepAliveOption = True
+#         self.LowDelayOption = True
+
+#         self.__connection_expected = False
+
+#         self.qurl = QUrl()
+
+#         # Timer for connection attempts
+#         self.connect_timer = QTimer()
+#         self.connect_timer.setTimerType(Qt.VeryCoarseTimer)
+
+#         self.stateChanged.connect(self._on_state_changed)
+
+#     def _attempt_open(self):
+#         self.connect_timer.singleShot(0, lambda: self.open(self.qurl))
+#         log.info(f"SOCKET OPEN ATTEMPT qurl={self.qurl}")
+
+#     def _on_state_changed(self, state: QAbstractSocket.SocketState):
+#         log.info(f"SOCKET STATE CHANGED state={self.state_str()} qurl={self.qurl}")
+
+#         # Send busy state to view
+#         if state == QAbstractSocket.ConnectingState:
+#             self.startedconnecting.emit()
+#         else:
+#             self.stoppedconnecting.emit(state == QAbstractSocket.ConnectedState)
+
+#         # Perform next action
+#         if state == QAbstractSocket.UnconnectedState:
+#             if self.__connection_expected:
+#                 self._attempt_open()
+#         elif state == QAbstractSocket.ConnectedState:
+#             self.__connection_expected = True
+
+#     def connect(self, url):
+#         self.qurl = QUrl(url)
+#         self._attempt_open()
+
+#     def disconnect(self):
+#         self.__connection_expected = False
+#         self.connect_timer.stop()
+#         self.close()

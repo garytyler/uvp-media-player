@@ -2,11 +2,13 @@ import logging
 
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFontMetrics, QIcon
+from PyQt5.QtNetwork import QAbstractSocket
 from PyQt5.QtWidgets import (
     QAbstractButton,
     QAction,
     QApplication,
     QFormLayout,
+    QFrame,
     QHBoxLayout,
     QInputDialog,
     QLabel,
@@ -19,227 +21,273 @@ from PyQt5.QtWidgets import (
 
 from ..base.buttons import ActionButton
 from ..gui import icons
-from ..output.status import IconStatusLabel, TextStatusLabel
+from ..output.status import IconStatusLabel
 from ..util import config
 
 log = logging.getLogger(__name__)
 
 
-class ConnectToServerAction(QWidgetAction):
-    stoppedconnecting = pyqtSignal(bool)
-    disconnected = pyqtSignal()
+CONNECTION_STATUS_TIPS = {
+    QAbstractSocket.ConnectedState: "Connected",
+    QAbstractSocket.ConnectingState: "Connecting...",
+    QAbstractSocket.UnconnectedState: "Disconnected",
+}
+CONNECTION_TOOL_TIPS = {
+    QAbstractSocket.ConnectedState: "Press To Disonnect",
+    QAbstractSocket.ConnectingState: "Connecting...",
+    QAbstractSocket.UnconnectedState: "Press To Connect",
+}
 
-    DisconnectedMode = 0
-    ConnectingMode = 1
-    ConnectedMode = 2
 
-    mode_status_tips = {
-        DisconnectedMode: "Disconnected",
-        ConnectingMode: "Connecting...",
-        ConnectedMode: "Connected",
-    }
-    mode_tool_tips = {
-        DisconnectedMode: "Connect Now",
-        ConnectingMode: "Connecting...",
-        ConnectedMode: "Disconnect Now",
-    }
+def connection_status_tip(state):
+    if state in (QAbstractSocket.ConnectedState, QAbstractSocket.UnconnectedState):
+        return CONNECTION_STATUS_TIPS[state]
+    else:
+        return CONNECTION_STATUS_TIPS[QAbstractSocket.ConnectingState]
 
-    def __init__(self, auto_connect_socket, connect_status_widget, parent):
+
+def connection_tool_tip(state):
+    if state in (QAbstractSocket.ConnectedState, QAbstractSocket.UnconnectedState):
+        return CONNECTION_TOOL_TIPS[state]
+    else:
+        return CONNECTION_TOOL_TIPS[QAbstractSocket.ConnectingState]
+
+
+class ConnectAction(QWidgetAction):
+    def __init__(self, socket, parent):
         super().__init__(parent)
-        self.socket = auto_connect_socket
-        self.connect_status_widget = connect_status_widget
-        self.parent = parent
-        self.setIcon(icons.connect_to_server_status)
-        self.setCheckable(True)
-        self.set_mode(self.DisconnectedMode)
+        self.socket = socket
 
-        self.socket.stoppedconnecting.connect(self.on_stoppedconnecting)
-        self.socket.disconnected.connect(self.on_disconnected)
+        self.setCheckable(True)
+        self.setIcon(icons.connect_to_server_status)
+        self.update_state(self.socket.state())
+
+        self.socket.stateChanged.connect(self.update_state)
         self.triggered.connect(self.on_triggered)
 
-    def createWidget(self, parent):
-        return ConnectToServerWidget(self.parent, self)
-
     def on_triggered(self, checked):
-        print("TRIGGERED", checked)
         if checked:
             self.socket.connect(config.state.url)
-            self.set_mode(self.ConnectingMode)
         else:
             self.socket.disconnect()
 
-    @pyqtSlot(bool)
-    def on_stoppedconnecting(self, is_connected):
-        if is_connected:
-            self.set_mode(self.ConnectedMode)
-        else:
-            self.set_mode(self.DisconnectedMode)
-
-    @pyqtSlot()
-    def on_disconnected(self):
-        self.set_mode(self.DisconnectedMode)
-
-    def get_status_txt(self, status, url=""):
-        return f"{status} {url}"
-
-    @property
-    def mode(self):
-        return self._mode
-
-    def set_mode(self, mode):
-        self._mode = mode
-        self.setText(self.mode_status_tips[self.mode])
-        self.setStatusTip(self.mode_status_tips[self.mode])
-        self.setToolTip(self.mode_tool_tips[self.mode])
-
-        if self.mode == self.DisconnectedMode:
-            self.setEnabled(True)
-            self.setChecked(False)
-            self.connect_status_widget.set_status(
-                text=f"{self.mode_status_tips[self.mode]} ({config.state.url})",
-                mode=QIcon.Normal,
-                state=QIcon.Off,
-                elide_mode=Qt.ElideMiddle,
-            )
-        elif self.mode == self.ConnectingMode:
-            self.setEnabled(False)
-            self.setChecked(False)
-            self.connect_status_widget.set_status(
-                text=f"{self.mode_status_tips[self.mode]} ({config.state.url})",
-                mode=QIcon.Disabled,
-                state=QIcon.Off,
-                elide_mode=Qt.ElideMiddle,
-            )
-        elif self.mode == self.ConnectedMode:
+    @pyqtSlot(QAbstractSocket.SocketState)
+    def update_state(self, state):
+        self.setStatusTip(self.statusTip())
+        self.setToolTip(self.toolTip())
+        self.setText(self.text())
+        if state == self.socket.ConnectedState:
             self.setEnabled(True)
             self.setChecked(True)
-            self.connect_status_widget
-            self.connect_status_widget.set_status(
-                text=f"{self.mode_status_tips[self.mode]} ({config.state.url})",
+
+        elif state == self.socket.UnconnectedState:
+            self.setEnabled(True)
+            self.setChecked(False)
+
+        elif state == self.socket.ConnectingState:
+            self.setEnabled(False)
+            self.setChecked(False)
+
+    def statusTip(self):
+        state = self.socket.state()
+        return connection_status_tip(state)
+
+    def toolTip(self):
+        state = self.socket.state()
+        return connection_tool_tip(state)
+
+    def text(self):
+        return self.statusTip()
+
+
+class ConnectStatusLabel(IconStatusLabel):
+    def __init__(self, parent, socket):
+        super().__init__(parent=parent, icon=icons.connect_to_server_status)
+        self.socket = socket
+        self.update_state(self.socket.state())
+        self.socket.stateChanged.connect(self.update_state)
+
+    @pyqtSlot(QAbstractSocket.SocketState)
+    def update_state(self, state):
+        status_tip = connection_status_tip(state)
+        if state == self.socket.ConnectedState:
+            self.set_status(
+                text=f"{status_tip} ({config.state.url})",
                 mode=QIcon.Selected,
                 state=QIcon.On,
                 elide_mode=Qt.ElideMiddle,
             )
+        elif state == self.socket.ConnectingState:
+            self.set_status(
+                text=f"{status_tip} ({config.state.url})",
+                mode=QIcon.Disabled,
+                state=QIcon.Off,
+                elide_mode=Qt.ElideMiddle,
+            )
+        elif state == self.socket.UnconnectedState:
+            self.set_status(
+                text=f"{status_tip} ({config.state.url})",
+                mode=QIcon.Normal,
+                state=QIcon.Off,
+                elide_mode=Qt.ElideMiddle,
+            )
+
+    def get_status_txt(self, status, url=""):
+        return f"{status} {url}"
 
 
-class ProxyToolButton(QToolButton):
-    """Cosmetic button that lets the parent button or a connected action handle the the
-    manage it's state. Useful as one of multiple child buttons all connected to the
-    same function that can serve a unique layout.
-    """
+class ConnectActionCenterFillText(ConnectAction):
+    def __init__(self, parent, socket):
+        self.text_area_width_chars = None
+        super().__init__(parent=parent, socket=socket)
 
-    def __init__(self, parent):
+    # def statusTip(self):
+    #     if self.text_area_width_chars:
+    #         return super().statusTip().center(self.text_area_width_chars)
+    #     else:
+    #         return super().statusTip()
+
+    # def toolTip(self):
+    #     if self.text_area_width_chars:
+    #         return super().toolTip().center(self.text_area_width_chars)
+    #     else:
+    #         return super().toolTip()
+
+    # def text(self):
+    #     if self.text_area_width_chars:
+    #         return super().text().center(self.text_area_width_chars)
+    #     else:
+    #         return super().text()
+
+
+class ConnectButtonWidgetAction(QWidgetAction):
+    extra_width_chars = 2
+
+    def __init__(self, parent, socket):
+        super().__init__(parent)
+        self.socket = socket
+
+        # super().__init__(
+        #     parent=parent,
+        #     socket=socket,
+        # )
+        # self.button.setDefaultAction(self)
+
+    def createWidget(self, parent):
+
+        self.action = ConnectActionCenterFillText(parent=parent, socket=self.socket)
+        self.button = ConnectButton(parent=parent, action=self.action)
+        # self.button.setDefaultAction(self.action)
+
+        return self.button
+
+    def statusTip(self):
+        return self.status_tips[self.mode]
+
+    def toolTip(self):
+        return self.tool_tips[self.mode]
+
+    def text(self):
+        return super().statusTip()
+
+
+class ConnectButton(QToolButton):
+
+    extra_width_chars = 2
+
+    def __init__(self, parent, action):
         super().__init__(parent)
         self.setObjectName("connect")
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setDefaultAction(action)
 
-    def mousePressEvent(self, e):
-        e.ignore()
+        text_strings = []
+        text_strings.extend(CONNECTION_STATUS_TIPS.values())
+        text_strings.extend(CONNECTION_TOOL_TIPS.values())
 
-    def mouseReleaseEvent(self, e):
-        e.ignore()
-
-
-class ConnectToServerWidget(QToolButton):
-
-    leave_style_sheets = {
-        ConnectToServerAction.DisconnectedMode: "color: crimson;",
-        ConnectToServerAction.ConnectedMode: "color: darkgreen;",
-    }
-    border_width = "2px"
-
-    mouse_press_style_sheets = {
-        "pressed": {
-            "text": f"border: {border_width} inset palette(base); border-left:none;",
-            "icon": f"border: {border_width} inset palette(base); border-right:none;",
-        },
-        "unpressed": {
-            "text": f"border: {border_width} outset palette(base); border-left:none;",
-            "icon": f"border: {border_width} outset palette(base); border-right:none;",
-        },
-    }
-
-    def __init__(self, parent, connect_to_server_action):
-        super().__init__(parent)
-        self.action = connect_to_server_action
-        self.setLayout(QHBoxLayout(self))
-        self.setContentsMargins(0, 0, 0, 0)
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().setSpacing(0)
-
-        self.icon_bttn = ProxyToolButton(self)
-        self.icon_bttn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-        self.icon_bttn.setIconSize(QSize(32, 32))
-        self.icon_bttn.setDefaultAction(connect_to_server_action)
-        self.icon_bttn.setToolButtonStyle(Qt.ToolButtonIconOnly)
-
-        self.text_bttn = ProxyToolButton(self)
-        self.text_bttn.setDefaultAction(connect_to_server_action)
-        self.text_bttn.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.text_bttn.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
-
-        self.layout().addWidget(self.icon_bttn, alignment=Qt.AlignLeft)
-        self.layout().addWidget(self.text_bttn, alignment=Qt.AlignJustify)
-
-        self.text_bttn.setFixedWidth(self.get_max_text_bttn_width() + 10)
-        self.set_proxy_buttons_unpressed()
-
-        self.action.stoppedconnecting.connect(self.on_stoppedconnecting)
-
-    def get_max_text_bttn_width(self):
-        """Get the largest potential width of the button, suitable for setting as minimum width.
-        """
-        start_text = self.text_bttn.text()
-        mode_widths = []
-        potential_strings = list(self.action.mode_tool_tips.values()) + list(
-            self.action.mode_status_tips.values()
+        # Set text area width
+        avg_char_width = self.fontMetrics().averageCharWidth()
+        max_string_width_pixels = max(
+            (self.fontMetrics().boundingRect(s).width() for s in text_strings)
         )
-        for string in potential_strings:
-            self.text_bttn.setText(string)
-            width = self.text_bttn.sizeHint().width()
-            mode_widths.append(width)
-        self.text_bttn.setText(start_text)
-        return max(mode_widths)
+        extra_width_pixels = self.extra_width_chars * avg_char_width
+        text_area_width_pixels = max_string_width_pixels + extra_width_pixels
+        self.text_area_width_chars = int(text_area_width_pixels / avg_char_width)
 
-    def mousePressEvent(self, e):
-        e.accept()
-        self._pressed = True
-        self.set_proxy_buttons_pressed()
+        # Set total button width
+        max_default_button_width = self.max_default_button_width(text_strings)
+        total_button_width = max_default_button_width + extra_width_pixels
+        self.setFixedWidth(total_button_width)
 
-    def mouseReleaseEvent(self, e):
-        self._pressed = False
-        self.set_proxy_buttons_unpressed()
-        if self._hovered:
-            self.action.triggered.emit(not self.action.isChecked())
+        # # Replace status_tip strings in action instance
+        # for key, value in CONNECTION_STATUS_TIPS.items():
+        #     text = value.center(self.text_area_width_chars)
+        #     CONNECTION_STATUS_TIPS[key] = text
 
-    def set_proxy_buttons_pressed(self):
-        self.text_bttn.setStyleSheet(self.mouse_press_style_sheets["pressed"]["text"])
-        self.icon_bttn.setStyleSheet(self.mouse_press_style_sheets["pressed"]["icon"])
+        # # Replace tool_tip strings in action instance
+        # for key, value in CONNECTION_TOOL_TIPS.items():
+        #     text = value.center(self.text_area_width_chars)
+        #     CONNECTION_TOOL_TIPS[key] = text
 
-    def set_proxy_buttons_unpressed(self):
-        self.text_bttn.setStyleSheet(self.mouse_press_style_sheets["unpressed"]["text"])
-        self.icon_bttn.setStyleSheet(self.mouse_press_style_sheets["unpressed"]["icon"])
+        # Setup
+        # self.update_button_text()
+        # action.stoppedconnecting.connect(self.on_stoppedconnecting)
 
-    def enterEvent(self, e):
-        self._hovered = True
-        self.text_bttn.setText(self.text_bttn.toolTip())
+        # return super().setDefaultAction(action)
 
-    def leaveEvent(self, e):
-        print("leave")
-        self._hovered = False
-        self.text_bttn.setText(self.text_bttn.statusTip())
+    def max_default_button_width(self, text_strings):
+        # action = self.defaultAction()
+        start_text = self.text()
+        widths: list[int, int] = []
+        for string in text_strings:
+            self.setText(string)
+            button_width = self.sizeHint().width()
+            widths.append(button_width)
+        self.setText(start_text)
+        return max(widths)
 
-    def on_stoppedconnecting(self, is_connected):
-        """If connected/disconnected before leave event, go ahead and update text color to deliver smooth feedback instead of flashing a separate hover color.
-        """
-        self.text_bttn.setText(self.text_bttn.statusTip())
-        if not self._hovered:
-            return None
-        elif is_connected:
-            self.text_bttn.setStyleSheet("color: darkgreen;")
-        else:
-            self.text_bttn.setStyleSheet("color: crimson;")
+    def setText(self, text):
+        # text = text.center(self.text_area_width_chars)
+        text = self.defaultAction().statusTip().center(self.text_area_width_chars)
+        # print(text)
+        super().setText(text)
 
-    def sizeHint(self):
-        return QSize(
-            self.layout().totalSizeHint().width(), self.icon_bttn.sizeHint().height()
-        )
+    # def setText(self, text):
+    #     # text = text.center(self.text_area_width_chars)
+    #     text = self.defaultAction().statusTip().center(self.text_area_width_chars)
+    #     # print(text)
+    #     super().setText(text)
+
+    # def text(self, text):
+
+    # def update_button_text(self):
+    #     try:
+    #         _is_hovering = self.is_hovering
+    #     except AttributeError:
+    #         _is_hovering = self.is_hovering = False
+
+    #     action = self.defaultAction()
+    #     if _is_hovering:
+    #         text = CONNECTION_TOOL_TIPS[action.mode]
+    #     else:
+    #         text = CONNECTION_TOOL_TIPS[action.mode]
+    #     self.setText(text)
+
+    # def enterEvent(self, e):
+    #     self.is_hovering = True
+    #     self.update_button_text()
+
+    # def leaveEvent(self, e):
+    #     self.is_hovering = False
+    #     self.update_button_text()
+
+    # def on_stoppedconnecting(self, is_connected):
+    #     """If connected/disconnected before leave event, go ahead and update text color to deliver smooth feedback instead of flashing a separate hover color.
+    #     """
+    #     self.text_bttn.setText(self.text_bttn.statusTip())
+    #     if not self._hovered:
+    #         return None
+    #     elif is_connected:
+    #         self.text_bttn.setStyleSheet("color: darkgreen;")
+    #     else:
+    #         self.text_bttn.setStyleSheet("color: crimson;")

@@ -17,11 +17,11 @@ from PyQt5.QtWidgets import (
 from . import vlcqt
 from .base.docking import DockableWidget, ToolBar
 from .comm.client import IOController
-from .comm.connect import ConnectToServerAction, ConnectToServerWidget
+from .comm.connect import ConnectAction, ConnectButtonWidgetAction, ConnectStatusLabel
 from .comm.socks import AutoReconnectSocket
 from .gui.window import AlwaysOnTopAction
 from .output.frame import MediaPlayerContentFrame
-from .output.fullscreen import FullscreenManager, FullscreenMenu
+from .output.fullscreen import FullscreenManager, FullscreenMenu, FullscreenStatusLabel
 from .output.orientation import ViewpointManager
 from .output.playback import (
     FrameResPlaybackSlider,
@@ -64,6 +64,7 @@ class AppWindow(QMainWindow):
         self.setStatusBar(StatusBar(self))
 
         self.create_interface()
+        self.create_status_bar()
         self.create_playback_components()
         self.create_other_components()
         self.create_gui_layout()
@@ -73,9 +74,21 @@ class AppWindow(QMainWindow):
 
         self.initialized.emit()
 
+    def create_status_bar(self):
+        self.status_bar = StatusBar(parent=self)
+        self.connect_status_label = ConnectStatusLabel(
+            parent=self.status_bar, socket=self.socket
+        )
+        self.fullscreen_status_label = FullscreenStatusLabel(
+            parent=self.status_bar, fullscreen_mngr=self.fullscreen_mngr
+        )
+        self.status_bar.addPermanentWidget(self.fullscreen_status_label)
+        self.status_bar.addPermanentWidget(self.connect_status_label)
+        self.setStatusBar(self.status_bar)
+
     def create_interface(self):
-        self.auto_connect_socket = AutoReconnectSocket()
-        self.io_ctrlr = IOController(socket=self.auto_connect_socket)
+        self.socket = AutoReconnectSocket()
+        self.io_ctrlr = IOController(socket=self.socket)
         self.vp_manager = ViewpointManager(io_ctrlr=self.io_ctrlr)
         self.frame_size_mngr = FrameSizeManager(
             main_win=self, viewpoint_mngr=self.vp_manager
@@ -89,7 +102,6 @@ class AppWindow(QMainWindow):
         )
         self.fullscreen_mngr = FullscreenManager(
             main_content_frame=vlcqt.media_player_content_frame,
-            status_widget=self.statusBar().fullscreen_status_widget,
             viewpoint_mngr=self.vp_manager,
         )
         self.loop_mode_mngr = LoopModeManager(parent=self)
@@ -121,11 +133,6 @@ class AppWindow(QMainWindow):
             parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
         )
         self.open_settings_act = OpenSettingsAction(main_win=self)
-        self.connect_to_server_act = ConnectToServerAction(
-            auto_connect_socket=self.auto_connect_socket,
-            connect_status_widget=self.statusBar().connect_status_widget,
-            parent=self,
-        )
 
     def create_other_components(self):
         self.open_media_menu = OpenMediaMenu(
@@ -139,16 +146,17 @@ class AppWindow(QMainWindow):
         )
         self.vol_popup_bttn = VolumePopupButton(parent=self, vol_mngr=self.vol_mngr)
         self.pb_ctrls_slider = FrameResPlaybackSlider(parent=self)
+        # self.connect_button_widget_action = ConnectButtonWidgetAction(
+        #     parent=self, connect_action=self.connect_action
+        # )
+        self.connect_button_widget_action = ConnectButtonWidgetAction(
+            socket=self.socket, parent=self
+        )
 
     def create_gui_layout(self):
         self.media_toolbar = ToolBar(
             title="Media",
-            objects=[
-                self.open_settings_act,
-                self.open_media_menu,
-                ToolBar.Separator,
-                self.toggle_playlist_act,
-            ],
+            objects=[self.open_media_menu, ToolBar.Separator, self.toggle_playlist_act],
             parent=self,
             collapsible=True,
             icon_size=32,
@@ -164,21 +172,15 @@ class AppWindow(QMainWindow):
             collapsible=True,
             icon_size=32,
         )
-        self.connect_to_server_widget = ConnectToServerWidget(
-            parent=self, connect_to_server_action=self.connect_to_server_act
-        )
         self.connect_toolbar = ToolBar(
             title="Connect",
-            objects=[self.connect_to_server_widget],
+            objects=[self.connect_button_widget_action, self.open_settings_act],
+            # objects=[self.connect_action, self.open_settings_act],
             parent=self,
             collapsible=True,
             icon_size=32,
         )
-        # connect_toolbar_bttn = self.connect_toolbar.widgetForAction(
-        #     self.connect_to_server_act
-        # )
-        # connect_toolbar_bttn.setObjectName("connect_toolbar_button")
-        # connect_toolbar_bttn.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.connect_toolbar.setObjectName("borderedbuttons")
 
         button_bar_widget = QWidget(self)
         button_bar_widget.setContentsMargins(0, 0, 0, 0)
