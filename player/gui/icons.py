@@ -1,24 +1,33 @@
 import qtawesome as qta
-from PyQt5.QtGui import QColor
+from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QApplication
 
-
-def qta_defaults_dark():
-    defaults = {}
-    defaults["color"] = QColor(150, 150, 150)
-    defaults["color_on"] = QColor("ForestGreen")
-    defaults["color_off_active"] = defaults["color"].lighter()
-    defaults["color_on_active"] = defaults["color_on"].lighter()
-    defaults["color_disabled"] = QColor(100, 100, 100)
-    return defaults
+APPLICATION_PALETTE = None
 
 
-QTA_DEFAULTS_LIGHT = qta.iconic_font._default_options
-QTA_DEFAULTS_DARK = qta_defaults_dark()
+def initialize_icon_defaults_light(app_palette):
+    global APPLICATION_PALETTE
+    APPLICATION_PALETTE = app_palette
+    qta.set_global_defaults(**qta.iconic_font._default_options)
+
+
+def initialize_icon_defaults_dark(app_palette):
+    global APPLICATION_PALETTE
+    palette = APPLICATION_PALETTE = app_palette
+    d = {}
+    d["color_on"] = QColor("ForestGreen")
+    d["color"] = palette.color(QPalette.Normal, QPalette.ButtonText)
+    d["color_on_active"] = d["color_on"].lighter()
+    d["color_off_active"] = d["color"].lighter()
+    d["color_disabled"] = palette.color(QPalette.Disabled, QPalette.ButtonText)
+    qta.set_global_defaults(**d)
 
 
 class AppIcons:
     def __init__(self):
+        global APPLICATION_PALETTE
+        self.palette = APPLICATION_PALETTE
+
         self.fullscreen_menu_bttn = qta.icon("mdi.fullscreen", offset=(0, -0.06))
         self.fullscreen = qta.icon("mdi.fullscreen", scale_factor=1.1)
         self.fullscreen_exit = qta.icon("mdi.fullscreen-exit")
@@ -50,7 +59,7 @@ class AppIcons:
             on="mdi.server-network",
             off="mdi.server-network-off",
             off_active="mdi.server-network-off",
-            on_active="mdi.server-network-off",
+            on_active="mdi.server-network",
             color_on_active="green",
             color_off_active="red",
             color_on="darkgreen",
@@ -67,9 +76,9 @@ class AppIcons:
                 {"scale_factor": open_file_bg_scale},
                 {
                     "scale_factor": open_file_bg_scale * bg_fg_multiplier,
-                    "color": self.palette().window(),
-                    "color_on_active": self.palette().window(),
-                    "color_off_active": self.palette().window(),
+                    "color": self.palette.window(),
+                    "color_on_active": self.palette.window(),
+                    "color_off_active": self.palette.window(),
                     "offset": (-0.01, 0.02),
                 },
             ],
@@ -81,9 +90,9 @@ class AppIcons:
                 {"scale_factor": open_many_bg_scale},
                 {
                     "scale_factor": open_many_bg_scale * bg_fg_multiplier,
-                    "color": self.palette().window(),
-                    "color_on_active": self.palette().window(),
-                    "color_off_active": self.palette().window(),
+                    "color": self.palette.window(),
+                    "color_on_active": self.palette.window(),
+                    "color_off_active": self.palette.window(),
                     "offset": (0.05, -0.05),
                 },
             ],
@@ -102,10 +111,6 @@ class AppIcons:
         self.open_split_view = qta.icon("mdi.view-split-vertical")
         self.open_settings = qta.icon("mdi.cogs")
         self.toolbar_ext_bttn = qta.icon("mdi.menu-right-outline")
-
-    def palette(self):
-        qapp = QApplication.instance()
-        return qapp.palette()
 
 
 _APP_ICONS = None
