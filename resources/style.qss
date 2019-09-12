@@ -3,8 +3,12 @@
     font-family: helvetica;
 }
 
-QMainWindow::separator {
-    border-bottom: 1px groove palette(base);
+*::separator {
+    border-bottom: 2px groove palette(base);
+}
+
+QAbstractButton{
+    border:none;
 }
 
 
@@ -25,7 +29,7 @@ QWidget#popup {
 
 QGroupBox {
     background-color: palette(alternate-base);
-    border: 1px solid palette(midlight);
+    border: 1px solid palette(light);
     margin-top: 25px;
 }
 
@@ -47,7 +51,7 @@ QMenu:disabled {
 }
 
 QMenu:item {
-    background-color: palette(midlight);
+    background-color: palette(base);
 }
 
 
@@ -109,32 +113,71 @@ QAction::title {
 
 
 /*
- * QStatusBar
- */
-
-QStatusBar {
-    border-top: 1px outset palette(base);
-    color: palette(light)
-}
-
-
-/*
  * QToolBar
  */
 
-QToolBar {
-    border: none;
-}
-
-QDockableWidget QToolBar {
-    border: none;
-    align-items: flex-end
-}
+/* QToolBar {
+} */
 
 QToolBar:separator {
     margin: 2ex;
     width: 0.5px;
-    border: 1px outset palette(base);
+    border: 3px outset palette(base);
+}
+
+QDockableWidget QToolBar {
+    align-items: flex-end
+}
+
+
+/*
+ * QWidget#bordered
+ * For QWidgets with groups of buttons
+ */
+
+QToolButton {
+    border: 1px outset palette(shadow);
+    border-radius: 6px;
+    background-color: palette(window);
+}
+
+QToolButton:hover {
+    border-color: palette(dark);
+    background-color: palette(alternate-base);
+}
+
+QToolButton:pressed {
+    border: 1px inset palette(shadow);
+    border-radius: 6px;
+    background-color: palette(button)
+}
+QToolButton:pressed {
+    border: 1px inset palette(shadow);
+    border-radius: 6px;
+    background-color: palette(button)
+}
+
+
+/*
+ * QWidget#bordered
+ * For QWidgets with groups of buttons
+ */
+
+QWidget#borderedbuttons QToolButton {
+    border: 1px outset palette(shadow);
+    border-radius: 6px;
+    background-color: palette(window);
+}
+
+QWidget#borderedbuttons QToolButton:hover {
+    border-color: palette(dark);
+    background-color: palette(alternate-base);
+}
+
+QWidget#borderedbuttons QToolButton:pressed {
+    border: 1px inset palette(shadow);
+    border-radius: 6px;
+    background-color: palette(button)
 }
 
 
@@ -142,22 +185,9 @@ QToolBar:separator {
  * QToolButton
  */
 
-QToolButton {
-    border: none;
-    /* border-radius: 10px; */
-}
-
-QToolButton:checked {
-    color: darkgreen;
-}
-
 QToolButton:disabled,
 QToolButton:hover:disabled{
     color: gray;
-}
-
-QToolButton:hover {
-    color: palette(button-text);
 }
 
 
@@ -187,15 +217,14 @@ QWidget#borderedbuttons QToolButton {
 
 QToolButton#connect {
     color: crimson;
-    font: 15px;
-    font-style: bold;
+    font-weight: bolder;
+    font: 12px;
 }
 
-QToolButton#connect:pressed {
-    border-style: inset;
-}
+
 
 QToolButton#connect:disabled {
+    border-style: inset;
     color:gray;
 }
 
@@ -220,24 +249,48 @@ QToolButton#connect:!disabled:hover:!checked {
  * QTabBar
  */
 
+QTabBar{
+    font-size:12px;
+}
+
 QTabBar {
     background-color: transparent;
+    border:none;
 }
 
 QTabBar::tab {
-    padding: 4px 6px;
+    margin-left:4px;
+    margin-right:4px;
+    padding-right: 10px ;
+    padding-left: 10px ;
+    padding-bottom: 2px ;
     background-color: transparent;
     border-bottom: 2px solid transparent;
 }
 
 QTabBar::tab:selected,
 QTabBar::tab:hover {
-    color: palette(text);
+    color: palette(highlighted-text);
     border-bottom: 2px solid palette(highlight);
+}
+
+QTabBar::tab:!selected {
+    color: palette(text);
+    margin-top: 6px;
 }
 
 QTabBar::tab:selected:disabled {
     border-bottom: 2px solid palette(light);
+}
+
+
+/*
+ * QStatusBar
+ */
+
+ QStatusBar {
+    border-top: 1px outset palette(base);
+    color: palette(highlighted-text)
 }
 
 
@@ -328,8 +381,6 @@ QScrollArea #scrollAreaWidgetContents {
  */
 
 QSlider::groove:horizontal {
-    /* border: 1px solid #999999; */
-    /* height: 8px; */
     margin: 2px 0;
 }
 

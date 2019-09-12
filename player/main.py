@@ -17,7 +17,7 @@ from PyQt5.QtWidgets import (
 from . import vlcqt
 from .base.docking import DockableWidget, ToolBar
 from .comm.client import IOController
-from .comm.connect import ConnectAction, ConnectButtonWidgetAction, ConnectStatusLabel
+from .comm.connect import ConnectAction, ConnectStatusLabel, ConnectWideButtonBuilder
 from .comm.socks import AutoReconnectSocket
 from .gui.window import AlwaysOnTopAction
 from .output.frame import MediaPlayerContentFrame
@@ -146,11 +146,8 @@ class AppWindow(QMainWindow):
         )
         self.vol_popup_bttn = VolumePopupButton(parent=self, vol_mngr=self.vol_mngr)
         self.pb_ctrls_slider = FrameResPlaybackSlider(parent=self)
-        # self.connect_button_widget_action = ConnectButtonWidgetAction(
-        #     parent=self, connect_action=self.connect_action
-        # )
-        self.connect_button_widget_action = ConnectButtonWidgetAction(
-            socket=self.socket, parent=self
+        self.connect_wide_button_builder = ConnectWideButtonBuilder(
+            parent=self, socket=self.socket
         )
 
     def create_gui_layout(self):
@@ -174,8 +171,7 @@ class AppWindow(QMainWindow):
         )
         self.connect_toolbar = ToolBar(
             title="Connect",
-            objects=[self.connect_button_widget_action, self.open_settings_act],
-            # objects=[self.connect_action, self.open_settings_act],
+            objects=[self.connect_wide_button_builder, self.open_settings_act],
             parent=self,
             collapsible=True,
             icon_size=32,
