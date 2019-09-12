@@ -19,5 +19,4 @@ class MenuButton(QToolButton):
         self.setIcon(icon)
         self.setIconSize(QSize(size, size))
         self.setPopupMode(QToolButton.MenuButtonPopup)
-        # self.setAutoRaise(True)
         self.setCheckable(True)

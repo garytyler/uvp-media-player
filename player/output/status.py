@@ -16,9 +16,16 @@ from ..gui import icons
 log = logging.getLogger(__name__)
 
 
-class TextStatusLabel(QLabel):
-    def __init__(self, parent=None):
+class StatusBar(QStatusBar):
+    def __init__(self, parent, permanent_widgets=[]):
         super().__init__(parent)
+        self.setMaximumHeight(super().sizeHint().height())
+        self.setContentsMargins(0, 0, 0, 0)
+
+
+class TextStatusLabel(QLabel):
+    def __init__(self, parent: QStatusBar = None):
+        super().__init__(parent=parent)
         self.setObjectName("text_status")
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self._text = ""
@@ -40,7 +47,7 @@ class TextStatusLabel(QLabel):
 
 
 class IconStatusLabel(QLabel):
-    def __init__(self, parent=None, icon=None):
+    def __init__(self, parent: QStatusBar = None, icon=None):
         super().__init__(parent)
         self.setObjectName("icon_status")
         self.setContentsMargins(0, 0, 0, 0)
@@ -62,20 +69,3 @@ class IconStatusLabel(QLabel):
         self.text_lbl.setText(text, elide_mode)
         pixmap = self.icon.pixmap(self.icon_size, mode, state)
         self.icon_lbl.setPixmap(pixmap)
-
-
-class StatusBar(QStatusBar):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setMaximumHeight(super().sizeHint().height())
-        self.setContentsMargins(0, 0, 0, 0)
-
-        self.connect_status_widget = IconStatusLabel(
-            parent=self, icon=icons.connect_to_server_status
-        )
-        self.fullscreen_status_widget = IconStatusLabel(
-            parent=self, icon=icons.fullscreen
-        )
-
-        for widget in [self.fullscreen_status_widget, self.connect_status_widget]:
-            self.addPermanentWidget(widget)

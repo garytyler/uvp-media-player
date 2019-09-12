@@ -63,8 +63,8 @@ class SettingsDialog(QDialog):
 
 class OpenSettingsAction(QAction):
     def __init__(self, main_win):
-        # self.dialog = SettingsDialog(main_win=main_win)
         super().__init__("Settings")
+
         self.main_win = main_win
         self.setIcon(icons.open_settings)
         self.setCheckable(True)

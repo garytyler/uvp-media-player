@@ -1,11 +1,12 @@
 import logging
 
-from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal
+from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFontMetrics, QGuiApplication, QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QSizePolicy, QToolButton
 
 from ..base.popup import PopupMenuAction
 from ..gui import icons
+from ..output.status import IconStatusLabel
 
 log = logging.getLogger(__name__)
 
@@ -19,31 +20,45 @@ class FullscreenManager(QObject):
     fullscreenstarted = pyqtSignal(QAction)
     fullscreenstopped = pyqtSignal()
 
-    def __init__(self, main_content_frame, status_widget, viewpoint_mngr):
+    def __init__(self, main_content_frame, viewpoint_mngr):
         super().__init__()
         self.vp_manager = viewpoint_mngr
         self.main_content_frame = main_content_frame
-        self.status_widget = status_widget
 
         self._is_fullscreen = False
-
-        self.status_widget.set_status("Main Window", QIcon.Normal, QIcon.Off)
 
     def start(self, action):
         qscreen = action.qscreen
         self.main_content_frame.start_fullscreen(qscreen)
         self._is_fullscreen = True
         self.fullscreenstarted.emit(action)
-        self.status_widget.set_status(action.text(), QIcon.Normal, QIcon.On)
 
     def stop(self):
         self.main_content_frame.stop_fullscreen()
         self._is_fullscreen = False
         self.fullscreenstopped.emit()
-        self.status_widget.set_status("Main Window", QIcon.Normal, QIcon.Off)
 
     def is_fullscreen(self):
         return self._is_fullscreen
+
+
+class FullscreenStatusLabel(IconStatusLabel):
+    def __init__(self, parent, fullscreen_mngr):
+        super().__init__(parent=parent, icon=icons.fullscreen)
+        self.fullscreen_mngr = fullscreen_mngr
+
+        self.set_status("Main Window", QIcon.Normal, QIcon.Off)
+
+        self.fullscreen_mngr.fullscreenstarted.connect(self.on_fullscreenstarted)
+        self.fullscreen_mngr.fullscreenstopped.connect(self.on_fullscreenstopped)
+
+    @pyqtSlot()
+    def on_fullscreenstarted(self, action: QAction):
+        self.set_status(action.text(), QIcon.Normal, QIcon.On)
+
+    @pyqtSlot()
+    def on_fullscreenstopped(self, action: QAction):
+        self.set_status("Main Window", QIcon.Normal, QIcon.Off)
 
 
 class StartFullscreenAction(QAction):

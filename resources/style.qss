@@ -144,10 +144,10 @@ QToolBar:separator {
 
 QToolButton {
     border: none;
+    /* border-radius: 10px; */
 }
 
-QToolButton:checked,
-QToolButton#connect:checked {
+QToolButton:checked {
     color: darkgreen;
 }
 
@@ -162,22 +162,40 @@ QToolButton:hover {
 
 
 /*
+ * QToolButton#bordered
+ */
+
+ QToolButton#combobutton  {
+    border-width: 2px;
+    border-style: outset;
+    border-radius: 5px;
+    border-color: palette(base);
+}
+
+
+/*
  * QToolButton#connect
  */
+
+
+QWidget#borderedbuttons QToolButton {
+    border-width: 2px;
+    border-style: outset;
+    border-radius: 6px;
+    border-color: palette(base);
+}
 
 QToolButton#connect {
     color: crimson;
     font: 15px;
     font-style: bold;
-    /* text-transform: uppercase; */
 }
 
-QToolButton#connect:checked {
-    color:darkgreen;
+QToolButton#connect:pressed {
+    border-style: inset;
 }
 
-QToolButton#connect:disabled,
-QToolButton#connect:disabled:hover{
+QToolButton#connect:disabled {
     color:gray;
 }
 
@@ -185,10 +203,17 @@ QToolButton#connect:!disabled:!hover:checked {
     color: darkgreen;
 }
 
+QToolButton#connect:!disabled:hover:checked {
+    color: green;
+}
+
 QToolButton#connect:!disabled:!hover:!checked {
     color: crimson;
 }
 
+QToolButton#connect:!disabled:hover:!checked {
+    color: red;
+}
 
 
 /*
