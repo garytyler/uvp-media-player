@@ -3,17 +3,18 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QApplication
 
 
-class DarkColors:
-    def __init__(self):
-        self.color = QColor(150, 150, 150)
-        self.color_on = QColor("ForestGreen")
-        self.color_off_active = self.color.lighter()
-        self.color_on_active = self.color_on.lighter()
-        self.color_disabled = QColor(100, 100, 100)
+def qta_defaults_dark():
+    defaults = {}
+    defaults["color"] = QColor(150, 150, 150)
+    defaults["color_on"] = QColor("ForestGreen")
+    defaults["color_off_active"] = defaults["color"].lighter()
+    defaults["color_on_active"] = defaults["color_on"].lighter()
+    defaults["color_disabled"] = QColor(100, 100, 100)
+    return defaults
 
 
-DEFAULT_ICON_OPTIONS_LIGHT = qta.iconic_font._default_options
-DEFAULT_ICON_OPTIONS_DARK = DarkColors()
+QTA_DEFAULTS_LIGHT = qta.iconic_font._default_options
+QTA_DEFAULTS_DARK = qta_defaults_dark()
 
 
 class AppIcons:

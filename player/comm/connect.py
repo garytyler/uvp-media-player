@@ -1,6 +1,7 @@
 import logging
+from typing import List
 
-from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QSize, Qt, QTextStream, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QFontMetrics, QIcon
 from PyQt5.QtNetwork import QAbstractSocket
 from PyQt5.QtWidgets import (
@@ -57,7 +58,7 @@ class ConnectAction(QWidgetAction):
     def __init__(self, socket, parent):
         super().__init__(parent)
         self.socket = socket
-
+        self.button = None
         self.setCheckable(True)
         self.setIcon(icons.connect_to_server_status)
         self.update_state(self.socket.state())
@@ -79,11 +80,9 @@ class ConnectAction(QWidgetAction):
         if state == self.socket.ConnectedState:
             self.setEnabled(True)
             self.setChecked(True)
-
         elif state == self.socket.UnconnectedState:
             self.setEnabled(True)
             self.setChecked(False)
-
         elif state == self.socket.ConnectingState:
             self.setEnabled(False)
             self.setChecked(False)
@@ -98,6 +97,79 @@ class ConnectAction(QWidgetAction):
 
     def text(self):
         return self.statusTip()
+
+
+class ConnectWideButton(QToolButton):
+
+    extra_width_chars = 2
+
+    def __init__(self, parent, action: ConnectAction):
+        super().__init__(parent)
+        self.setObjectName("connect")
+        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setDefaultAction(action)
+
+        text_strings: List[str] = []
+        text_strings.extend(CONNECTION_STATUS_TIPS.values())
+        text_strings.extend(CONNECTION_TOOL_TIPS.values())
+
+        # Set text area width
+        avg_char_width = self.fontMetrics().averageCharWidth()
+        max_string_width_pixels = max(
+            (self.fontMetrics().boundingRect(s).width() for s in text_strings)
+        )
+        extra_width_pixels = self.extra_width_chars * avg_char_width
+        text_area_width_pixels = max_string_width_pixels + extra_width_pixels
+        self.text_area_width_chars = int(text_area_width_pixels / avg_char_width)
+
+        # Set total button width
+        max_default_button_width = self.max_default_button_width(text_strings)
+        total_button_width = max_default_button_width + extra_width_pixels
+        self.setFixedWidth(total_button_width)
+
+        # Init
+        self.setText(action.text())
+        action.socket.stateChanged.connect(action.update_state)
+
+    def enterEvent(self, e):
+        self.is_hovering = True
+        action = self.defaultAction()
+        self.setText(action.toolTip())
+
+    def leaveEvent(self, e):
+        self.is_hovering = False
+        action = self.defaultAction()
+        self.setText(action.statusTip())
+
+    def max_default_button_width(self, text_strings):
+        start_text = self.text()
+        widths: List[int] = []
+        for string in text_strings:
+            self.setText(string)
+            button_width = self.sizeHint().width()
+            widths.append(button_width)
+        self.setText(start_text)
+        return max(widths)
+
+    def setText(self, text):
+        super().setText(text.center(self.text_area_width_chars))
+
+
+class ConnectWideButtonBuilder(ConnectAction):
+    extra_width_chars = 2
+
+    def __init__(self, parent, socket):
+        super().__init__(parent=parent, socket=socket)
+        self.button = None
+
+    def setText(self, text):
+        if self.button:
+            self.button.setText(text)
+
+    def createWidget(self, parent):
+        self.text_width_chars = "***"
+        self.button = ConnectWideButton(parent=parent, action=self)
+        return self.button
 
 
 class ConnectStatusLabel(IconStatusLabel):
@@ -134,160 +206,3 @@ class ConnectStatusLabel(IconStatusLabel):
 
     def get_status_txt(self, status, url=""):
         return f"{status} {url}"
-
-
-class ConnectActionCenterFillText(ConnectAction):
-    def __init__(self, parent, socket):
-        self.text_area_width_chars = None
-        super().__init__(parent=parent, socket=socket)
-
-    # def statusTip(self):
-    #     if self.text_area_width_chars:
-    #         return super().statusTip().center(self.text_area_width_chars)
-    #     else:
-    #         return super().statusTip()
-
-    # def toolTip(self):
-    #     if self.text_area_width_chars:
-    #         return super().toolTip().center(self.text_area_width_chars)
-    #     else:
-    #         return super().toolTip()
-
-    # def text(self):
-    #     if self.text_area_width_chars:
-    #         return super().text().center(self.text_area_width_chars)
-    #     else:
-    #         return super().text()
-
-
-class ConnectButtonWidgetAction(QWidgetAction):
-    extra_width_chars = 2
-
-    def __init__(self, parent, socket):
-        super().__init__(parent)
-        self.socket = socket
-
-        # super().__init__(
-        #     parent=parent,
-        #     socket=socket,
-        # )
-        # self.button.setDefaultAction(self)
-
-    def createWidget(self, parent):
-
-        self.action = ConnectActionCenterFillText(parent=parent, socket=self.socket)
-        self.button = ConnectButton(parent=parent, action=self.action)
-        # self.button.setDefaultAction(self.action)
-
-        return self.button
-
-    def statusTip(self):
-        return self.status_tips[self.mode]
-
-    def toolTip(self):
-        return self.tool_tips[self.mode]
-
-    def text(self):
-        return super().statusTip()
-
-
-class ConnectButton(QToolButton):
-
-    extra_width_chars = 2
-
-    def __init__(self, parent, action):
-        super().__init__(parent)
-        self.setObjectName("connect")
-        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
-        self.setDefaultAction(action)
-
-        text_strings = []
-        text_strings.extend(CONNECTION_STATUS_TIPS.values())
-        text_strings.extend(CONNECTION_TOOL_TIPS.values())
-
-        # Set text area width
-        avg_char_width = self.fontMetrics().averageCharWidth()
-        max_string_width_pixels = max(
-            (self.fontMetrics().boundingRect(s).width() for s in text_strings)
-        )
-        extra_width_pixels = self.extra_width_chars * avg_char_width
-        text_area_width_pixels = max_string_width_pixels + extra_width_pixels
-        self.text_area_width_chars = int(text_area_width_pixels / avg_char_width)
-
-        # Set total button width
-        max_default_button_width = self.max_default_button_width(text_strings)
-        total_button_width = max_default_button_width + extra_width_pixels
-        self.setFixedWidth(total_button_width)
-
-        # # Replace status_tip strings in action instance
-        # for key, value in CONNECTION_STATUS_TIPS.items():
-        #     text = value.center(self.text_area_width_chars)
-        #     CONNECTION_STATUS_TIPS[key] = text
-
-        # # Replace tool_tip strings in action instance
-        # for key, value in CONNECTION_TOOL_TIPS.items():
-        #     text = value.center(self.text_area_width_chars)
-        #     CONNECTION_TOOL_TIPS[key] = text
-
-        # Setup
-        # self.update_button_text()
-        # action.stoppedconnecting.connect(self.on_stoppedconnecting)
-
-        # return super().setDefaultAction(action)
-
-    def max_default_button_width(self, text_strings):
-        # action = self.defaultAction()
-        start_text = self.text()
-        widths: list[int, int] = []
-        for string in text_strings:
-            self.setText(string)
-            button_width = self.sizeHint().width()
-            widths.append(button_width)
-        self.setText(start_text)
-        return max(widths)
-
-    def setText(self, text):
-        # text = text.center(self.text_area_width_chars)
-        text = self.defaultAction().statusTip().center(self.text_area_width_chars)
-        # print(text)
-        super().setText(text)
-
-    # def setText(self, text):
-    #     # text = text.center(self.text_area_width_chars)
-    #     text = self.defaultAction().statusTip().center(self.text_area_width_chars)
-    #     # print(text)
-    #     super().setText(text)
-
-    # def text(self, text):
-
-    # def update_button_text(self):
-    #     try:
-    #         _is_hovering = self.is_hovering
-    #     except AttributeError:
-    #         _is_hovering = self.is_hovering = False
-
-    #     action = self.defaultAction()
-    #     if _is_hovering:
-    #         text = CONNECTION_TOOL_TIPS[action.mode]
-    #     else:
-    #         text = CONNECTION_TOOL_TIPS[action.mode]
-    #     self.setText(text)
-
-    # def enterEvent(self, e):
-    #     self.is_hovering = True
-    #     self.update_button_text()
-
-    # def leaveEvent(self, e):
-    #     self.is_hovering = False
-    #     self.update_button_text()
-
-    # def on_stoppedconnecting(self, is_connected):
-    #     """If connected/disconnected before leave event, go ahead and update text color to deliver smooth feedback instead of flashing a separate hover color.
-    #     """
-    #     self.text_bttn.setText(self.text_bttn.statusTip())
-    #     if not self._hovered:
-    #         return None
-    #     elif is_connected:
-    #         self.text_bttn.setStyleSheet("color: darkgreen;")
-    #     else:
-    #         self.text_bttn.setStyleSheet("color: crimson;")
