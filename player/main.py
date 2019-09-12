@@ -209,8 +209,9 @@ class AppWindow(QMainWindow):
             objects=self.play_actions.actions(),
             parent=self,
             collapsible=False,
-            icon_size=52,
+            icon_size=60,
         )
+        self.pb_ctrls_middle_toolbar.setObjectName("mainplaybuttons")
         self.pb_ctrls_right_toolbar = ToolBar(
             title="Right Controls",
             objects=[self.playback_mode_act, self.vol_popup_bttn],
