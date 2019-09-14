@@ -1,5 +1,4 @@
 import logging
-from os.path import exists
 
 from ffmpeg import probe
 from PyQt5.QtCore import Qt

@@ -1,4 +1,3 @@
-import qtawesome as qta
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QApplication
 

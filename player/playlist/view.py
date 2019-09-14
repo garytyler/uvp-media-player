@@ -4,11 +4,9 @@ from os import path
 from PyQt5.QtCore import Qt, pyqtSlot
 from PyQt5.QtWidgets import QAction, QHeaderView, QMenu, QTreeView, QVBoxLayout
 
-from .. import vlcqt
 from ..base.docking import DockableWidget
 from ..base.popup import PopupWindowAction, PopupWindowWidget
 from ..gui import icons
-from ..util import config
 from . import files
 from .model import MediaItem, PlaylistModel
 

@@ -1,17 +1,8 @@
 import logging
 
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtGui import QFontMetrics, QIcon
-from PyQt5.QtWidgets import (
-    QHBoxLayout,
-    QLabel,
-    QSizePolicy,
-    QSpacerItem,
-    QStatusBar,
-    QWidget,
-)
-
-from ..gui import icons
+from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QFontMetrics
+from PyQt5.QtWidgets import QHBoxLayout, QLabel, QSizePolicy, QStatusBar
 
 log = logging.getLogger(__name__)
 

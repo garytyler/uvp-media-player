@@ -1,26 +1,11 @@
 import logging
 from typing import List
 
-from PyQt5.QtCore import QSize, Qt, QTextStream, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QFontMetrics, QIcon
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtGui import QIcon
 from PyQt5.QtNetwork import QAbstractSocket
-from PyQt5.QtWidgets import (
-    QAbstractButton,
-    QAction,
-    QApplication,
-    QFormLayout,
-    QFrame,
-    QHBoxLayout,
-    QInputDialog,
-    QLabel,
-    QPushButton,
-    QSizePolicy,
-    QToolButton,
-    QWidget,
-    QWidgetAction,
-)
+from PyQt5.QtWidgets import QToolButton, QWidgetAction
 
-from ..base.buttons import ActionButton
 from ..gui import icons
 from ..output.status import IconStatusLabel
 from ..util import config

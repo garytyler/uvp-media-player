@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QSize, Qt
-from PyQt5.QtWidgets import QAction, QApplication, QMainWindow, QToolButton
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QAction
 
 from ..gui import icons
 from ..util import config

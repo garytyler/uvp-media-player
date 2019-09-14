@@ -1,16 +1,7 @@
 import logging
 
-from PyQt5.QtCore import QObject, QPoint, QSize, Qt, pyqtSignal
-from PyQt5.QtWidgets import (
-    QAction,
-    QDialog,
-    QDockWidget,
-    QFrame,
-    QHBoxLayout,
-    QSlider,
-    QToolButton,
-    QWidget,
-)
+from PyQt5.QtCore import QObject, pyqtSignal
+from PyQt5.QtWidgets import QAction, QHBoxLayout, QSlider, QToolButton
 
 from .. import vlcqt
 from ..base.popup import PopupControlWidget

@@ -2,7 +2,7 @@ import logging
 from random import choice
 from string import ascii_uppercase, digits
 
-from PyQt5.QtCore import Qt, QTimer, QUrl, pyqtSignal
+from PyQt5.QtCore import Qt, QTimer, QUrl
 from PyQt5.QtNetwork import QAbstractSocket
 from PyQt5.QtWebSockets import QWebSocket, QWebSocketProtocol
 

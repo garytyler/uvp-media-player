@@ -1,16 +1,12 @@
-import configparser
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import (
     QAction,
-    QButtonGroup,
     QDialog,
     QFormLayout,
     QHBoxLayout,
     QLineEdit,
     QPushButton,
     QVBoxLayout,
-    QWidget,
 )
 
 from ..gui import icons, window

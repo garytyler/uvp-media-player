@@ -1,10 +1,9 @@
 import logging
 
-from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QFontMetrics, QGuiApplication, QIcon
-from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QSizePolicy, QToolButton
+from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtGui import QGuiApplication, QIcon
+from PyQt5.QtWidgets import QAction, QActionGroup, QMenu
 
-from ..base.popup import PopupMenuAction
 from ..gui import icons
 from ..output.status import IconStatusLabel
 

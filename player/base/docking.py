@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QPoint, QRect, QSize, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtGui import QKeySequence, QPainter, QStaticText, QTextOption
+from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import (
     QAction,
     QDockWidget,
@@ -7,7 +7,6 @@ from PyQt5.QtWidgets import (
     QMenu,
     QProxyStyle,
     QSizePolicy,
-    QSpacerItem,
     QStyle,
     QTabBar,
     QToolBar,

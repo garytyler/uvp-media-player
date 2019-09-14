@@ -1,5 +1,5 @@
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal, pyqtSlot
-from PyQt5.QtWidgets import QAction, QFrame, QToolButton, QWidget
+from PyQt5.QtWidgets import QAction, QFrame, QWidget
 
 from ..gui import window
 

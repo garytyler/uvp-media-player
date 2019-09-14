@@ -1,7 +1,6 @@
 import json
 import logging
 from os import getenv, path
-from tempfile import gettempdir
 
 log = logging.getLogger(__name__)
 

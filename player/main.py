@@ -4,7 +4,6 @@ from typing import Tuple
 from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
-    QActionGroup,
     QApplication,
     QGridLayout,
     QHBoxLayout,
@@ -17,7 +16,7 @@ from PyQt5.QtWidgets import (
 from . import vlcqt
 from .base.docking import DockableWidget, ToolBar
 from .comm.client import IOController
-from .comm.connect import ConnectAction, ConnectStatusLabel, ConnectWideButtonBuilder
+from .comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
 from .comm.socks import AutoReconnectSocket
 from .gui.window import AlwaysOnTopAction
 from .output.frame import MediaPlayerContentFrame
@@ -26,11 +25,8 @@ from .output.orientation import ViewpointManager
 from .output.playback import (
     FrameResPlaybackSlider,
     LoopModeManager,
-    NextMediaAction,
     PlayActions,
     PlaybackModeAction,
-    PlayPauseAction,
-    PreviousMediaAction,
 )
 from .output.size import (
     FrameSizeManager,
