@@ -61,61 +61,11 @@ class MediaPlayer(vlc_facades.MediaPlayerFacade):
 media_player = MediaPlayer()
 
 
-# class MediaListPlayer(vlc_facades.MediaListPlayerFacade):
-#     def __init__(self):
-#         super().__init__()
-#         self.mp = media_player
-#         self.set_media_player(self.mp)
-
-#     def set_mrls(self, media_paths):
-#         self.ml = vlc.MediaList(media_paths)
-#         self.set_media_list(self.ml)
-
-#     @pyqtSlot(str)
-#     def on_setplaybackmode(self, value):
-#         enums = {
-#             "off": vlc.PlaybackMode.default,
-#             "one": vlc.PlaybackMode.loop,
-#             "all": vlc.PlaybackMode.repeat,
-#         }
-#         self.set_playback_mode(enums[value])
-
-
-# list_player = MediaListPlayer()
-
-
 class Media(vlc_facades.MediaFacade):
-    """
-    Use to get size: vlcqt.libvlc_video_get_size(self.aux_mp, 0)
-
-    """
+    """Use to get size: vlcqt.libvlc_video_get_size(self.aux_mp, 0)"""
 
     def __init__(self, mrl, *options):
         super().__init__(mrl, *options)
-
-    def _parse_with_options(self, parse_flag, timeout):
-        # 'parse()' has limited functionality, and does not parse meta data
-        # We use async method 'parse_with_options()' for parsing meta data
-        self._vlc_obj.parse_with_options(parse_flag, timeout)
-
-    def parse_with_options(self, parse_flag, timeout):
-        self.aux_vlc_instance = vlc.libvlc_new(argc=0, argv=[])
-        self.aux_mp = vlc.libvlc_media_player_new(self.aux_vlc_instance)
-        self.aux_frame = QFrame()
-        self.aux_frame.setVisible(False)
-        set_output_to_widget(media_player=self.aux_mp, widget=self.aux_frame)
-        self.aux_mp.set_media(self)
-        self.aux_mp.play()
-        connection = self.mediaparsedchanged.connect(self.on_mediaparsedchanged)
-        self.mediaparsedchanged_connection = connection
-        self._parse_with_options(parse_flag, timeout)
-
-    def on_mediaparsedchanged(self, e):
-        self.mediaparsedchanged.disconnect()
-        self.aux_mp.stop()
-        del self.aux_vlc_instance
-        del self.aux_mp
-        del self.aux_frame
 
 
 def __getattr__(attribute):
