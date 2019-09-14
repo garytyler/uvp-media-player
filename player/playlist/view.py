@@ -8,6 +8,7 @@ from .. import vlcqt
 from ..base.docking import DockableWidget
 from ..base.popup import PopupWindowAction, PopupWindowWidget
 from ..gui import icons
+from ..util import config
 from . import files
 from .model import MediaItem, PlaylistModel
 

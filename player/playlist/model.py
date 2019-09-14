@@ -6,27 +6,13 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 
 from .. import vlcqt
+from ..util import config
 
 log = logging.getLogger(__name__)
 
 
 Qt.VlcMedia = Qt.UserRole + 1
 Qt.IsSpherical = Qt.UserRole + 2
-
-META_TAG_KEYS = [
-    "title",
-    "artist",
-    "genre",
-    "album",
-    "duration",
-    "track_number",
-    "description",
-    "url",
-    "id",
-    "rating",
-    "disc_number",
-    "date",
-]
 
 
 class MediaItem(QStandardItem):
@@ -60,7 +46,7 @@ class PlaylistModel(QStandardItemModel):
     """Read-Only"""
 
     def __init__(self, media_items=[], parent=None):
-        super().__init__(0, len(META_TAG_KEYS), parent=parent)
+        super().__init__(0, len(config.state.meta_tags), parent=parent)
         for i in media_items:
             self.appendRow(i)
 
@@ -73,14 +59,14 @@ class PlaylistModel(QStandardItemModel):
             if orientation == Qt.Vertical:
                 return section
             elif orientation == Qt.Horizontal:
-                return META_TAG_KEYS[section].capitalize()
+                return config.state.meta_tags[section].title()
 
     def data(self, index, role):
         item = self.item(index.row())
         if not item:
             return None
         elif role == Qt.DisplayRole:
-            header_key = META_TAG_KEYS[index.column()]
+            header_key = config.state.meta_tags[index.column()]
             return item.probe["format"]["tags"].get(header_key)
         elif role >= Qt.UserRole:
             return item.data(role)

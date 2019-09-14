@@ -17,6 +17,23 @@ _SETTINGS = {
     "url": {"options": (), "default": "wss://eventvr.herokuapp.com/mediaplayer"},
     "volume": {"options": (), "default": 50},  # number between 1 and 100
     "tool_bar_area": {"options": ("top", "bottom"), "default": "bottom"},
+    "meta_tags": {
+        "options": ([]),
+        "default": [
+            "title",
+            "duration",
+            "artist",
+            "genre",
+            "album",
+            "track number",
+            "description",
+            "uri",
+            "id",
+            "rating",
+            "disc number",
+            "date",
+        ],
+    },
 }
 
 
