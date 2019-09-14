@@ -1,5 +1,6 @@
 import qtawesome as qta
 from PyQt5.QtGui import QColor, QPalette
+from PyQt5.QtWidgets import QApplication
 
 APPLICATION_PALETTE = None
 
@@ -25,7 +26,11 @@ def initialize_icon_defaults_dark(app_palette):
 class AppIcons:
     def __init__(self):
         global APPLICATION_PALETTE
-        self.palette = APPLICATION_PALETTE
+        if APPLICATION_PALETTE:
+            self.palette = APPLICATION_PALETTE
+        else:
+            qapp = QApplication.instance()
+            self.palette = qapp.palette()
 
         self.fullscreen_menu_bttn = qta.icon("mdi.fullscreen", offset=(0, -0.06))
         self.fullscreen = qta.icon("mdi.fullscreen", scale_factor=1.1)
