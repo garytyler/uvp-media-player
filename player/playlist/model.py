@@ -24,7 +24,6 @@ META_TAG_KEYS = [
     "url",
     "id",
     "rating",
-    "cover",
     "disc_number",
     "date",
 ]
@@ -74,7 +73,7 @@ class PlaylistModel(QStandardItemModel):
             if orientation == Qt.Vertical:
                 return section
             elif orientation == Qt.Horizontal:
-                return META_TAG_KEYS[section]
+                return META_TAG_KEYS[section].capitalize()
 
     def data(self, index, role):
         item = self.item(index.row())

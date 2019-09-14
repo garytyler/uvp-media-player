@@ -1,16 +1,8 @@
 import logging
 from os import path
 
-from PyQt5.QtCore import QSize, Qt, pyqtSlot
-from PyQt5.QtGui import QStandardItem
-from PyQt5.QtWidgets import (
-    QAction,
-    QDialog,
-    QMainWindow,
-    QTreeView,
-    QVBoxLayout,
-    QWidget,
-)
+from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5.QtWidgets import QAction, QHeaderView, QMenu, QTreeView, QVBoxLayout
 
 from .. import vlcqt
 from ..base.docking import DockableWidget
@@ -22,17 +14,57 @@ from .model import MediaItem, PlaylistModel
 log = logging.getLogger(__name__)
 
 
+class Header(QHeaderView):
+    def __init__(self, parent=None):
+        super().__init__(Qt.Horizontal, parent)
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.get_context_menu)
+        self.sectionCountChanged.connect(self.on_sectionCountChanged)
+
+    def on_sectionCountChanged(self, oldCount, newCount):
+        if oldCount == newCount:
+            return None
+
+        self.actions = []
+        for index in range(newCount):
+            name = self.model().headerData(index, Qt.Horizontal, Qt.DisplayRole)
+            action = QAction(name, self)
+            # Store section_index for retreival on trigger
+            action.setData(index)
+            action.setCheckable(True)
+            action.setChecked(True)
+            action.toggled.connect(self.toggle_section)
+            self.actions.append(action)
+
+        log.info(f"sectionCountChanged oldCount={oldCount}, newCount={newCount}")
+
+    @pyqtSlot(bool)
+    def toggle_section(self, hide: bool):
+        action: QAction = self.sender()
+        logical_index: int = action.data()
+        self.setSectionHidden(logical_index, not hide)
+
+    def get_context_menu(self, point):
+        menu = QMenu(self)
+        self.currentSection = self.logicalIndexAt(point)
+        for action in self.actions:
+            menu.addAction(action)
+        menu.exec_(self.mapToGlobal(point))
+
+
 class PlaylistView(QTreeView):
     def __init__(self, playlist_player, play_ctrls, parent):
         super().__init__(parent=parent)
         self.pl_player = playlist_player
         self.play_ctrls = play_ctrls
+
         self.setSelectionBehavior(self.SelectRows)
         self.setEditTriggers(self.NoEditTriggers)
         self.setExpandsOnDoubleClick(False)
-        self.setItemsExpandable(True)
-        self.setAllColumnsShowFocus(True)
         self.setRootIsDecorated(False)
+
+        self._header = Header(parent=self)
+        self.setHeader(self._header)
 
         self.doubleClicked.connect(self.on_doubleClicked)
 
