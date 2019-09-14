@@ -30,7 +30,7 @@ class PlaylistView(QTreeView):
         self.setSelectionBehavior(self.SelectRows)
         self.setEditTriggers(self.NoEditTriggers)
         self.setExpandsOnDoubleClick(False)
-        self.setItemsExpandable(False)
+        self.setItemsExpandable(True)
         self.setAllColumnsShowFocus(True)
         self.setRootIsDecorated(False)
 

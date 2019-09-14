@@ -13,65 +13,55 @@ log = logging.getLogger(__name__)
 Qt.VlcMedia = Qt.UserRole + 1
 Qt.IsSpherical = Qt.UserRole + 2
 
+META_TAG_KEYS = [
+    "title",
+    "artist",
+    "genre",
+    "album",
+    "duration",
+    "track_number",
+    "description",
+    "url",
+    "id",
+    "rating",
+    "cover",
+    "disc_number",
+    "date",
+]
+
 
 class MediaItem(QStandardItem):
     meta_enum_names = vlcqt.Meta._enum_names_
 
     def __init__(self, path):
         super().__init__()
+        self._path = path
 
-        self.setEditable(False)
         self.setDragEnabled(True)
 
-        self.meta = {"vlc": {}, "ffmpeg": {}}
-        try:
-            self.meta["ffmpeg"] = probe(path)
-        except FileNotFoundError as e:
-            log.error(e)
-
-        for enum in sorted(self.meta_enum_names.keys()):
-            self.setChild(enum, 0, QStandardItem())
-
         self._media = vlcqt.Media(path)
-        self.update_vlc_meta()
-        self.get_media().mediaparsedchanged.connect(self.update_vlc_meta)
-        self.get_media().parse_with_options(vlcqt.MediaParseFlag.local, timeout=2)
-
-    def get_media(self):
-        return self._media
-
-    def update_vlc_meta(self):
-        media = self.get_media()
-        for enum, name in sorted(self.meta_enum_names.items()):
-            meta = media.get_meta(enum)
-            child = self.child(enum, 0)
-            child.setData(meta, role=Qt.DisplayRole)
-            child.setData(name, role=Qt.WhatsThisRole)
-            child.setData(name, role=Qt.ToolTipRole)
-        self.emitDataChanged()
+        self.probe = probe(path)
 
     def data(self, role):
         if role == Qt.DisplayRole:
-            return self.get_media().get_meta(0)
-        elif role == Qt.UserRole:
-            return self
+            return self.probe["format"]["tags"]["title"]
         elif role == Qt.VlcMedia:
-            return self.get_media()
+            return self._media
         elif role == Qt.IsSpherical:
             return self.is_spherical()
 
-    def is_spherical(self):
-        streams = self.meta["ffmpeg"]["streams"]
-        for stream in streams:
+    def is_spherical(self) -> bool:
+        for stream in self.probe["streams"]:
             if stream.get("side_data_list"):
                 return True
+        return False
 
 
 class PlaylistModel(QStandardItemModel):
     """Read-Only"""
 
     def __init__(self, media_items=[], parent=None):
-        super().__init__(0, len(MediaItem.meta_enum_names), parent=parent)
+        super().__init__(0, len(META_TAG_KEYS), parent=parent)
         for i in media_items:
             self.appendRow(i)
 
@@ -84,15 +74,14 @@ class PlaylistModel(QStandardItemModel):
             if orientation == Qt.Vertical:
                 return section
             elif orientation == Qt.Horizontal:
-                return MediaItem.meta_enum_names[section]
+                return META_TAG_KEYS[section]
 
     def data(self, index, role):
         item = self.item(index.row())
         if not item:
             return None
         elif role == Qt.DisplayRole:
-            child = item.child(index.column())
-            if child:
-                return child.data(role)
+            header_key = META_TAG_KEYS[index.column()]
+            return item.probe["format"]["tags"].get(header_key)
         elif role >= Qt.UserRole:
             return item.data(role)
