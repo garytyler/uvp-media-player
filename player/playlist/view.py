@@ -34,8 +34,6 @@ class PlaylistView(QTreeView):
         self.setAllColumnsShowFocus(True)
         self.setRootIsDecorated(False)
 
-        self.setModel(PlaylistModel(parent=self))
-
         self.doubleClicked.connect(self.on_doubleClicked)
 
     def on_doubleClicked(self, index):
@@ -44,15 +42,6 @@ class PlaylistView(QTreeView):
     def on_model_dataChanged(self, topLeft, bottomRight):
         """Enable/disable playback controls according to contents"""
         self.play_ctrls.setEnabled(bool(self.model().item(0)))
-
-    def setModel(self, model):
-        # Disconnect old model
-        old_model = self.model()
-        if old_model:
-            old_model.dataChanged.disconnect(self.on_model_dataChanged)
-        # Connect new model
-        model.dataChanged.connect(self.on_model_dataChanged)
-        super().setModel(model)
 
     def add_media(self, paths):
         paths = files.get_media_paths(paths)
@@ -63,6 +52,12 @@ class PlaylistView(QTreeView):
         for p in paths:
             item = MediaItem(path.abspath(p))
             items.append(item)
+
+        if not items:
+            return None
+
+        if not self.model():
+            self.setModel(PlaylistModel(parent=self))
 
         for i in items:
             self.model().appendRow(i)

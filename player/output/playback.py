@@ -67,6 +67,8 @@ class PlaybackModeAction(QAction):
 class PlayActions(QActionGroup):
     def __init__(self, parent, playlist_player):
         super().__init__(parent)
+        self.mp = vlcqt.media_player
+
         self.prev = PreviousMediaAction(parent=parent, playlist_player=playlist_player)
         self.play = PlayPauseAction(parent=parent, playlist_player=playlist_player)
         self.next = NextMediaAction(parent=parent, playlist_player=playlist_player)
@@ -74,6 +76,11 @@ class PlayActions(QActionGroup):
         self.addAction(self.play)
         self.addAction(self.next)
         self.setEnabled(False)
+
+        self.mp.mediachanged.connect(self.on_mediaplayer_mediachanged)
+
+    def on_mediaplayer_mediachanged(self, e):
+        self.setEnabled(self.mp.has_media())
 
 
 class PlayPauseAction(QAction):
