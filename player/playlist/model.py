@@ -56,7 +56,7 @@ class PlaylistModel(QStandardItemModel):
     def headerData(self, section, orientation, role):
         if role == Qt.DisplayRole:
             if orientation == Qt.Vertical:
-                return section
+                return section + 1
             elif orientation == Qt.Horizontal:
                 return config.state.meta_tags[section].title()
 

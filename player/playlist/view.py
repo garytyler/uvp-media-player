@@ -2,7 +2,7 @@ import logging
 from os import path
 
 from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import QAction, QHeaderView, QMenu, QTreeView, QVBoxLayout
+from PyQt5.QtWidgets import QAction, QHeaderView, QMenu, QTableView, QVBoxLayout
 
 from ..base.docking import DockableWidget
 from ..base.popup import PopupWindowAction, PopupWindowWidget
@@ -51,19 +51,21 @@ class Header(QHeaderView):
         menu.exec_(self.mapToGlobal(point))
 
 
-class PlaylistView(QTreeView):
+class PlaylistView(QTableView):
     def __init__(self, playlist_player, play_ctrls, parent):
         super().__init__(parent=parent)
         self.pl_player = playlist_player
         self.play_ctrls = play_ctrls
 
         self.setSelectionBehavior(self.SelectRows)
-        self.setEditTriggers(self.NoEditTriggers)
-        self.setExpandsOnDoubleClick(False)
-        self.setRootIsDecorated(False)
+        self.setDragDropMode(self.InternalMove)
+        self.setEditTriggers(QTableView.NoEditTriggers)
+        self.setAlternatingRowColors(True)
+        # self.setExpandsOnDoubleClick(False)
+        # self.setRootIsDecorated(False)
 
         self._header = Header(parent=self)
-        self.setHeader(self._header)
+        self.setHorizontalHeader(self._header)
 
         self.doubleClicked.connect(self.on_doubleClicked)
 
@@ -96,6 +98,53 @@ class PlaylistView(QTreeView):
         first_item = self.model().item(0)
         if first_item:
             self.pl_player.load_media(index=first_item.index(), play=False)
+
+
+# class PlaylistView(QTableView):
+#     def __init__(self, playlist_player, play_ctrls, parent):
+#         super().__init__(parent=parent)
+#         self.pl_player = playlist_player
+#         self.play_ctrls = play_ctrls
+
+#         self.setSelectionBehavior(self.SelectRows)
+#         self.setEditTriggers(self.NoEditTriggers)
+#         # self.setExpandsOnDoubleClick(False)
+#         # self.setRootIsDecorated(False)
+
+#         self._header = Header(parent=self)
+#         self.setHorizontalHeader(self._header)
+
+#         self.doubleClicked.connect(self.on_doubleClicked)
+
+#     def on_doubleClicked(self, index):
+#         self.pl_player.load_media(index=index)
+
+#     def on_model_dataChanged(self, topLeft, bottomRight):
+#         """Enable/disable playback controls according to contents"""
+#         self.play_ctrls.setEnabled(bool(self.model().item(0)))
+
+#     def add_media(self, paths):
+#         paths = files.get_media_paths(paths)
+#         if not paths:
+#             return None
+
+#         items = []
+#         for p in paths:
+#             item = MediaItem(path.abspath(p))
+#             items.append(item)
+
+#         if not items:
+#             return None
+
+#         if not self.model():
+#             self.setModel(PlaylistModel(parent=self))
+
+#         for i in items:
+#             self.model().appendRow(i)
+
+#         first_item = self.model().item(0)
+#         if first_item:
+#             self.pl_player.load_media(index=first_item.index(), play=False)
 
 
 class PopupPlaylistWindow(PopupWindowWidget):
