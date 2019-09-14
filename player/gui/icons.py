@@ -5,13 +5,12 @@ from PyQt5.QtWidgets import QApplication
 APPLICATION_PALETTE = None
 
 
-def initialize_icon_defaults_light(app_palette):
+def initialize_icon_defaults_light(app_palette: QPalette):
     global APPLICATION_PALETTE
     APPLICATION_PALETTE = app_palette
-    qta.set_global_defaults(**qta.iconic_font._default_options)
 
 
-def initialize_icon_defaults_dark(app_palette):
+def initialize_icon_defaults_dark(app_palette: QPalette):
     global APPLICATION_PALETTE
     palette = APPLICATION_PALETTE = app_palette
     d = {}

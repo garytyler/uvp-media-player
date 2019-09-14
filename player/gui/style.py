@@ -39,9 +39,7 @@ def dark_palette():
 def set_color_theme(name):
     qapp = QApplication.instance()
     if name == "light":
-        qapp.setPalette(qapp.styleSheet())
-        app_palette = qapp.palette()
-        icons.initialize_icon_defaults_light(app_palette=app_palette)
+        icons.initialize_icon_defaults_light(app_palette=qapp.palette())
     elif name == "dark":
         app_palette = dark_palette()
         icons.initialize_icon_defaults_dark(app_palette=app_palette)
