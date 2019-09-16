@@ -1,14 +1,5 @@
 # seevr-player
 
-## Environment Variables
-
-- `VLC_ARGS`
-- `QT_ARGS`
-- `LOG_LEVEL`
-- `VR_PLAYER_CONFIG`
-- `VR_PLAYER_COLOR_THEME` (overridden by setting in config file)
-- `VR_PLAYER_REMOTE_URL` (overridden by setting in config file)
-
 # Build
 
 As with any `pyinstaller` build, the build process must be run using the targeted OS platform. For more info, see [PyInstaller Docs: Requirements](https://pyinstaller.readthedocs.io/en/stable/requirements.html?highlight=Windows%20XP#requirements).
@@ -41,3 +32,26 @@ pipenv shell
 ```
 
 To debug the build, run the build script with `--console` to open a console to monitor standard i/o, and use `--debug=imports` to also monitor imports. Also, submit an issue.
+
+## Environment Variables
+
+#### `VLC_ARGS`
+
+#### `QT_ARGS`
+
+#### `LOG_LEVELS`
+
+- Comma-delimited (`,`) list of Colon-delimited (`:`) name/value pairs
+- Use "`root`" for name of default logger
+
+#### `VR_PLAYER_CONFIG`
+
+- Overrides setting in config file
+
+#### `VR_PLAYER_COLOR_THEME`
+
+- Overridden by setting in config file
+
+#### `VR_PLAYER_REMOTE_URL`
+
+- Overridden by setting in config file

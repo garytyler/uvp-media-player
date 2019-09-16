@@ -14,16 +14,23 @@ else:
 def initialize_logging(level="INFO", color=color_available):
     vlc.logger.setLevel(0)
 
-    level = os.getenv("LOG_LEVEL", level)
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(get_formatter(color=color))
     file_handler = logging.FileHandler("player.log")
     file_handler.setFormatter(get_formatter(color=False))
+
     logger = logging.getLogger()
     logger.addHandler(stream_handler)
     logger.addHandler(file_handler)
-    logger.setLevel(level)
-    logger.info(f"CONFIGURED LOGGING level={level}, color={color}")
+    logger.setLevel("INFO")
+    logger.info(f"INIT LOGGING level={level} color={color}")
+
+    # Set log levels
+    log_levels = (i.split(":") for i in os.getenv("LOG_LEVELS", "").split(",") if i)
+    for name, level in log_levels:
+        logger = logging.getLogger(name)
+        logger.setLevel(level)
+        logger.info(f"SET LOGGER LOG LEVEL name={name} level={level}")
 
 
 def get_formatter(color):
