@@ -33,11 +33,15 @@ pipenv shell
 
 To debug the build, run the build script with `--console` to open a console to monitor standard i/o, and use `--debug=imports` to also monitor imports. Also, submit an issue.
 
+# Development
+
 ## Environment Variables
 
-#### `VLC_ARGS`
+For logging, use [coloredlogs environment variables](https://coloredlogs.readthedocs.io/en/latest/api.html#environment-variables)
 
 #### `QT_ARGS`
+
+#### `VLC_ARGS`
 
 #### `LOG_LEVELS`
 

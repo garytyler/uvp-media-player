@@ -10,11 +10,11 @@ flake8 = "*"
 mypy = "*"
 pytest = "*"
 pyinstaller = {git = "git://github.com/pyinstaller/pyinstaller.git",ref = "8196c57ab37e94ea5735479d04a5fd2169e638d8"}
+coloredlogs = "*"
 
 [packages]
 click = "*"
 colorama = "*"
-colorlog = "*"
 python-vlc = "*"
 pyqt5 = "*"
 qtawesome = "*"
