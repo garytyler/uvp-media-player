@@ -43,7 +43,9 @@ For logging, use [coloredlogs environment variables](https://coloredlogs.readthe
 
 #### `VLC_ARGS`
 
-#### `LOG_LEVELS`
+#### `VR_PLAYER_LOG_FILE`
+
+#### `VR_PLAYER_LOG_LEVELS`
 
 - Comma-delimited (`,`) list of Colon-delimited (`:`) name/value pairs
 - Use "`root`" for name of default logger
@@ -51,10 +53,6 @@ For logging, use [coloredlogs environment variables](https://coloredlogs.readthe
 #### `VR_PLAYER_CONFIG`
 
 - Overrides setting in config file
-
-#### `VR_PLAYER_COLOR_THEME`
-
-- Overridden by setting in config file
 
 #### `VR_PLAYER_REMOTE_URL`
 
