@@ -1,8 +1,14 @@
 import logging
-from os import path
 
-from PyQt5.QtCore import Qt, pyqtSlot
-from PyQt5.QtWidgets import QAction, QHeaderView, QMenu, QTableView, QVBoxLayout
+from PyQt5.QtCore import QModelIndex, Qt, pyqtSlot
+from PyQt5.QtWidgets import (
+    QAction,
+    QHeaderView,
+    QMenu,
+    QTableView,
+    QVBoxLayout,
+    QWidget,
+)
 
 from ..base.docking import DockableWidget
 from ..base.popup import PopupWindowAction, PopupWindowWidget
@@ -27,7 +33,7 @@ class Header(QHeaderView):
         self.actions = []
         for index in range(newCount):
             name = self.model().headerData(index, Qt.Horizontal, Qt.DisplayRole)
-            action = QAction(name, self)
+            action = QAction(str(name), self)
             # Store section_index for retreival on trigger
             action.setData(index)
             action.setCheckable(True)
@@ -52,99 +58,101 @@ class Header(QHeaderView):
 
 
 class PlaylistView(QTableView):
-    def __init__(self, playlist_player, play_ctrls, parent):
+    def __init__(self, playlist_player, play_ctrls=None, parent=None):
         super().__init__(parent=parent)
-        self.pl_player = playlist_player
+        self.playlist_player = playlist_player
         self.play_ctrls = play_ctrls
 
         self.setSelectionBehavior(self.SelectRows)
+        self.setSelectionMode(self.SingleSelection)
         self.setDragDropMode(self.InternalMove)
+        self.setDragDropOverwriteMode(False)
         self.setEditTriggers(QTableView.NoEditTriggers)
         self.setAlternatingRowColors(True)
-        # self.setExpandsOnDoubleClick(False)
-        # self.setRootIsDecorated(False)
-
+        self.setDropIndicatorShown(True)
         self._header = Header(parent=self)
         self.setHorizontalHeader(self._header)
 
         self.doubleClicked.connect(self.on_doubleClicked)
 
+    @pyqtSlot(QModelIndex)
     def on_doubleClicked(self, index):
-        self.pl_player.load_media(index=index)
+        self.playlist_player.load_media(index=index, play=True)
 
-    def on_model_dataChanged(self, topLeft, bottomRight):
+    def dropEvent(self, e):
+        dragged_index = self.currentIndex()
+        dropped_index = self.indexAt(e.pos())
+
+        log.debug(
+            f"dragged_index={dragged_index.row(), dragged_index.column()} dropped_index={dropped_index.row(), dropped_index.column()} action={e.dropAction()} source={e.source()}"
+        )
+
+        if dropped_index.row() == -1:
+            return None
+
+        model = self.model()
+        item = model.takeRow(dragged_index.row())
+        model.insertRow(dropped_index.row(), item)
+        self.setCurrentIndex(dropped_index)
+        e.ignore()
+
+    def on_model_dataChanged(self, topLeft, bottomRight, roles: list = None):
         """Enable/disable playback controls according to contents"""
         self.play_ctrls.setEnabled(bool(self.model().item(0)))
+
+    def setModel(self, model):
+        # Disconnect old model
+        old_model = self.model()
+        if old_model:
+            old_model.dataChanged.disconnect(self.on_model_dataChanged)
+        # Connect new model
+        model.dataChanged.connect(self.on_model_dataChanged)
+        super().setModel(model)
+
+
+class PlaylistWidget(QWidget):
+    def __init__(self, playlist_player, play_ctrls, parent):
+        super().__init__(parent=parent)
+        self.playlist_player = playlist_player
+        self.play_ctrls = play_ctrls
+
+        self.setLayout(QVBoxLayout())
+        self.view = PlaylistView(
+            playlist_player=self.playlist_player, play_ctrls=self.play_ctrls
+        )
+        self.layout().addWidget(self.view)
 
     def add_media(self, paths):
         paths = files.get_media_paths(paths)
         if not paths:
+            log.error(f"No media paths found in {paths}")
             return None
 
-        items = []
-        for p in paths:
-            item = MediaItem(path.abspath(p))
-            items.append(item)
+        if not self.view.model():
+            self.view.setModel(PlaylistModel(parent=self))
 
-        if not items:
-            return None
+        model = self.view.model()
+        for path in paths:
+            item = MediaItem(path)
+            model.appendRow(item)
 
-        if not self.model():
-            self.setModel(PlaylistModel(parent=self))
-
-        for i in items:
-            self.model().appendRow(i)
-
-        first_item = self.model().item(0)
+        first_item = self.view.model().item(0)
         if first_item:
-            self.pl_player.load_media(index=first_item.index(), play=False)
+            self.playlist_player.load_media(index=first_item.index(), play=False)
 
 
-# class PlaylistView(QTableView):
-#     def __init__(self, playlist_player, play_ctrls, parent):
-#         super().__init__(parent=parent)
-#         self.pl_player = playlist_player
-#         self.play_ctrls = play_ctrls
+class DockablePlaylist(DockableWidget):
+    def __init__(self, parent, playlist_widget):
+        super().__init__(title="Playlist", parent=parent)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.setWidget(playlist_widget)
+        self.setVisible(False)
 
-#         self.setSelectionBehavior(self.SelectRows)
-#         self.setEditTriggers(self.NoEditTriggers)
-#         # self.setExpandsOnDoubleClick(False)
-#         # self.setRootIsDecorated(False)
-
-#         self._header = Header(parent=self)
-#         self.setHorizontalHeader(self._header)
-
-#         self.doubleClicked.connect(self.on_doubleClicked)
-
-#     def on_doubleClicked(self, index):
-#         self.pl_player.load_media(index=index)
-
-#     def on_model_dataChanged(self, topLeft, bottomRight):
-#         """Enable/disable playback controls according to contents"""
-#         self.play_ctrls.setEnabled(bool(self.model().item(0)))
-
-#     def add_media(self, paths):
-#         paths = files.get_media_paths(paths)
-#         if not paths:
-#             return None
-
-#         items = []
-#         for p in paths:
-#             item = MediaItem(path.abspath(p))
-#             items.append(item)
-
-#         if not items:
-#             return None
-
-#         if not self.model():
-#             self.setModel(PlaylistModel(parent=self))
-
-#         for i in items:
-#             self.model().appendRow(i)
-
-#         first_item = self.model().item(0)
-#         if first_item:
-#             self.pl_player.load_media(index=first_item.index(), play=False)
+    def toggleViewAction(self):
+        action = super().toggleViewAction()
+        action.setIcon(icons.open_playlist)
+        action.setEnabled(True)
+        return action
 
 
 class PopupPlaylistWindow(PopupWindowWidget):
@@ -164,18 +172,17 @@ class PopupPlaylistWindow(PopupWindowWidget):
         pos = self.main_win.pos()
         pos.setX(pos.x() - width)
         self.move(pos)
-
         super().showEvent(e)
 
 
 class OpenPlaylistAction(QAction):
     def __init__(
-        self, parent, split_view, playlist_view, frame_size_mngr, main_content_frame
+        self, parent, split_view, playlist_widget, frame_size_mngr, main_content_frame
     ):
         super().__init__(parent=parent)
         self.parent = parent
         self.split_view = split_view
-        self.pl_editor = playlist_view
+        self.playlist_widget = playlist_widget
         self.frame_size_mngr = frame_size_mngr
         self.main_content_frame = main_content_frame
         self.setIcon(icons.open_split_view)
@@ -203,17 +210,3 @@ class PopupPlaylistAction(PopupWindowAction):
             widget=self.playlist_win,
             main_win=main_win,
         )
-
-
-class DockablePlaylist(DockableWidget):
-    def __init__(self, parent, playlist_view):
-        super().__init__(title="Playlist", parent=parent)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setWidget(playlist_view)
-        self.setVisible(False)
-
-    def toggleViewAction(self):
-        action = super().toggleViewAction()
-        action.setIcon(icons.open_playlist)
-        action.setEnabled(True)
-        return action

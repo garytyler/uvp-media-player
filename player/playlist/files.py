@@ -67,10 +67,10 @@ def get_media_paths(paths):
 
 
 class OpenFileAction(QAction):
-    def __init__(self, parent, playlist_view):
+    def __init__(self, parent, playlist_widget):
         super().__init__(parent=parent)
         self.parent = parent
-        self.playlist_view = playlist_view
+        self.playlist_widget = playlist_widget
         self.setIcon(icons.open_file)
         self.setText("Open file")
         self.setShortcut("Ctrl+O")
@@ -84,14 +84,14 @@ class OpenFileAction(QAction):
             self.parent, self.text(), directory="media"
         )
         if file_path:
-            self.playlist_view.add_media([file_path])
+            self.playlist_widget.add_media([file_path])
 
 
 class OpenMultipleAction(QAction):
-    def __init__(self, parent, playlist_view):
+    def __init__(self, parent, playlist_widget):
         super().__init__(parent=parent)
         self.parent = parent
-        self.playlist_view = playlist_view
+        self.playlist_widget = playlist_widget
         self.setIcon(icons.open_multiple)
         self.setText("Open Multiple Files")
         self.setShortcut("Ctrl+M")
@@ -105,15 +105,15 @@ class OpenMultipleAction(QAction):
             self.parent, self.text(), directory="media"
         )
         if file_paths:
-            self.playlist_view.add_media(file_paths)
+            self.playlist_widget.add_media(file_paths)
 
 
 class OpenMediaMenu(QMenu):
-    def __init__(self, parent, playlist_view):
+    def __init__(self, parent, playlist_widget):
         super().__init__(parent=parent)
         self.parent = parent
-        self.playlist_view = playlist_view
+        self.playlist_widget = playlist_widget
         self.setIcon(icons.open_file_menu)
         self.setTitle("Open Media")
-        self.addAction(OpenMultipleAction(parent=self, playlist_view=playlist_view))
-        self.addAction(OpenFileAction(parent=self, playlist_view=playlist_view))
+        self.addAction(OpenMultipleAction(parent=self, playlist_widget=playlist_widget))
+        self.addAction(OpenFileAction(parent=self, playlist_widget=playlist_widget))

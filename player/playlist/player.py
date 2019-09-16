@@ -1,8 +1,9 @@
 import logging
 
-from PyQt5.QtCore import Qt, pyqtSignal
+from PyQt5.QtCore import pyqtSignal
 
 from .. import vlcqt
+from .model import MediaItem
 
 log = logging.getLogger(__name__)
 
@@ -63,12 +64,11 @@ class PlaylistPlayer:
             log.info(f"LOAD MEDIA Index Invalid row={index.row()}")
         else:
             self.index = index
-            media = self.index.data(Qt.VlcMedia)
-            is_spherical = self.index.data(Qt.IsSpherical)
-
+            mrl = self.index.data(MediaItem.PathRole)
+            is_spherical = self.index.data(MediaItem.SphericalRole)
             self.vp_manager.enable_per_frame_updates(is_spherical)
             self.mp.stop()
-            self.mp.set_media(media)
+            self.mp.set_mrl(mrl)
             if play:
                 self.mp.play()
 

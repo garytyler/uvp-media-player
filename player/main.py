@@ -39,7 +39,7 @@ from .output.sound import VolumeManager, VolumePopupButton
 from .output.status import StatusBar
 from .playlist.files import OpenMediaMenu
 from .playlist.player import PlaylistPlayer
-from .playlist.view import DockablePlaylist, PlaylistView
+from .playlist.view import DockablePlaylist, PlaylistWidget
 from .util.settings import OpenSettingsAction
 
 log = logging.getLogger(__name__)
@@ -66,7 +66,7 @@ class AppWindow(QMainWindow):
         self.create_gui_layout()
         self.create_window_shortcuts()
 
-        self.playlist_view.add_media(media_paths)
+        self.playlist_widget.add_media(media_paths)
 
         self.initialized.emit()
 
@@ -110,13 +110,13 @@ class AppWindow(QMainWindow):
         self.play_actions = PlayActions(
             parent=self, playlist_player=self.playlist_player
         )
-        self.playlist_view = PlaylistView(
+        self.playlist_widget = PlaylistWidget(
             playlist_player=self.playlist_player,
             play_ctrls=self.play_actions,
             parent=self,
         )
         self.dockable_playlist = DockablePlaylist(
-            parent=self, playlist_view=self.playlist_view
+            parent=self, playlist_widget=self.playlist_widget
         )
         self.toggle_playlist_act = self.dockable_playlist.toggleViewAction()
 
@@ -132,7 +132,7 @@ class AppWindow(QMainWindow):
 
     def create_other_components(self):
         self.open_media_menu = OpenMediaMenu(
-            parent=self, playlist_view=self.playlist_view
+            parent=self, playlist_widget=self.playlist_widget
         )
         self.frame_scale_menu = FrameZoomMenu(
             main_win=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
