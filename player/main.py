@@ -49,7 +49,7 @@ class AppWindow(QMainWindow):
     initialized = pyqtSignal()
     centralwidgetresized = pyqtSignal()
 
-    def __init__(self, media_paths=[], flags=None):
+    def __init__(self, flags=None):
 
         QMainWindow.__init__(self, flags)
         self.qapp = QApplication.instance()
@@ -66,9 +66,10 @@ class AppWindow(QMainWindow):
         self.create_gui_layout()
         self.create_window_shortcuts()
 
-        self.playlist_widget.add_media(media_paths)
-
         self.initialized.emit()
+
+    def load_media(self, paths):
+        self.playlist_widget.add_media(paths)
 
     def create_status_bar(self):
         self.status_bar = StatusBar(parent=self)
