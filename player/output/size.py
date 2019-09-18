@@ -16,7 +16,7 @@ class FrameSizeManager(QObject):
 
     def __init__(self, main_win, viewpoint_mngr):
         super().__init__()
-        self.vp_manager = viewpoint_mngr
+        self.viewpoint_mngr = viewpoint_mngr
         self._main_win = main_win
         vlcqt.media_player.mediachanged.connect(self.conform_to_media)
 
@@ -27,7 +27,7 @@ class FrameSizeManager(QObject):
     def conform_to_media(self, media: vlcqt.Media = None):
         """If media arg is None, current media_player media is used"""
         self._apply_rescale(self.get_media_scale(media))
-        self.vp_manager.trigger_redraw()
+        self.viewpoint_mngr.trigger_redraw()
 
     def _apply_rescale(self, scale):
         self._main_win.resize_to_media(scale)

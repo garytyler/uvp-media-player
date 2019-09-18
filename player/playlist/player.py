@@ -11,8 +11,8 @@ log = logging.getLogger(__name__)
 class PlaylistPlayer:
     listplayerstatechanged = pyqtSignal()
 
-    def __init__(self, vp_manager, loop_mode_mngr):
-        self.vp_manager = vp_manager
+    def __init__(self, viewpoint_mngr, loop_mode_mngr):
+        self.viewpoint_mngr = viewpoint_mngr
         self.loop_mode_mngr = loop_mode_mngr
         self.mp = vlcqt.media_player
         self.index = None
@@ -66,7 +66,7 @@ class PlaylistPlayer:
             self.index = index
             mrl = self.index.data(MediaItem.PathRole)
             is_spherical = self.index.data(MediaItem.SphericalRole)
-            self.vp_manager.enable_per_frame_updates(is_spherical)
+            self.viewpoint_mngr.enable_per_frame_updates(is_spherical)
             self.mp.stop()
             self.mp.set_mrl(mrl)
             if play:

@@ -70,19 +70,6 @@ QLabel#vertical-dock-title-bar {
     color: palette(light);
 }
 
-QLabel#icon_status {
-    border: 2px groove palette(base);
-    border-top: none;
-    border-bottom: none;
-    border-right: none;
-    padding-left: .5em;
-}
-
-QLabel#text_status {
-    /* border: 1px ridge palette(base); */
-    color: palette(light);
-}
-
 
 /*
  * QFrame
@@ -247,8 +234,16 @@ QTabBar::tab:selected:disabled {
  * QStatusBar
  */
 
-QStatusBar {
+ QStatusBar {
     border-top: 1px outset palette(base);
+
+}
+
+QStatusBar::item {
+    border-left: 2px groove palette(base);
+}
+
+QStatusBar QLabel {
     color: palette(light);
 }
 

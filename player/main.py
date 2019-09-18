@@ -10,6 +10,7 @@ from PyQt5.QtWidgets import (
     QMainWindow,
     QShortcut,
     QSizePolicy,
+    QStatusBar,
     QWidget,
 )
 
@@ -21,7 +22,7 @@ from .comm.socks import AutoReconnectSocket
 from .gui.window import AlwaysOnTopAction
 from .output.frame import MediaPlayerContentFrame
 from .output.fullscreen import FullscreenManager, FullscreenMenu, FullscreenStatusLabel
-from .output.orientation import ViewpointManager
+from .output.orientation import OrientationStatusLabel, ViewpointManager
 from .output.playback import (
     FrameResPlaybackSlider,
     LoopModeManager,
@@ -36,7 +37,6 @@ from .output.size import (
     ZoomOutAction,
 )
 from .output.sound import VolumeManager, VolumePopupButton
-from .output.status import StatusBar
 from .playlist.files import OpenMediaMenu
 from .playlist.player import PlaylistPlayer
 from .playlist.view import DockablePlaylist, PlaylistWidget
@@ -57,8 +57,6 @@ class AppWindow(QMainWindow):
 
         self.setDockNestingEnabled(True)
 
-        self.setStatusBar(StatusBar(self))
-
         self.create_interface()
         self.create_status_bar()
         self.create_playback_components()
@@ -72,23 +70,27 @@ class AppWindow(QMainWindow):
         self.playlist_widget.add_media(paths)
 
     def create_status_bar(self):
-        self.status_bar = StatusBar(parent=self)
+        self.status_bar = QStatusBar(parent=self)
         self.connect_status_label = ConnectStatusLabel(
             parent=self.status_bar, socket=self.socket
         )
         self.fullscreen_status_label = FullscreenStatusLabel(
             parent=self.status_bar, fullscreen_mngr=self.fullscreen_mngr
         )
+        self.orientation_status_label = OrientationStatusLabel(
+            viewpoint_mngr=self.viewpoint_mngr, parent=self.status_bar
+        )
         self.status_bar.addPermanentWidget(self.fullscreen_status_label)
         self.status_bar.addPermanentWidget(self.connect_status_label)
+        self.status_bar.addPermanentWidget(self.orientation_status_label)
         self.setStatusBar(self.status_bar)
 
     def create_interface(self):
         self.socket = AutoReconnectSocket()
         self.io_ctrlr = IOController(socket=self.socket)
-        self.vp_manager = ViewpointManager(io_ctrlr=self.io_ctrlr)
+        self.viewpoint_mngr = ViewpointManager(io_ctrlr=self.io_ctrlr)
         self.frame_size_mngr = FrameSizeManager(
-            main_win=self, viewpoint_mngr=self.vp_manager
+            main_win=self, viewpoint_mngr=self.viewpoint_mngr
         )
         vlcqt.media_player_content_frame = MediaPlayerContentFrame(
             main_win=self, frame_size_mngr=self.frame_size_mngr
@@ -99,14 +101,14 @@ class AppWindow(QMainWindow):
         )
         self.fullscreen_mngr = FullscreenManager(
             main_content_frame=vlcqt.media_player_content_frame,
-            viewpoint_mngr=self.vp_manager,
+            viewpoint_mngr=self.viewpoint_mngr,
         )
         self.loop_mode_mngr = LoopModeManager(parent=self)
         self.vol_mngr = VolumeManager(parent=self)
 
     def create_playback_components(self):
         self.playlist_player = PlaylistPlayer(
-            vp_manager=self.vp_manager, loop_mode_mngr=self.loop_mode_mngr
+            viewpoint_mngr=self.viewpoint_mngr, loop_mode_mngr=self.loop_mode_mngr
         )
         self.play_actions = PlayActions(
             parent=self, playlist_player=self.playlist_player

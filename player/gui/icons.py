@@ -121,6 +121,7 @@ class AppIcons:
         self.open_split_view = qta.icon("mdi.view-split-vertical")
         self.open_settings = qta.icon("mdi.cogs")
         self.toolbar_ext_bttn = qta.icon("mdi.menu-right-outline")
+        self.virtual_reality = qta.icon("mdi.virtual-reality")
 
 
 _APP_ICONS = None

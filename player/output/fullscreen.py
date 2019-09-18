@@ -21,7 +21,7 @@ class FullscreenManager(QObject):
 
     def __init__(self, main_content_frame, viewpoint_mngr):
         super().__init__()
-        self.vp_manager = viewpoint_mngr
+        self.viewpoint_mngr = viewpoint_mngr
         self.main_content_frame = main_content_frame
 
         self._is_fullscreen = False
