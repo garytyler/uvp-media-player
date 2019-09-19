@@ -1,10 +1,13 @@
 import logging
 
-from PyQt5.QtCore import QModelIndex, Qt, pyqtSlot
+from PyQt5.QtCore import QItemSelectionModel, QModelIndex, QPoint, Qt, pyqtSlot
+from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
+    QAbstractItemView,
     QAction,
     QHeaderView,
     QMenu,
+    QShortcut,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -23,7 +26,7 @@ class Header(QHeaderView):
     def __init__(self, parent=None):
         super().__init__(Qt.Horizontal, parent)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.get_context_menu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
         self.sectionCountChanged.connect(self.on_sectionCountChanged)
 
     def on_sectionCountChanged(self, oldCount, newCount):
@@ -49,7 +52,7 @@ class Header(QHeaderView):
         logical_index: int = action.data()
         self.setSectionHidden(logical_index, not hide)
 
-    def get_context_menu(self, point):
+    def show_context_menu(self, point):
         menu = QMenu(self)
         self.currentSection = self.logicalIndexAt(point)
         for action in self.actions:
@@ -58,10 +61,12 @@ class Header(QHeaderView):
 
 
 class PlaylistView(QTableView):
-    def __init__(self, playlist_player, play_ctrls=None, parent=None):
+    def __init__(self, parent, playlist_player, play_ctrls=None):
         super().__init__(parent=parent)
         self.playlist_player = playlist_player
         self.play_ctrls = play_ctrls
+        self.create_item_actions()
+        self.create_item_shortcuts()
 
         self.setSelectionBehavior(self.SelectRows)
         self.setSelectionMode(self.SingleSelection)
@@ -73,7 +78,15 @@ class PlaylistView(QTableView):
         self._header = Header(parent=self)
         self.setHorizontalHeader(self._header)
 
+        self.setContextMenuPolicy(Qt.CustomContextMenu)
+        self.customContextMenuRequested.connect(self.show_item_context_menu)
         self.doubleClicked.connect(self.on_doubleClicked)
+
+    def mousePressEvent(self, e):
+        """Clear both row and current index selections when clicking away from items."""
+        if self.currentIndex().isValid():
+            self.selectionModel().clear()
+        super().mousePressEvent(e)
 
     @pyqtSlot(QModelIndex)
     def on_doubleClicked(self, index):
@@ -106,8 +119,47 @@ class PlaylistView(QTableView):
         if old_model:
             old_model.dataChanged.disconnect(self.on_model_dataChanged)
         # Connect new model
-        model.dataChanged.connect(self.on_model_dataChanged)
         super().setModel(model)
+        self.model().dataChanged.connect(self.on_model_dataChanged)
+        self.setSelectionModel(QItemSelectionModel(model=self.model()))
+
+    def create_item_actions(self):
+        self.rem_curr_row_action = RemoveCurrentRowAction(parent=self)
+
+    def create_item_shortcuts(self):
+        # Functional shortcuts
+        self.shortcut = QShortcut(self)
+        self.shortcut.setKey(QKeySequence.Delete)
+        self.shortcut.setContext(Qt.WidgetWithChildrenShortcut)
+        self.shortcut.activated.connect(self.rem_curr_row_action.trigger)
+
+    def show_item_context_menu(self, pos: QPoint):
+        curr_index = self.currentIndex().siblingAtColumn(0)
+        item_title = curr_index.data(Qt.DisplayRole)
+        menu = QMenu(self)
+        menu.addAction(f"Remove '{item_title}'", self.rem_curr_row_action.trigger)
+        menu.exec_(self.mapToGlobal(pos))
+
+
+class RemoveCurrentRowAction(QAction):
+    def __init__(self, parent: QAbstractItemView):
+        super().__init__(parent)
+        self.setIcon(icons.file_remove)
+        self.create_shortcut()
+        self.triggered.connect(self.on_triggered)
+        self.setText("Remove Item")
+
+    def on_triggered(self):
+        curr_index = self.parent().currentIndex().siblingAtColumn(0)
+        item_title = curr_index.data(role=Qt.DisplayRole)
+        self.parent().model().removeRow(curr_index.row())
+        self.setStatusTip(f"Removed '{item_title}' from playlist")
+
+    def create_shortcut(self):
+        # Not functional, only for labeling
+        self.setShortcut(QKeySequence.Delete)
+        self.setShortcutContext(Qt.WidgetWithChildrenShortcut)
+        self.setShortcutVisibleInContextMenu(True)
 
 
 class PlaylistWidget(QWidget):
@@ -116,10 +168,13 @@ class PlaylistWidget(QWidget):
         self.playlist_player = playlist_player
         self.play_ctrls = play_ctrls
 
-        self.setLayout(QVBoxLayout())
         self.view = PlaylistView(
-            playlist_player=self.playlist_player, play_ctrls=self.play_ctrls
+            playlist_player=self.playlist_player,
+            play_ctrls=self.play_ctrls,
+            parent=parent,
         )
+
+        self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.view)
 
     def add_media(self, paths):

@@ -31,7 +31,6 @@ class ViewpointManager(QObject):
         minor_diff = 0.01
         self.minor_diffs_cycle = cycle((minor_diff, -minor_diff))
         self.param_indexes_cycle = cycle((0, 1, 2))
-        print(self.param_indexes_cycle)
         self.is_enabled = False
 
         self.mp.newframe.connect(self.on_newframe)
@@ -65,7 +64,6 @@ class ViewpointManager(QObject):
 
     def set_new_user_viewpoint(self, yaw, pitch, roll):
         """Set a new user viewpoint."""
-        print("asdfasdf")
         self.user_vp.yaw = -yaw
         self.user_vp.pitch = -pitch
         self.user_vp.roll = -roll

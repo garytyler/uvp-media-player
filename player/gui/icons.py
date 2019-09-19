@@ -122,6 +122,7 @@ class AppIcons:
         self.open_settings = qta.icon("mdi.cogs")
         self.toolbar_ext_bttn = qta.icon("mdi.menu-right-outline")
         self.virtual_reality = qta.icon("mdi.virtual-reality")
+        self.file_remove = qta.icon("mdi.file-remove")
 
 
 _APP_ICONS = None
