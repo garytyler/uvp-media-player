@@ -51,12 +51,12 @@ class FullscreenStatusLabel(IconStatusLabel):
         self.fullscreen_mngr.fullscreenstarted.connect(self.on_fullscreenstarted)
         self.fullscreen_mngr.fullscreenstopped.connect(self.on_fullscreenstopped)
 
-    @pyqtSlot()
+    @pyqtSlot(QAction)
     def on_fullscreenstarted(self, action: QAction):
         self.set_status(action.text(), QIcon.Normal, QIcon.On)
 
     @pyqtSlot()
-    def on_fullscreenstopped(self, action: QAction):
+    def on_fullscreenstopped(self):
         self.set_status("Main Window", QIcon.Normal, QIcon.Off)
 
 
@@ -163,9 +163,11 @@ class FullscreenMenu(QMenu):
     def on_menu_aboutToShow(self):
         self.setChecked(self.fullscreen_mngr.is_fullscreen())
 
+    @pyqtSlot(QAction)
     def on_fullscreenstarted(self, action):
         self.stop_fs_action.setEnabled(True)
 
+    @pyqtSlot()
     def on_fullscreenstopped(self):
         self.stop_fs_action.setEnabled(False)
 
