@@ -1,41 +1,51 @@
 import logging
 import os
+from typing import Union
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QFileDialog, QMenu
 
 from .. import vlcqt
 from ..gui import icons
-from .model import MediaItem
 
 log = logging.getLogger(__name__)
 
 
-def get_media_items(paths):
+def get_file_paths(paths: list):
+    file_paths = []
+    for p in paths:
+        if os.path.isfile(p):
+            file_paths.append(p)
+        elif os.path.isdir(p):
+            for i in os.scandir(p):
+                if i.is_file():
+                    file_paths.append(i.path)
+        else:
+            log.warning(f"Path does not exist: {p}")
+    return file_paths
+
+
+def get_media_object(path: str):
+    media = vlcqt.Media(path)
+    media.parse()
+    iter_tracks = media.tracks_get()
+    if not iter_tracks:
+        return None
+    else:
+        return media
+
+
+def get_media_objects(paths: Union[list, str]):
     if isinstance(paths, str):
         paths = [paths]
 
-    file_paths = []
-    for p in paths:
-        if not os.path.exists(p):
-            log.error(f"PATH NOT FOUND path={p}")
-        if os.path.isfile(p):
-            file_paths.append(p)
-            continue
-        for i in os.scandir(p):
-            if i.is_file():
-                file_paths.append(i.path)
+    media_objects = []
+    for p in get_file_paths(paths):
+        obj = get_media_object(p)
+        if obj:
+            media_objects.append(obj)
 
-    media_items = []
-    for p in file_paths:
-        media = vlcqt.Media(p)
-        media.parse()
-        iter_tracks = media.tracks_get()
-        if not iter_tracks:
-            continue
-        media_items.append(MediaItem(media))
-
-    return media_items
+    return media_objects
 
 
 def get_media_paths(paths):

@@ -1,7 +1,5 @@
 import logging
 
-from PyQt5.QtCore import pyqtSignal
-
 from .. import vlcqt
 from .model import MediaItem
 
@@ -9,11 +7,10 @@ log = logging.getLogger(__name__)
 
 
 class PlaylistPlayer:
-    listplayerstatechanged = pyqtSignal()
-
     def __init__(self, viewpoint_mngr, loop_mode_mngr):
         self.viewpoint_mngr = viewpoint_mngr
         self.loop_mode_mngr = loop_mode_mngr
+
         self.mp = vlcqt.media_player
         self.index = None
         self.mp.endreached.connect(self.on_mp_endreached)

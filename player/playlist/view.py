@@ -6,8 +6,10 @@ from PyQt5.QtWidgets import (
     QAbstractItemView,
     QAction,
     QHeaderView,
+    QMainWindow,
     QMenu,
     QShortcut,
+    QStatusBar,
     QTableView,
     QVBoxLayout,
     QWidget,
@@ -61,9 +63,12 @@ class Header(QHeaderView):
 
 
 class PlaylistView(QTableView):
-    def __init__(self, parent, playlist_player, play_ctrls=None):
+    def __init__(
+        self, playlist_player, status_bar: QStatusBar, play_ctrls=None, parent=None
+    ):
         super().__init__(parent=parent)
         self.playlist_player = playlist_player
+        self.status_bar = status_bar
         self.play_ctrls = play_ctrls
         self.create_actions()
         self.create_shortcuts()
@@ -75,8 +80,7 @@ class PlaylistView(QTableView):
         self.setEditTriggers(QTableView.NoEditTriggers)
         self.setAlternatingRowColors(True)
         self.setDropIndicatorShown(True)
-        self._header = Header(parent=self)
-        self.setHorizontalHeader(self._header)
+        self.setHorizontalHeader(Header(parent=self))
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
         self.customContextMenuRequested.connect(self.show_context_menu)
@@ -84,9 +88,14 @@ class PlaylistView(QTableView):
 
     def mousePressEvent(self, e):
         """Clear both row and current index selections when clicking away from items."""
-        if self.currentIndex().isValid():
+        clicked_index = self.indexAt(e.pos())
+        if clicked_index.isValid():
+            item = self.model().item(clicked_index.row())
+            status_tip = item.data(role=Qt.DisplayRole)
+            self.status_bar.showMessage(status_tip)
+        else:
             self.selectionModel().clear()
-        super().mousePressEvent(e)
+        return super().mousePressEvent(e)
 
     @pyqtSlot(QModelIndex)
     def on_doubleClicked(self, index):
@@ -124,7 +133,11 @@ class PlaylistView(QTableView):
         self.setSelectionModel(QItemSelectionModel(model=self.model()))
 
     def create_actions(self):
-        self.rem_curr_row_action = RemoveCurrentRowAction(parent=self)
+        self.rem_curr_row_action = RemoveCurrentRowAction(
+            parent=self,
+            status_bar=self.status_bar,
+            playlist_player=self.playlist_player,
+        )
 
     def create_shortcuts(self):
         """Create shortcuts for manipulating items when this widget is selected.
@@ -159,21 +172,27 @@ class PlaylistView(QTableView):
 
 
 class RemoveCurrentRowAction(QAction):
-    def __init__(self, parent: QAbstractItemView):
+    def __init__(
+        self, parent: QAbstractItemView, status_bar: QStatusBar, playlist_player
+    ):
         super().__init__(parent)
+        self.status_bar = status_bar
+        self.playlist_player = playlist_player
         self.setIcon(icons.file_remove)
-        self.triggered.connect(self.on_triggered)
         self.setText("Remove")
+        self.triggered.connect(self.on_triggered)
 
     def on_triggered(self):
         curr_index = self.parent().currentIndex().siblingAtColumn(0)
+        if curr_index.row() == self.playlist_player.index.row():
+            self.playlist_player.handle_media_end_reached()
         item_title = curr_index.data(role=Qt.DisplayRole)
         self.parent().model().removeRow(curr_index.row())
-        self.setStatusTip(f"Removed '{item_title}' from playlist")
+        self.status_bar.showMessage(f"Removed '{item_title}' from playlist")
 
 
 class PlaylistWidget(QWidget):
-    def __init__(self, playlist_player, play_ctrls, parent):
+    def __init__(self, playlist_player, play_ctrls, parent: QMainWindow):
         super().__init__(parent=parent)
         self.playlist_player = playlist_player
         self.play_ctrls = play_ctrls
@@ -181,7 +200,7 @@ class PlaylistWidget(QWidget):
         self.view = PlaylistView(
             playlist_player=self.playlist_player,
             play_ctrls=self.play_ctrls,
-            parent=parent,
+            status_bar=self.parent().statusBar(),
         )
 
         self.setLayout(QVBoxLayout())

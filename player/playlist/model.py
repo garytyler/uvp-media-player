@@ -24,7 +24,6 @@ class MediaItem(QStandardItem):
 
         _title = _probe["format"]["tags"]["title"]
         self.setData(_title, Qt.DisplayRole)
-        self.setData(_title, Qt.ToolTipRole)
         self.setData(_title, Qt.WhatsThisRole)
         self.setData(_title, Qt.StatusTipRole)
 
@@ -46,6 +45,8 @@ class PlaylistModel(QStandardItemModel):
             probe = media_item.data(MediaItem.ProbeRole)
             key = config.state.meta_tags[index.column()]
             return probe["format"]["tags"].get(key, None)
+        elif role == (Qt.ToolTipRole):
+            return config.state.meta_tags[index.column()]
         else:
             item = self.item(index.row(), 0)
             return item.data(role)
