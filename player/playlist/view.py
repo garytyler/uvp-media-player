@@ -183,11 +183,17 @@ class RemoveCurrentRowAction(QAction):
         self.triggered.connect(self.on_triggered)
 
     def on_triggered(self):
-        curr_index = self.parent().currentIndex().siblingAtColumn(0)
-        if curr_index.row() == self.playlist_player.index.row():
+        # Get view and player state
+        curr_view_index = self.parent().currentIndex().siblingAtColumn(0)
+        curr_player_index = self.playlist_player.current_index()
+
+        # Handle player state
+        if curr_view_index.row() == curr_player_index.row():
             self.playlist_player.handle_media_end_reached()
-        item_title = curr_index.data(role=Qt.DisplayRole)
-        self.parent().model().removeRow(curr_index.row())
+
+        # Remove item from view
+        item_title = curr_view_index.data(role=Qt.DisplayRole)
+        self.parent().model().removeRow(curr_view_index.row())
         self.status_bar.showMessage(f"Removed '{item_title}' from playlist")
 
 
