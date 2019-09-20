@@ -16,7 +16,7 @@ def dark_palette():
     p.setColor(QPalette.ToolTipText, QColor(170, 170, 170))
     p.setColor(QPalette.Text, QColor(160, 160, 160))
     p.setColor(QPalette.Button, QColor(50, 50, 50))
-    p.setColor(QPalette.ButtonText, QColor(160, 160, 160))
+    p.setColor(QPalette.ButtonText, QColor(170, 170, 170))
     p.setColor(QPalette.BrightText, QColor(230, 230, 230))
     p.setColor(QPalette.Light, QColor(135, 135, 135))
     p.setColor(QPalette.Midlight, QColor(105, 105, 105))

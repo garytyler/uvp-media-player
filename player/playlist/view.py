@@ -65,8 +65,8 @@ class PlaylistView(QTableView):
         super().__init__(parent=parent)
         self.playlist_player = playlist_player
         self.play_ctrls = play_ctrls
-        self.create_item_actions()
-        self.create_item_shortcuts()
+        self.create_actions()
+        self.create_shortcuts()
 
         self.setSelectionBehavior(self.SelectRows)
         self.setSelectionMode(self.SingleSelection)
@@ -79,7 +79,7 @@ class PlaylistView(QTableView):
         self.setHorizontalHeader(self._header)
 
         self.setContextMenuPolicy(Qt.CustomContextMenu)
-        self.customContextMenuRequested.connect(self.show_item_context_menu)
+        self.customContextMenuRequested.connect(self.show_context_menu)
         self.doubleClicked.connect(self.on_doubleClicked)
 
     def mousePressEvent(self, e):
@@ -123,43 +123,53 @@ class PlaylistView(QTableView):
         self.model().dataChanged.connect(self.on_model_dataChanged)
         self.setSelectionModel(QItemSelectionModel(model=self.model()))
 
-    def create_item_actions(self):
+    def create_actions(self):
         self.rem_curr_row_action = RemoveCurrentRowAction(parent=self)
 
-    def create_item_shortcuts(self):
-        # Functional shortcuts
-        self.shortcut = QShortcut(self)
-        self.shortcut.setKey(QKeySequence.Delete)
-        self.shortcut.setContext(Qt.WidgetWithChildrenShortcut)
-        self.shortcut.activated.connect(self.rem_curr_row_action.trigger)
+    def create_shortcuts(self):
+        """Create shortcuts for manipulating items when this widget is selected.
 
-    def show_item_context_menu(self, pos: QPoint):
+        - Use QShortcut instances with context 'Qt.WidgetWithChildrenShortcut'
+        """
+        self.rem_item_shortcut = QShortcut(self)
+        self.rem_item_shortcut.setKey(QKeySequence.Delete)
+        self.rem_item_shortcut.setContext(Qt.WidgetWithChildrenShortcut)
+        self.rem_item_shortcut.activated.connect(self.rem_curr_row_action.trigger)
+
+    def show_context_menu(self, pos: QPoint):
+        # Get title of targeted item to use in context menu item text strings
         curr_index = self.currentIndex().siblingAtColumn(0)
         item_title = curr_index.data(Qt.DisplayRole)
+
+        # Create context menu object
         menu = QMenu(self)
-        menu.addAction(f"Remove '{item_title}'", self.rem_curr_row_action.trigger)
+
+        # Create context menu actions
+        remove_item_menu_action = menu.addAction(
+            icons.file_remove,
+            f"Remove '{item_title}'",
+            self.rem_curr_row_action.trigger,
+        )
+
+        # Add shortcut labels as reference. Key presses will not reach this menu.
+        remove_item_menu_action.setShortcut(self.rem_item_shortcut.key())
         menu.exec_(self.mapToGlobal(pos))
+
+        return menu
 
 
 class RemoveCurrentRowAction(QAction):
     def __init__(self, parent: QAbstractItemView):
         super().__init__(parent)
         self.setIcon(icons.file_remove)
-        self.create_shortcut()
         self.triggered.connect(self.on_triggered)
-        self.setText("Remove Item")
+        self.setText("Remove")
 
     def on_triggered(self):
         curr_index = self.parent().currentIndex().siblingAtColumn(0)
         item_title = curr_index.data(role=Qt.DisplayRole)
         self.parent().model().removeRow(curr_index.row())
         self.setStatusTip(f"Removed '{item_title}' from playlist")
-
-    def create_shortcut(self):
-        # Not functional, only for labeling
-        self.setShortcut(QKeySequence.Delete)
-        self.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-        self.setShortcutVisibleInContextMenu(True)
 
 
 class PlaylistWidget(QWidget):

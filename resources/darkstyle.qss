@@ -14,9 +14,8 @@ QAbstractButton{
  */
 
 QWidget#popup {
-    background-color: palette(base);
-    border: inset rgb(21, 21, 21);
-    border-width: 4px;
+    border: 1px solid palette(shadow);
+    background-color: palette(mid);
 }
 
 
@@ -24,7 +23,7 @@ QWidget#popup {
  * QGroupBox
  */
 
-/* QGroupBox {
+QGroupBox {
     background-color: palette(alternate-base);
     border: 1px solid palette(light);
     margin-top: 25px;
@@ -32,7 +31,7 @@ QWidget#popup {
 
 QGroupBox::title {
     background-color: transparent;
-} */
+}
 
 
 /*
@@ -40,15 +39,12 @@ QGroupBox::title {
  */
 
 QMenu {
-    font-size: 10pt;
+    border: 1px solid palette(shadow);
+    background-color: palette(mid);
 }
 
-QMenu:disabled {
-    color: palette(midlight);
-}
-
-QMenu:item {
-    background-color: palette(base);
+QMenu::item:selected {
+    background-color: darkslateblue;
 }
 
 
@@ -81,9 +77,8 @@ QFrame#output_surface {
 }
 
 QFrame#popupcontrolwin {
-    background-color: palette(base);
-    border: inset rgb(21, 21, 21);
-    border-width: 1px;
+    border: 1px solid palette(shadow);
+    background-color: palette(mid);
 }
 
 
@@ -236,7 +231,6 @@ QTabBar::tab:selected:disabled {
 
  QStatusBar {
     border-top: 1px outset palette(base);
-
 }
 
 QStatusBar::item {
@@ -334,11 +328,11 @@ QScrollArea #scrollAreaWidgetContents {
  * QSlider
  */
 
-QSlider::groove:horizontal {
+QSlider::groove {
     margin: 2px 0;
 }
 
-QSlider::handle:horizontal {
+QSlider::handle {
     border-radius: 5px;
     background-color: palette(light);
     max-height: 20px;
