@@ -1,9 +1,8 @@
 import logging
 
-from PyQt5.QtCore import QItemSelectionModel, QModelIndex, QPoint, Qt, pyqtSlot
+from PyQt5.QtCore import QModelIndex, QPoint, Qt, pyqtSlot
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
-    QAbstractItemView,
     QAction,
     QHeaderView,
     QMainWindow,
@@ -24,7 +23,7 @@ from .model import MediaItem, PlaylistModel
 log = logging.getLogger(__name__)
 
 
-class Header(QHeaderView):
+class PlaylistViewHeader(QHeaderView):
     def __init__(self, parent=None):
         super().__init__(Qt.Horizontal, parent)
         self.setContextMenuPolicy(Qt.CustomContextMenu)
@@ -64,27 +63,34 @@ class Header(QHeaderView):
 
 class PlaylistView(QTableView):
     def __init__(
-        self, playlist_player, status_bar: QStatusBar, play_ctrls=None, parent=None
+        self, playlist_player, status_bar: QStatusBar, play_ctrls, parent=None
     ):
         super().__init__(parent=parent)
-        self.playlist_player = playlist_player
+        self.player = playlist_player
         self.status_bar = status_bar
         self.play_ctrls = play_ctrls
-        self.create_actions()
-        self.create_shortcuts()
 
         self.setSelectionBehavior(self.SelectRows)
-        self.setSelectionMode(self.SingleSelection)
         self.setDragDropMode(self.InternalMove)
         self.setDragDropOverwriteMode(False)
         self.setEditTriggers(QTableView.NoEditTriggers)
         self.setAlternatingRowColors(True)
         self.setDropIndicatorShown(True)
-        self.setHorizontalHeader(Header(parent=self))
-
+        self.setHorizontalHeader(PlaylistViewHeader(parent=self))
         self.setContextMenuPolicy(Qt.CustomContextMenu)
+
+        # Create shortcuts
+        self.rem_selected_items_shortcut = QShortcut(self)
+        self.rem_selected_items_shortcut.setKey(QKeySequence.Delete)
+        self.rem_selected_items_shortcut.setContext(Qt.WidgetWithChildrenShortcut)
+        self.rem_selected_items_shortcut.activated.connect(self.remove_selected_items)
+
+        self.setModel(PlaylistModel())
+
+        # Setup signals
         self.customContextMenuRequested.connect(self.show_context_menu)
         self.doubleClicked.connect(self.on_doubleClicked)
+        self.selectionModel().selectionChanged.connect(self.on_selectionChanged)
 
     def mousePressEvent(self, e):
         """Clear both row and current index selections when clicking away from items."""
@@ -97,9 +103,14 @@ class PlaylistView(QTableView):
             self.selectionModel().clear()
         return super().mousePressEvent(e)
 
+    def on_selectionChanged(self, selected, deselected):
+        if not selected:
+            self.selectionModel().clear()
+
     @pyqtSlot(QModelIndex)
     def on_doubleClicked(self, index):
-        self.playlist_player.load_media(index=index, play=True)
+        self.player.load_media(index=index)
+        self.player.mp.play()
 
     def dropEvent(self, e):
         dragged_index = self.currentIndex()
@@ -118,93 +129,86 @@ class PlaylistView(QTableView):
         self.setCurrentIndex(dropped_index)
         e.ignore()
 
-    def on_model_dataChanged(self, topLeft, bottomRight, roles: list = None):
-        """Enable/disable playback controls according to contents"""
-        self.play_ctrls.setEnabled(bool(self.model().item(0)))
+    @pyqtSlot(int)
+    def on_model_rowCountChanged(self, count):
+        """Enable/disable GUI elements when media is added or removed"""
+        if count:
+            self.play_ctrls.setEnabled(True)
+        else:
+            self.play_ctrls.setEnabled(False)
 
     def setModel(self, model):
-        # Disconnect old model
-        old_model = self.model()
-        if old_model:
-            old_model.dataChanged.disconnect(self.on_model_dataChanged)
-        # Connect new model
+        # Disconnect previous model
+        if self.model():
+            self.model().rowCountChanged.disconnect()
+        # Connect this model
+        model.rowCountChanged.connect(self.on_model_rowCountChanged)
+        model.rowCountChanged.connect(self.player.on_playlist_rowCountChanged)
         super().setModel(model)
-        self.model().dataChanged.connect(self.on_model_dataChanged)
-        self.setSelectionModel(QItemSelectionModel(model=self.model()))
 
-    def create_actions(self):
-        self.rem_curr_row_action = RemoveCurrentRowAction(
-            parent=self,
-            status_bar=self.status_bar,
-            playlist_player=self.playlist_player,
-        )
-
-    def create_shortcuts(self):
-        """Create shortcuts for manipulating items when this widget is selected.
-
-        - Use QShortcut instances with context 'Qt.WidgetWithChildrenShortcut'
-        """
-        self.rem_item_shortcut = QShortcut(self)
-        self.rem_item_shortcut.setKey(QKeySequence.Delete)
-        self.rem_item_shortcut.setContext(Qt.WidgetWithChildrenShortcut)
-        self.rem_item_shortcut.activated.connect(self.rem_curr_row_action.trigger)
+    def selected_items(self):
+        items = []
+        for i in self.selectionModel().selectedRows():
+            items.append(self.model().itemFromIndex(i))
+        return items
 
     def show_context_menu(self, pos: QPoint):
-        # Get title of targeted item to use in context menu item text strings
-        curr_index = self.currentIndex().siblingAtColumn(0)
-        item_title = curr_index.data(Qt.DisplayRole)
-
-        # Create context menu object
+        selected_items = self.selected_items()
+        if len(selected_items) <= 1:
+            rem_selected_text = f"Remove '{selected_items[0].data(Qt.DisplayRole)}'"
+        else:
+            rem_selected_text = f"Remove {len(selected_items)} items"
         menu = QMenu(self)
-
-        # Create context menu actions
-        remove_item_menu_action = menu.addAction(
+        menu.addAction(
             icons.file_remove,
-            f"Remove '{item_title}'",
-            self.rem_curr_row_action.trigger,
+            rem_selected_text,
+            self.remove_selected_items,
+            self.rem_selected_items_shortcut.key(),
         )
-
-        # Add shortcut labels as reference. Key presses will not reach this menu.
-        remove_item_menu_action.setShortcut(self.rem_item_shortcut.key())
         menu.exec_(self.mapToGlobal(pos))
 
-        return menu
+    @pyqtSlot()
+    def remove_selected_items(self):
+        indexes = self.selectionModel().selectedRows()
+        items = [self.model().itemFromIndex(i) for i in indexes]
+        self.remove_items(items)
 
+    def remove_items(self, items):
+        # Create a status message
+        if len(items) == 1:
+            status_msg = f"Removed '{items[0].data(Qt.DisplayRole)}'"
+        else:
+            status_msg = f"Removed {len(items)} items"
 
-class RemoveCurrentRowAction(QAction):
-    def __init__(
-        self, parent: QAbstractItemView, status_bar: QStatusBar, playlist_player
-    ):
-        super().__init__(parent)
-        self.status_bar = status_bar
-        self.playlist_player = playlist_player
-        self.setIcon(icons.file_remove)
-        self.setText("Remove")
-        self.triggered.connect(self.on_triggered)
+        # Unload from player
+        self.player.unload_media(items=items)
 
-    def on_triggered(self):
-        # Get view and player state
-        curr_view_index = self.parent().currentIndex().siblingAtColumn(0)
-        curr_player_index = self.playlist_player.current_index()
+        # Remove items
+        while items:
+            seq = [self.model().indexFromItem(items.pop(0)).row()]
+            while items:
+                row = self.model().indexFromItem(items[0]).row()
+                if row != seq[-1] + 1:
+                    break
+                items.pop(0)
+                seq.append(row)
+            self.model().removeRows(seq[0], len(seq))
 
-        # Handle player state
-        if curr_view_index.row() == curr_player_index.row():
-            self.playlist_player.handle_media_end_reached()
+        # Push status message
+        self.status_bar.showMessage(status_msg)
 
-        # Remove item from view
-        item_title = curr_view_index.data(role=Qt.DisplayRole)
-        self.parent().model().removeRow(curr_view_index.row())
-        self.status_bar.showMessage(f"Removed '{item_title}' from playlist")
+        # Emit row count
+        self.model().rowCountChanged(self.model().rowCount())
 
 
 class PlaylistWidget(QWidget):
     def __init__(self, playlist_player, play_ctrls, parent: QMainWindow):
         super().__init__(parent=parent)
-        self.playlist_player = playlist_player
+        self.player = playlist_player
         self.play_ctrls = play_ctrls
 
         self.view = PlaylistView(
-            playlist_player=self.playlist_player,
+            playlist_player=self.player,
             play_ctrls=self.play_ctrls,
             status_bar=self.parent().statusBar(),
         )
@@ -218,9 +222,6 @@ class PlaylistWidget(QWidget):
             log.error(f"No media paths found in {paths}")
             return None
 
-        if not self.view.model():
-            self.view.setModel(PlaylistModel(parent=self))
-
         model = self.view.model()
         for path in paths:
             item = MediaItem(path)
@@ -228,7 +229,7 @@ class PlaylistWidget(QWidget):
 
         first_item = self.view.model().item(0)
         if first_item:
-            self.playlist_player.load_media(index=first_item.index(), play=False)
+            self.player.load_media(index=first_item.index())
 
 
 class DockablePlaylist(DockableWidget):
