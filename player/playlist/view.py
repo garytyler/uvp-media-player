@@ -62,11 +62,9 @@ class PlaylistViewHeader(QHeaderView):
 
 
 class PlaylistView(QTableView):
-    def __init__(
-        self, playlist_player, status_bar: QStatusBar, play_ctrls, parent=None
-    ):
+    def __init__(self, listplayer, status_bar: QStatusBar, play_ctrls, parent=None):
         super().__init__(parent=parent)
-        self.player = playlist_player
+        self.player = listplayer
         self.status_bar = status_bar
         self.play_ctrls = play_ctrls
 
@@ -202,13 +200,13 @@ class PlaylistView(QTableView):
 
 
 class PlaylistWidget(QWidget):
-    def __init__(self, playlist_player, play_ctrls, parent: QMainWindow):
+    def __init__(self, listplayer, play_ctrls, parent: QMainWindow):
         super().__init__(parent=parent)
-        self.player = playlist_player
+        self.player = listplayer
         self.play_ctrls = play_ctrls
 
         self.view = PlaylistView(
-            playlist_player=self.player,
+            listplayer=self.player,
             play_ctrls=self.play_ctrls,
             status_bar=self.parent().statusBar(),
         )

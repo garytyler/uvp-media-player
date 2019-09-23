@@ -38,7 +38,7 @@ from .output.size import (
 )
 from .output.sound import VolumeManager, VolumePopupButton
 from .playlist.files import OpenMediaMenu
-from .playlist.player import PlaylistPlayer
+from .playlist.player import ListPlayer
 from .playlist.view import DockablePlaylist, PlaylistWidget
 from .util.settings import OpenSettingsAction
 
@@ -89,8 +89,11 @@ class AppWindow(QMainWindow):
         self.socket = AutoReconnectSocket()
         self.io_ctrlr = IOController(socket=self.socket)
         self.viewpoint_mngr = ViewpointManager(io_ctrlr=self.io_ctrlr)
+        self.listplayer = ListPlayer(viewpoint_mngr=self.viewpoint_mngr)
         self.frame_size_mngr = FrameSizeManager(
-            main_win=self, viewpoint_mngr=self.viewpoint_mngr
+            main_win=self,
+            viewpoint_mngr=self.viewpoint_mngr,
+            listplayer=self.listplayer,
         )
         vlcqt.media_player_content_frame = MediaPlayerContentFrame(
             main_win=self, frame_size_mngr=self.frame_size_mngr
@@ -104,19 +107,12 @@ class AppWindow(QMainWindow):
             viewpoint_mngr=self.viewpoint_mngr,
         )
         self.loop_mode_mngr = LoopModeManager(parent=self)
-        self.vol_mngr = VolumeManager(parent=self)
 
     def create_playback_components(self):
-        self.playlist_player = PlaylistPlayer(
-            viewpoint_mngr=self.viewpoint_mngr, loop_mode_mngr=self.loop_mode_mngr
-        )
-        self.play_actions = PlayActions(
-            parent=self, playlist_player=self.playlist_player
-        )
+        self.vol_mngr = VolumeManager(parent=self, listplayer=self.listplayer)
+        self.play_actions = PlayActions(parent=self, listplayer=self.listplayer)
         self.playlist_widget = PlaylistWidget(
-            playlist_player=self.playlist_player,
-            play_ctrls=self.play_actions,
-            parent=self,
+            listplayer=self.listplayer, play_ctrls=self.play_actions, parent=self
         )
         self.dockable_playlist = DockablePlaylist(
             parent=self, playlist_widget=self.playlist_widget
@@ -138,13 +134,17 @@ class AppWindow(QMainWindow):
             parent=self, playlist_widget=self.playlist_widget
         )
         self.frame_scale_menu = FrameZoomMenu(
-            main_win=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
+            main_win=self,
+            zoom_ctrl_mngr=self.zoom_ctrl_mngr,
+            listplayer=self.listplayer,
         )
         self.fullscreen_menu = FullscreenMenu(
             main_win=self, fullscreen_mngr=self.fullscreen_mngr
         )
         self.vol_popup_bttn = VolumePopupButton(parent=self, vol_mngr=self.vol_mngr)
-        self.pb_ctrls_slider = FrameResPlaybackSlider(parent=self)
+        self.pb_ctrls_slider = FrameResPlaybackSlider(
+            parent=self, listplayer=self.listplayer
+        )
         self.connect_wide_button_builder = ConnectWideButtonBuilder(
             parent=self, socket=self.socket
         )
@@ -276,9 +276,8 @@ class AppWindow(QMainWindow):
         h = target_height if target_height < screen_h else screen_h
         return w, h
 
-    def get_proper_win_size(self, scale) -> Tuple[int, int]:
+    def get_proper_win_size(self, media_w, media_h, scale) -> Tuple[int, int]:
         """Calculate total window resize values from current compoment displacement"""
-        media_w, media_h = vlcqt.libvlc_video_get_size(vlcqt.media_player, 0)
         layout_size = self.layout().totalSizeHint()
         layout_h = layout_size.height()
         if media_h:
@@ -287,8 +286,8 @@ class AppWindow(QMainWindow):
             return 600 * scale, 360 * scale + layout_h
 
     @pyqtSlot(int, int)
-    def resize_to_media(self, scale):
-        win_w, win_h = self.get_proper_win_size(scale)
+    def resize_to_media(self, media_h, media_w, scale):
+        win_w, win_h = self.get_proper_win_size(media_h, media_w, scale)
         targ_w, targ_h = self.screen_size_threshold_filter(win_w, win_h)
         self.showNormal()
         self.resize(targ_w, targ_h)
@@ -296,13 +295,15 @@ class AppWindow(QMainWindow):
 
     def showEvent(self, e):
         scale = self.frame_size_mngr.get_media_scale()
-        self.resize_to_media(scale)
+        media_w, media_h = self.listplayer._item.size()
+        self.resize_to_media(media_w, media_h, scale)
 
     def sizeHint(self):
         try:
             return self._size_hint
         except AttributeError:
             scale = self.frame_size_mngr.get_media_scale()
-            self._size_hint = QSize(*self.get_proper_win_size(scale))
+            media_w, media_h = self.listplayer._item.size()
+            self._size_hint = QSize(*self.get_proper_win_size(media_w, media_h, scale))
         finally:
             return self._size_hint

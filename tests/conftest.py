@@ -19,8 +19,8 @@ def play_button(appwin, play_action):
 
 
 @pytest.fixture
-def playlist_player(appwin):
-    return appwin.playlist_widget.playlist_player
+def listplayer(appwin):
+    return appwin.playlist_widget.listplayer
 
 
 @pytest.fixture

@@ -1,19 +1,20 @@
 import logging
 
-from PyQt5.QtCore import QModelIndex, QObject, pyqtSlot
+from PyQt5.QtCore import QModelIndex, QObject, pyqtSignal, pyqtSlot
 
 from .. import vlcqt
+from ..util import config
 from .model import MediaItem
 
 log = logging.getLogger(__name__)
 
 
-class PlaylistPlayer(QObject):
-    def __init__(self, viewpoint_mngr, loop_mode_mngr):
+class ListPlayer(QObject):
+    mediachanged = pyqtSignal(MediaItem)
+
+    def __init__(self, viewpoint_mngr):
         super().__init__()
         self.viewpoint_mngr = viewpoint_mngr
-        self.loop_mode_mngr = loop_mode_mngr
-
         self.mp = vlcqt.media_player
         self._item = None
         self.mp.endreached.connect(self._handle_media_finished)
@@ -34,7 +35,7 @@ class PlaylistPlayer(QObject):
         """Perform next expected task when media is finished."""
         curr_index = self._item.index()
         next_index = curr_index.siblingAtRow(self._item.row() + 1)
-        loop_mode = self.loop_mode_mngr.get_mode()
+        loop_mode = config.state.loop_mode
         if loop_mode == "one" and curr_index.isValid():
             self.mp.stop()
             self.mp.play()
@@ -46,7 +47,8 @@ class PlaylistPlayer(QObject):
 
     def _handle_playlist_finished(self):
         """Perform next expected task when playlist is finished."""
-        loop_mode = self.loop_mode_mngr.get_mode()
+        # loop_mode = self.loop_mode_mngr.get_mode()
+        loop_mode = config.state.loop_mode
         if loop_mode == "off":
             self.mp.stop()
             return None
@@ -91,10 +93,12 @@ class PlaylistPlayer(QObject):
         else:
             self._item = index.model().itemFromIndex(index)
             mrl = index.data(MediaItem.PathRole)
-            is_spherical = index.data(MediaItem.SphericalRole)
-            self.viewpoint_mngr.enable_per_frame_updates(is_spherical)
+            spherical = index.data(MediaItem.SphericalRole)
+            self.viewpoint_mngr.enable_per_frame_updates(spherical)
             self.mp.stop()
             self.mp.set_mrl(mrl)
+            self.mediachanged.emit(self._item)
+            self.mp.play()
             return True
 
     def unload_media(self, items: list):

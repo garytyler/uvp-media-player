@@ -36,9 +36,9 @@ class AppIcons:
         self.fullscreen_exit = qta.icon("mdi.fullscreen-exit")
         self.fullscreen_enter = qta.icon("mdi.fullscreen")
         self.display_screen = qta.icon("mdi.desktop-mac")
-        self.playback_mode_off = qta.icon("mdi.repeat-off")
-        self.playback_mode_one = qta.icon("mdi.repeat-once")
-        self.playback_mode_all = qta.icon("mdi.repeat")
+        self.loop_mode_off = qta.icon("mdi.repeat-off")
+        self.loop_mode_one = qta.icon("mdi.repeat-once")
+        self.loop_mode_all = qta.icon("mdi.repeat")
         self.play_pause = qta.icon(
             "mdi.play",
             on="mdi.pause",

@@ -18,7 +18,7 @@ class LoopModeManager(QObject):
 
         self.option_names = ["off", "one", "all"]
         for index, item in enumerate(self.option_names):
-            if item == config.state.playback_mode:
+            if item == config.state.loop_mode:
                 self.rotate_list(self.option_names, index)
                 break
 
@@ -30,7 +30,7 @@ class LoopModeManager(QObject):
         self.rotate_list(self.option_names, 1)
         option_name = self.option_names[0]
         self.playbackmodechanged.emit(option_name)
-        config.state.playback_mode = option_name
+        config.state.loop_mode = option_name
 
     def get_mode(self):
         return self.option_names[0]
@@ -42,9 +42,9 @@ class PlaybackModeAction(QAction):
         self.loop_mode_mngr = loop_mode_mngr
 
         self.icons = {
-            "off": icons.playback_mode_off,
-            "one": icons.playback_mode_one,
-            "all": icons.playback_mode_all,
+            "off": icons.loop_mode_off,
+            "one": icons.loop_mode_one,
+            "all": icons.loop_mode_all,
         }
         self.setText("Toggle Playback Mode")
         self.setToolTip("Toggle Playback Mode")
@@ -65,28 +65,29 @@ class PlaybackModeAction(QAction):
 
 
 class PlayActions(QActionGroup):
-    def __init__(self, parent, playlist_player):
+    def __init__(self, parent, listplayer):
         super().__init__(parent)
+        self.listplayer = listplayer
         self.mp = vlcqt.media_player
 
-        self.prev = PreviousMediaAction(parent=parent, playlist_player=playlist_player)
-        self.play = PlayPauseAction(parent=parent, playlist_player=playlist_player)
-        self.next = NextMediaAction(parent=parent, playlist_player=playlist_player)
+        self.prev = PreviousMediaAction(parent=parent, listplayer=listplayer)
+        self.play = PlayPauseAction(parent=parent, listplayer=listplayer)
+        self.next = NextMediaAction(parent=parent, listplayer=listplayer)
         self.addAction(self.prev)
         self.addAction(self.play)
         self.addAction(self.next)
         self.setEnabled(False)
 
-        self.mp.mediachanged.connect(self.on_mediaplayer_mediachanged)
+        listplayer.mediachanged.connect(self.on_mediaplayer_mediachanged)
 
     def on_mediaplayer_mediachanged(self, e):
         self.setEnabled(self.mp.has_media())
 
 
 class PlayPauseAction(QAction):
-    def __init__(self, parent, playlist_player):
+    def __init__(self, parent, listplayer):
         super().__init__(parent=parent)
-        self.playlist_player = playlist_player
+        self.listplayer = listplayer
         self.mp = vlcqt.media_player
 
         self.setToolTip("Play/Pause")
@@ -116,38 +117,40 @@ class PlayPauseAction(QAction):
 
 
 class PreviousMediaAction(QAction):
-    def __init__(self, parent, playlist_player):
+    def __init__(self, parent, listplayer):
         super().__init__(parent=parent)
+        self.listplayer = listplayer
+
         self.setToolTip("Previous Media")
         self.setIcon(icons.previous_media)
-        self.playlist_player = playlist_player
 
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.playlist_player.skip_previous()
+        self.listplayer.skip_previous()
 
 
 class NextMediaAction(QAction):
-    def __init__(self, parent, playlist_player):
+    def __init__(self, parent, listplayer):
         super().__init__(parent=parent)
         self.setToolTip("Next Media")
         self.setIcon(icons.next_media)
-        self.playlist_player = playlist_player
+        self.listplayer = listplayer
 
         self.triggered.connect(self.on_triggered)
 
     @pyqtSlot(bool)
     def on_triggered(self, checked):
-        self.playlist_player.skip_next()
+        self.listplayer.skip_next()
 
 
 class FrameResPlaybackSlider(QSlider):
     slider_precision = 100  # Must match multiplier used by timer
 
-    def __init__(self, parent):
+    def __init__(self, parent, listplayer):
         super().__init__(Qt.Horizontal, parent)
+        self.listplayer = listplayer
         self.mp = vlcqt.media_player
         self.setToolTip("Position")
         self.curr_pos = self.mp.get_position()
@@ -162,7 +165,7 @@ class FrameResPlaybackSlider(QSlider):
         if _media:
             self.conform_to_media(media=_media)
 
-        self.mp.mediachanged.connect(self.on_mediachanged)
+        self.listplayer.mediachanged.connect(self.on_mediachanged)
         self.mp.positionchanged.connect(self.on_positionchanged)
         self.mp.stopped.connect(self.on_stopped)
 

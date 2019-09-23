@@ -14,12 +14,13 @@ log = logging.getLogger(__name__)
 class VolumeManager(QObject):
     volumechanged = pyqtSignal(int)
 
-    def __init__(self, parent):
+    def __init__(self, parent, listplayer):
         super().__init__(parent)
+        self.lp = listplayer
         self.mp = vlcqt.media_player
         vlcqt.libvlc_audio_set_volume(self.mp, config.state.volume)
         self.mp.audiovolume.connect(self.on_audiovolume)
-        self.mp.mediachanged.connect(self.on_mediachanged)
+        self.lp.mediachanged.connect(self.on_mediachanged)
 
     def set_volume(self, value):
         self.mp.audio_set_volume(value)

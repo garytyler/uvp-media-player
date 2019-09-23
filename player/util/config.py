@@ -9,7 +9,7 @@ _CONFIG_FILE_PATH = getenv("VR_PLAYER_CONFIG", ".user_config")
 
 
 _SETTINGS = {
-    "playback_mode": {"options": ("off", "one", "all"), "default": "off"},
+    "loop_mode": {"options": ("off", "one", "all"), "default": "off"},
     "stay_on_top": {"options": (True, False), "default": False},
     "view_scale": {"options": (0.25, 0.5, 1, 2), "default": 1},
     "color_theme": {"options": ("light", "dark"), "default": "dark"},

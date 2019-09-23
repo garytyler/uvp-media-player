@@ -14,11 +14,12 @@ log = logging.getLogger(__name__)
 class FrameSizeManager(QObject):
     mediaframeresized = pyqtSignal(float)
 
-    def __init__(self, main_win, viewpoint_mngr):
+    def __init__(self, main_win, viewpoint_mngr, listplayer):
         super().__init__()
         self.viewpoint_mngr = viewpoint_mngr
         self._main_win = main_win
-        vlcqt.media_player.mediachanged.connect(self.conform_to_media)
+        self.listplayer = listplayer
+        self.listplayer.mediachanged.connect(self.conform_to_media)
 
     def set_scale(self, scale) -> float:
         config.state.view_scale = scale
@@ -26,12 +27,15 @@ class FrameSizeManager(QObject):
 
     def conform_to_media(self, media: vlcqt.Media = None):
         """If media arg is None, current media_player media is used"""
-        self._apply_rescale(self.get_media_scale(media))
+        scale = self.get_media_scale(media)
+        media_w, media_h = self._main_win.listplayer._item.size()
+        # self._apply_rescale(media_w, media_h, scale)
+        self._main_win.resize_to_media(media_w, media_h, scale)
         self.viewpoint_mngr.trigger_redraw()
 
     def _apply_rescale(self, scale):
         self._main_win.resize_to_media(scale)
-        self.mediaframeresized.emit(scale)  # TODO
+        # self.mediaframeresized.emit(scale)  # TODO
 
     @staticmethod
     def get_media_scale(media: vlcqt.Media = None):
@@ -127,10 +131,11 @@ class ZoomOutAction(QAction):
 
 
 class FrameZoomMenu(QMenu):
-    def __init__(self, main_win, zoom_ctrl_mngr):
+    def __init__(self, main_win, zoom_ctrl_mngr, listplayer):
         super().__init__(parent=main_win)
         self.main_win = main_win
         self.zoom_ctrl_mngr = zoom_ctrl_mngr
+        self.listplayer = listplayer
 
         self.setTitle("Zoom")
         self.setIcon(icons.zoom_menu_button)
@@ -176,7 +181,7 @@ class FrameZoomMenu(QMenu):
         self.conform_to_media()
 
         self.zoom_ctrl_mngr.zoomchanged.connect(self.on_zoomchanged)
-        vlcqt.media_player.mediachanged.connect(self.on_mediachanged)
+        self.listplayer.mediachanged.connect(self.on_mediachanged)
 
     def on_zoomchanged(self, value):
         self.option_action_map[value].setChecked(True)

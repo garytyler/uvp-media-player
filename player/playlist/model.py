@@ -18,10 +18,11 @@ class MediaItem(QStandardItem):
 
     def __init__(self, path):
         super().__init__()
-        probe = ffmpeg_probe(path)
+        self.setData(path, MediaItem.PathRole)
+        self.setData(ffmpeg_probe(path), MediaItem.ProbeRole)
 
         # Set Qt data role values
-        format_tags = probe["format"]["tags"]
+        format_tags = self.probe()["format"]["tags"]
         try:
             title = format_tags["title"]
         except KeyError:
@@ -31,12 +32,20 @@ class MediaItem(QStandardItem):
         self.setData(title, Qt.WhatsThisRole)
         self.setData(title, Qt.StatusTipRole)
 
-        # Set proprietary data role values
-        self.setData(path, MediaItem.PathRole)
-        self.setData(probe, MediaItem.ProbeRole)
-        self.setData(self.is_spherical(), MediaItem.SphericalRole)
+    def path(self):
+        return self.data(MediaItem.PathRole)
 
-    def is_spherical(self) -> bool:
+    def probe(self):
+        return self.data(MediaItem.ProbeRole)
+
+    def size(self):
+        probe = self.probe()
+        stream = next((i for i in probe["streams"] if i["codec_type"] == "video"), None)
+        width = int(stream["width"])
+        height = int(stream["height"])
+        return width, height
+
+    def spherical(self) -> bool:
         probe = self.data(MediaItem.ProbeRole)
         for stream in probe["streams"]:
             if stream.get("side_data_list"):
