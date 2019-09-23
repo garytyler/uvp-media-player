@@ -22,12 +22,18 @@ class ViewpointManager(QObject):
         self.mp = vlcqt.media_player
         self.io_ctrlr = io_ctrlr
 
+        # Main viewpoint object
         self.user_vp = vlcqt.VideoViewpoint()
         self.user_vp.field_of_view = 80
         self.user_vp.yaw = self.user_vp.pitch = self.user_vp.roll = 0
-        self.vp_params = [self.user_vp.yaw, self.user_vp.pitch, self.user_vp.roll]
+        self.user_vp_axes = [self.user_vp.yaw, self.user_vp.pitch, self.user_vp.roll]
 
-        self.adjusted_vp = vlcqt.VideoViewpoint()
+        # An alt viewpoint object for values that will trigger a frame redraw
+        self.redraw_vp = vlcqt.VideoViewpoint()
+        self.redraw_vp.field_of_view = 80
+        self.redraw_vp.yaw = self.user_vp.pitch = self.user_vp.roll = 0
+
+        # Some variables for cycling through diff values for triggering frame redraws
         minor_diff = 0.01
         self.minor_diffs_cycle = cycle((minor_diff, -minor_diff))
         self.param_indexes_cycle = cycle((0, 1, 2))
@@ -36,7 +42,7 @@ class ViewpointManager(QObject):
         self.mp.newframe.connect(self.on_newframe)
         self.mp.vout.connect(self.trigger_redraw)  # Not needed if updating per frame
 
-    def enable_per_frame_updates(self, value):
+    def set_redraw_every_frame(self, value):
         self.is_enabled = value
         if value:
             self.trigger_redraw()
@@ -69,14 +75,14 @@ class ViewpointManager(QObject):
         self.user_vp.roll = -roll
         self._update_viewpoint(self.user_vp)
 
-    def set_new_adjusted_viewpoint(self, yaw_diff, pitch_diff, roll_diff):
+    def set_new_offset_viewpoint(self, yaw_diff, pitch_diff, roll_diff):
         """Set new adjusted viewpoint. Passed values are applied as adjustments to the
         latest user viewpoint.
         """
-        self.adjusted_vp.yaw = self.user_vp.yaw + -yaw_diff
-        self.adjusted_vp.pitch = self.user_vp.pitch + -pitch_diff
-        self.adjusted_vp.roll = self.user_vp.roll + -roll_diff
-        self._update_viewpoint(self.adjusted_vp)
+        self.redraw_vp.yaw = self.user_vp.yaw + -yaw_diff
+        self.redraw_vp.pitch = self.user_vp.pitch + -pitch_diff
+        self.redraw_vp.roll = self.user_vp.roll + -roll_diff
+        self._update_viewpoint(self.redraw_vp)
 
     def trigger_redraw(self):
         """Force a redraw of the video frame to correct the displayed aspect ratio
@@ -89,9 +95,9 @@ class ViewpointManager(QObject):
         """
         diff = next(self.minor_diffs_cycle)
         index = next(self.param_indexes_cycle)
-        param = self.vp_params[index]
-        self.vp_params[index] = param + diff
-        self.set_new_adjusted_viewpoint(*self.vp_params)
+        param = self.user_vp_axes[index]
+        self.user_vp_axes[index] = param + diff
+        self.set_new_offset_viewpoint(*self.user_vp_axes)
 
 
 class OrientationStatusLabel(IconStatusLabel):

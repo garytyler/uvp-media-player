@@ -95,11 +95,11 @@ class ListPlayer(QObject):
             return False
         else:
             self._item = index.model().itemFromIndex(index)
-            mrl = index.data(MediaItem.PathRole)
-            spherical = index.data(MediaItem.SphericalRole)
-            self.viewpoint_mngr.enable_per_frame_updates(spherical)
+            path = self._item.path()
+            is_spherical = self._item.is_spherical()
+            self.viewpoint_mngr.set_redraw_every_frame(is_spherical)
             self.mp.stop()
-            self.mp.set_mrl(mrl)
+            self.mp.set_mrl(path)
             self.mediachanged.emit(self._item)
             self.mp.play()
             return True

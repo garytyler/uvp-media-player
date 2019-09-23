@@ -18,19 +18,27 @@ class MediaItem(QStandardItem):
 
     def __init__(self, path):
         super().__init__()
+
+        # Set proprietary data role values
         self.setData(path, MediaItem.PathRole)
         self.setData(ffmpeg_probe(path), MediaItem.ProbeRole)
 
         # Set Qt data role values
-        format_tags = self.probe()["format"]["tags"]
-        try:
-            title = format_tags["title"]
-        except KeyError:
-            log.warning(f"No 'title' tag found. path={path}, format_tags={format_tags}")
-            title = format_tags["title"] = basename(path)
+        title = self.title()
         self.setData(title, Qt.DisplayRole)
         self.setData(title, Qt.WhatsThisRole)
         self.setData(title, Qt.StatusTipRole)
+
+    def title(self):
+        format_tags = self.probe()["format"]["tags"]
+        try:
+            result = format_tags["title"]
+        except KeyError:
+            path = self.path()
+            log.warning(f"No 'title' tag found. path={path}, format_tags={format_tags}")
+            result = format_tags["title"] = basename(path)
+        finally:
+            return result
 
     def path(self):
         return self.data(MediaItem.PathRole)
@@ -45,7 +53,7 @@ class MediaItem(QStandardItem):
         height = int(stream["height"])
         return width, height
 
-    def spherical(self) -> bool:
+    def is_spherical(self) -> bool:
         probe = self.data(MediaItem.ProbeRole)
         for stream in probe["streams"]:
             if stream.get("side_data_list"):
