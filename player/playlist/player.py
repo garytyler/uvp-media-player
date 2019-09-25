@@ -12,9 +12,10 @@ log = logging.getLogger(__name__)
 class ListPlayer(QObject):
     mediachanged = pyqtSignal(MediaItem)
 
-    def __init__(self, viewpoint_mngr):
+    def __init__(self, viewpoint_mngr, loop_mode_mngr):
         super().__init__()
         self.viewpoint_mngr = viewpoint_mngr
+        self.loop_mode_mngr = loop_mode_mngr
         self.mp = vlcqt.media_player
         self._item = None
         self.mp.endreached.connect(self._handle_media_finished)

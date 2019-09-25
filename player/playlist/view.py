@@ -195,9 +195,6 @@ class PlaylistView(QTableView):
         # Push status message
         self.status_bar.showMessage(status_msg)
 
-        # Emit row count
-        self.model().rowCountChanged(self.model().rowCount())
-
 
 class PlaylistWidget(QWidget):
     def __init__(self, listplayer, play_ctrls, parent: QMainWindow):

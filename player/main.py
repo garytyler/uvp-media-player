@@ -89,7 +89,10 @@ class AppWindow(QMainWindow):
         self.socket = AutoReconnectSocket()
         self.io_ctrlr = IOController(socket=self.socket)
         self.viewpoint_mngr = ViewpointManager(io_ctrlr=self.io_ctrlr)
-        self.listplayer = ListPlayer(viewpoint_mngr=self.viewpoint_mngr)
+        self.loop_mode_mngr = LoopModeManager(parent=self)
+        self.listplayer = ListPlayer(
+            viewpoint_mngr=self.viewpoint_mngr, loop_mode_mngr=self.loop_mode_mngr
+        )
         self.frame_size_mngr = FrameSizeManager(
             main_win=self,
             viewpoint_mngr=self.viewpoint_mngr,
@@ -106,7 +109,6 @@ class AppWindow(QMainWindow):
             main_content_frame=vlcqt.media_player_content_frame,
             viewpoint_mngr=self.viewpoint_mngr,
         )
-        self.loop_mode_mngr = LoopModeManager(parent=self)
 
     def create_playback_components(self):
         self.vol_mngr = VolumeManager(parent=self, listplayer=self.listplayer)
