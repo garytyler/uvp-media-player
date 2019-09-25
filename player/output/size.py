@@ -13,37 +13,48 @@ log = logging.getLogger(__name__)
 
 class FrameSizeManager(QObject):
     mediaframeresized = pyqtSignal(float)
+    default_size = 600, 360
+    default_scale = 1
 
     def __init__(self, main_win, viewpoint_mngr, listplayer):
         super().__init__()
         self.viewpoint_mngr = viewpoint_mngr
         self._main_win = main_win
         self.listplayer = listplayer
-        self.listplayer.mediachanged.connect(self.conform_to_media)
+        self.listplayer.mediachanged.connect(self.on_mediachanged)
+
+    def on_mediachanged(self, media_item):
+        width, height = media_item.size()
+        self.update_frame_size(height=height, width=width)
 
     def set_scale(self, scale) -> float:
         config.state.view_scale = scale
-        self._apply_rescale(scale)
+        self.update_frame_size(scale=scale)
 
-    def conform_to_media(self, media: vlcqt.Media = None):
+    def update_frame_size(self, height=None, width=None, scale=None):
         """If media arg is None, current media_player media is used"""
-        scale = self.get_media_scale(media)
-        media_w, media_h = self._main_win.listplayer._item.size()
-        # self._apply_rescale(media_w, media_h, scale)
-        self._main_win.resize_to_media(media_w, media_h, scale)
+        if not height or not width:
+            _width, _height = self.get_media_size()
+            width = width if width else _width
+            height = height if height else _height
+        scale = scale if scale else self.get_media_scale()
+        self._main_win.resize_to_media(width, height, scale)
+        self.mediaframeresized.emit(scale)  # TODO
         self.viewpoint_mngr.trigger_redraw()
 
-    def _apply_rescale(self, scale):
-        self._main_win.resize_to_media(scale)
-        # self.mediaframeresized.emit(scale)  # TODO
+    def get_media_size(self):
+        item = self.listplayer.item()
+        if item:
+            return item.size()
+        else:
+            return self.default_size
 
-    @staticmethod
-    def get_media_scale(media: vlcqt.Media = None):
-        _media = media if media else vlcqt.media_player.get_media()
-        if _media:
+    def get_media_scale(self):
+        item = self.listplayer.item()
+        if item:
             return config.state.view_scale
         else:
-            return 1
+            return self.default_scale
 
 
 class ZoomControlManager(QMenu):

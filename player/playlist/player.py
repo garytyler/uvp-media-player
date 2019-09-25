@@ -28,8 +28,11 @@ class ListPlayer(QObject):
         if count == 0:
             self.mp.stop()
 
-    def current_index(self):
+    def index(self):
         return self._item.model().indexFromItem(self._item)
+
+    def item(self):
+        return self._item
 
     def _handle_media_finished(self):
         """Perform next expected task when media is finished."""

@@ -1,7 +1,7 @@
 import logging
 from typing import Tuple
 
-from PyQt5.QtCore import QSize, Qt, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QApplication,
@@ -266,7 +266,7 @@ class AppWindow(QMainWindow):
             QKeySequence.ZoomOut, self, self.zoom_ctrl_mngr.zoom_out
         )
 
-    def screen_size_threshold_filter(self, target_width, target_height):
+    def _screen_size_threshold_filter(self, target_width, target_height):
         main_win_geo = self.geometry()
         screen = self.qapp.screenAt(main_win_geo.center())
         screen_geo = screen.geometry()
@@ -276,26 +276,26 @@ class AppWindow(QMainWindow):
         h = target_height if target_height < screen_h else screen_h
         return w, h
 
-    def get_proper_win_size(self, media_w, media_h, scale) -> Tuple[int, int]:
+    def _get_win_size(self, media_w, media_h, scale) -> Tuple[int, int]:
         """Calculate total window resize values from current compoment displacement"""
         layout_size = self.layout().totalSizeHint()
         layout_h = layout_size.height()
-        if media_h:
-            return media_w * scale, media_h * scale + layout_h
-        else:
-            return 600 * scale, 360 * scale + layout_h
+        return media_w * scale, media_h * scale + layout_h
+        # if media_h:
+        #     return media_w * scale, media_h * scale + layout_h
+        # else:
+        #     return 600 * scale, 360 * scale + layout_h
 
-    @pyqtSlot(int, int)
     def resize_to_media(self, media_h, media_w, scale):
-        win_w, win_h = self.get_proper_win_size(media_h, media_w, scale)
-        targ_w, targ_h = self.screen_size_threshold_filter(win_w, win_h)
+        win_w, win_h = self._get_win_size(media_h, media_w, scale)
+        targ_w, targ_h = self._screen_size_threshold_filter(win_w, win_h)
         self.showNormal()
         self.resize(targ_w, targ_h)
         self._size_hint = QSize(targ_w, targ_h)
 
     def showEvent(self, e):
         scale = self.frame_size_mngr.get_media_scale()
-        media_w, media_h = self.listplayer._item.size()
+        media_w, media_h = self.frame_size_mngr.get_media_size()
         self.resize_to_media(media_w, media_h, scale)
 
     def sizeHint(self):
@@ -303,7 +303,7 @@ class AppWindow(QMainWindow):
             return self._size_hint
         except AttributeError:
             scale = self.frame_size_mngr.get_media_scale()
-            media_w, media_h = self.listplayer._item.size()
-            self._size_hint = QSize(*self.get_proper_win_size(media_w, media_h, scale))
+            media_w, media_h = self.frame_size_mngr.get_media_size()
+            self._size_hint = QSize(*self._get_win_size(media_w, media_h, scale))
         finally:
             return self._size_hint
