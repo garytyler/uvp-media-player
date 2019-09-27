@@ -18,27 +18,24 @@ class MediaItem(QStandardItem):
 
     def __init__(self, path):
         super().__init__()
+        # Check probe values
+        probe = ffmpeg_probe(path)
+        try:
+            title = probe["format"]["tags"]["title"]
+        except KeyError:
+            title = probe["format"]["tags"]["title"] = basename(path)
 
         # Set proprietary data role values
         self.setData(path, MediaItem.PathRole)
-        self.setData(ffmpeg_probe(path), MediaItem.ProbeRole)
+        self.setData(probe, MediaItem.ProbeRole)
 
         # Set Qt data role values
-        title = self.title()
         self.setData(title, Qt.DisplayRole)
         self.setData(title, Qt.WhatsThisRole)
         self.setData(title, Qt.StatusTipRole)
 
     def title(self):
-        format_tags = self.probe()["format"]["tags"]
-        try:
-            result = format_tags["title"]
-        except KeyError:
-            path = self.path()
-            log.warning(f"No 'title' tag found. path={path}, format_tags={format_tags}")
-            result = format_tags["title"] = basename(path)
-        finally:
-            return result
+        return self.probe()["format"]["tags"]["title"]
 
     def path(self):
         return self.data(MediaItem.PathRole)
