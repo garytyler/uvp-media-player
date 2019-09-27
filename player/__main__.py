@@ -22,7 +22,7 @@ def main():
 
     initialize_style(qapp)
     qapp.setApplicationDisplayName("Media Player")
-
+    #
     player_win = AppWindow()
     player_win.load_media(sys.argv[1:])
 

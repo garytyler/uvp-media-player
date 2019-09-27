@@ -94,6 +94,9 @@ class ListPlayer(QObject):
         if not index.isValid():
             log.info(f"LOAD MEDIA Index Invalid row={index.row()}")
             return False
+        item = index.model().itemFromIndex(index)
+        if not isinstance(item, MediaItem):
+            return False
         else:
             self._item = index.model().itemFromIndex(index)
             path = self._item.path()

@@ -31,7 +31,7 @@ class FrameSizeManager(QObject):
         config.state.view_scale = scale
         self.update_frame_size(scale=scale)
 
-    def update_frame_size(self, height=None, width=None, scale=None):
+    def update_frame_size(self, width=None, height=None, scale=None):
         """If media arg is None, current media_player media is used"""
         if not height or not width:
             _width, _height = self.get_media_size()

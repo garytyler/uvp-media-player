@@ -50,8 +50,8 @@ class AppWindow(QMainWindow):
     centralwidgetresized = pyqtSignal()
 
     def __init__(self, flags=None):
-
         QMainWindow.__init__(self, flags)
+        self._window_state = None
         self.qapp = QApplication.instance()
         self.media_player = vlcqt.media_player
 
@@ -98,15 +98,15 @@ class AppWindow(QMainWindow):
             viewpoint_mngr=self.viewpoint_mngr,
             listplayer=self.listplayer,
         )
-        vlcqt.media_player_content_frame = MediaPlayerContentFrame(
+        self.media_player_content_frame = MediaPlayerContentFrame(
             main_win=self, frame_size_mngr=self.frame_size_mngr
         )
-        self.setCentralWidget(vlcqt.media_player_content_frame)
+        self.setCentralWidget(self.media_player_content_frame)
         self.zoom_ctrl_mngr = ZoomControlManager(
             main_win=self, frame_size_mngr=self.frame_size_mngr
         )
         self.fullscreen_mngr = FullscreenManager(
-            main_content_frame=vlcqt.media_player_content_frame,
+            main_content_frame=self.media_player_content_frame,
             viewpoint_mngr=self.viewpoint_mngr,
         )
 
@@ -192,7 +192,7 @@ class AppWindow(QMainWindow):
         button_bar_widget.layout().addWidget(
             self.media_toolbar, 0, 2, 1, 1, Qt.AlignRight
         )
-
+        self.button_bar_widget = button_bar_widget
         self.addToolBar(
             Qt.TopToolBarArea,
             ToolBar("Toolbar", parent=self, objects=[button_bar_widget]),
@@ -254,7 +254,7 @@ class AppWindow(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, filters_dock_widget)
         self.tabifyDockWidget(pb_ctrls_dock_widget, filters_dock_widget)
         pb_ctrls_dock_widget.raise_()
-
+        self.pb_ctrls_dock_widget = pb_ctrls_dock_widget
         # Add playlist dock widget
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockable_playlist)
 
@@ -280,25 +280,25 @@ class AppWindow(QMainWindow):
 
     def _get_win_size(self, media_w, media_h, scale) -> Tuple[int, int]:
         """Calculate total window resize values from current compoment displacement"""
-        layout_size = self.layout().totalSizeHint()
-        layout_h = layout_size.height()
+        layout_h = self.layout().totalSizeHint().height()
         return media_w * scale, media_h * scale + layout_h
-        # if media_h:
-        #     return media_w * scale, media_h * scale + layout_h
-        # else:
-        #     return 600 * scale, 360 * scale + layout_h
 
-    def resize_to_media(self, media_h, media_w, scale):
-        win_w, win_h = self._get_win_size(media_h, media_w, scale)
-        targ_w, targ_h = self._screen_size_threshold_filter(win_w, win_h)
-        self.showNormal()
-        self.resize(targ_w, targ_h)
-        self._size_hint = QSize(targ_w, targ_h)
+    def resize_to_media(self, media_w, media_h, scale):
+        playlist_is_visible = self.dockable_playlist.isVisible()
+        if playlist_is_visible:
+            self.dockable_playlist.setVisible(False)
+
+        win_w, win_h = self._get_win_size(media_w, media_h, scale)
+        self.resize(win_w, win_h)
+
+        if playlist_is_visible:
+            self.dockable_playlist.setVisible(True)
 
     def showEvent(self, e):
         scale = self.frame_size_mngr.get_media_scale()
         media_w, media_h = self.frame_size_mngr.get_media_size()
         self.resize_to_media(media_w, media_h, scale)
+        return super().showEvent(e)
 
     def sizeHint(self):
         try:
