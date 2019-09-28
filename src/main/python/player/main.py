@@ -20,19 +20,16 @@ def main():
 
     qt_args = os.environ.get("QT_ARGS", default="").split(",")
 
-    appctxt = ApplicationContext()
-    # qapp = QApplication(qt_args)
+    app_context = ApplicationContext()
 
-    initialize_style(appctxt.app)
-    # qapp.setApplicationDisplayName("Media Player")
+    initialize_style(app_context)
 
     player_win = AppWindow()
     player_win.load_media(sys.argv[1:])
 
     player_win.show()
 
-    # exit_code = qapp.exec_()
-    exit_code = appctxt.app.exec_()
+    exit_code = app_context.app.exec_()
     sys.exit(exit_code)
 
 

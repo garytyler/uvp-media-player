@@ -36,20 +36,21 @@ def dark_palette():
     return p
 
 
-def set_color_theme(name):
-    qapp = QApplication.instance()
-    if name == "light":
-        icons.initialize_icon_defaults_light(app_palette=qapp.palette())
-    elif name == "dark":
+def set_color_theme(app_context):
+    color_theme_name = config.state.color_theme
+    if color_theme_name == "light":
+        app_palette = app_context.app.palette()
+        icons.initialize_icon_defaults_light(app_palette=app_palette)
+    elif color_theme_name == "dark":
         app_palette = dark_palette()
         icons.initialize_icon_defaults_dark(app_palette=app_palette)
-        qapp.setPalette(app_palette)
-        with open("resources/darkstyle.qss") as stylesheet:
-            qapp.setStyleSheet(stylesheet.read())
+        app_context.app.setPalette(app_palette)
+        with open(app_context.get_resource("style/dark.qss")) as stylesheet:
+            app_context.app.setStyleSheet(stylesheet.read())
     else:
         raise ValueError("Available themes are 'light' or 'dark'")
 
 
-def initialize_style(qapp):
-    qapp.setStyle("fusion")
-    set_color_theme(config.state.color_theme)
+def initialize_style(app_context):
+    app_context.app.setStyle("fusion")
+    set_color_theme(app_context)
