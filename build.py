@@ -1,15 +1,11 @@
-from fbs.cmdline import command
+import logging
+import os
+import shutil
+import sys
 from os import path
 
 import fbs
-import logging
-
-from ctypes.util import find_library
-import subprocess as sp
-import imageio_ffmpeg
-import os
-import sys
-import shutil
+from fbs.cmdline import command
 
 
 def _move_libvlc_dlls_to_subdirectory(frozen_dir):
