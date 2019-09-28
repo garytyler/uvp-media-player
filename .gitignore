@@ -10,6 +10,9 @@ tempCodeRunnerFile*
 # Pipenv
 #Pipfile.lock
 
+# fbs
+/target/
+
 # Pytest
 .pytest_cache
 .hypothesis/
@@ -35,6 +38,7 @@ __pycache__/
 # Distribution / packaging
 .Python
 build/
+!src/build/
 develop-eggs/
 dist/
 downloads/
@@ -92,9 +96,6 @@ instance/
 # Sphinx documentation
 docs/_build/
 
-# PyBuilder
-target/
-
 # Jupyter Notebook
 .ipynb_checkpoints
 
@@ -128,3 +129,5 @@ venv.bak/
 
 # mypy
 .mypy_cache/
+
+

@@ -43,7 +43,7 @@ $default_args = @(
     '--windowed'
     '--name=player'
     '--hidden-import=PyQt5.QtNetwork'
-    '--hidden-import=PyQt5.Qtcore'
+    '--hidden-import=PyQt5.QtCore'
     "--paths=${env:PROGRAMFILES}/VideoLAN/VLC/"
     "--add-data=./media/*;media"
     "--add-data=./resources/*;resources"
