@@ -13,6 +13,9 @@ tempCodeRunnerFile*
 # fbs
 /target/
 
+# Apple/Mac
+.DS_Store
+
 # Pytest
 .pytest_cache
 .hypothesis/
