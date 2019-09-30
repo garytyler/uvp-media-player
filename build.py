@@ -3,15 +3,19 @@ import os
 import shutil
 import sys
 from os import path
-from glob import glob
+
 import fbs
 from fbs.cmdline import command
 
 
-def _move_libvlc_dlls_to_subdirectory(frozen_dir):
+def _linux_move_libvlc_dlls_to_subdirectory(frozen_dir):
     """Fix for issue with launching exe from same root as libvlc dll files in linux.
     See: https://github.com/oaubert/python-vlc/issues/104
     """
+    app_name = fbs.SETTINGS["app_name"]
+    project_dir = fbs.SETTINGS["project_dir"]
+    frozen_dir = os.path.join(project_dir, "target", app_name)
+
     libvlc_dll_paths = []
     for file_name in os.listdir(frozen_dir):
         file_path = os.path.abspath(os.path.join(frozen_dir, file_name))
@@ -26,27 +30,21 @@ def _move_libvlc_dlls_to_subdirectory(frozen_dir):
     for file_path in libvlc_dll_paths:
         shutil.move(file_path, libvlc_dir_path)
 
-def _include_tcl_tk_lib_files_in_bundle():
-    """https://github.com/pyinstaller/pyinstaller/issues/3753"""
 
+def _macOS_include_tcl_tk_lib_files_in_bundle():
+    """https://github.com/pyinstaller/pyinstaller/issues/3753"""
     app_name = fbs.SETTINGS["app_name"]
     project_dir = fbs.SETTINGS["project_dir"]
-    bundle_root = os.path.join(project_dir, "target", f"{app_name}.app")
-    bundle_src = os.path.join(bundle_root, "Contents", "MacOS")
-    frozen_dir = os.path.join(project_dir, "target", app_name)
+    app_bundle_root = os.path.join(project_dir, "target", f"{app_name}.app")
+    bundle_src = os.path.join(app_bundle_root, "Contents", "MacOS")
 
     py_ver_major = str(sys.version_info.major)
     py_ver_minor = str(sys.version_info.minor)
-    py_ver_major_minor  = '.'.join((py_ver_major, py_ver_minor))
-    py_ver_dir = '/Library/Frameworks/Python.Framework/Versions'                    
-    py_lib_dir = os.path.join(py_ver_dir, py_ver_major_minor, 'lib')
-    
-    #src_paths = []
-    #for src_name in os.listdir(py_lib_dir):
-    #    if any((src_name.startswith(s) for s in ('tcl', 'tk', 'Tk'))):
-    #        src_paths.append(os.path.join(py_lib_dir, src_name))
-    
-    for dir_name in ('tcl', 'tk'):
+    py_ver_major_minor = ".".join((py_ver_major, py_ver_minor))
+    py_ver_dir = "/Library/Frameworks/Python.Framework/Versions"
+    py_lib_dir = os.path.join(py_ver_dir, py_ver_major_minor, "lib")
+
+    for dir_name in ("tcl", "tk"):
         targ_dir = os.path.join(bundle_src, dir_name)
 
         if os.path.isdir(targ_dir):
@@ -56,12 +54,12 @@ def _include_tcl_tk_lib_files_in_bundle():
 
         os.makedirs(targ_dir)
 
-    for stringstart in ("tcl", "tk", "Tk"):  
+    for stringstart in ("tcl", "tk", "Tk"):
         src_paths = []
         for src_name in os.listdir(py_lib_dir):
-            if src_name.startswith(stringstart) :
+            if src_name.startswith(stringstart):
                 src_paths.append(os.path.join(py_lib_dir, src_name))
-        
+
         targ_dir = os.path.join(bundle_src, stringstart.lower())
         for src_path in src_paths:
             if os.path.isfile(src_path):
@@ -69,7 +67,19 @@ def _include_tcl_tk_lib_files_in_bundle():
                 targ_path = os.path.join(targ_dir, src_name)
                 shutil.copy(src_path, targ_path)
             elif os.path.isdir(src_path):
-                shutil.copytree(src_path, targ_dir) 
+                shutil.copytree(src_path, targ_dir)
+
+
+def _macOS_copy_lib2to3_lib_to_app_bundle():
+    """Copy lib2to3 library files from frozen dir to '.app' bundle"""
+    app_name = fbs.SETTINGS["app_name"]
+    project_dir = fbs.SETTINGS["project_dir"]
+    frozen_dir = os.path.join(project_dir, "target", app_name)
+
+    app_bundle_root = os.path.join(project_dir, "target", f"{app_name}.app")
+    lib2to3_target = os.path.join(app_bundle_root, "Contents", "MacOS", "lib2to3")
+    lib2to3_source = os.path.join(frozen_dir, "lib2to3")
+    shutil.copytree(lib2to3_target, os.path.join(lib2to3_source, lib2to3_target))
 
 
 def _postfreeze():
@@ -82,14 +92,13 @@ def _postfreeze():
     if sys.platform.startswith("win"):
         pass
     elif sys.platform.startswith("darwin"):
-        _include_tcl_tk_lib_files_in_bundle()
-        bundle_root = os.path.join(project_dir, "target", f"{app_name}.app")
-        bundle_src = os.path.join(bundle_root, "Contents", "MacOS")
-        shutil.copytree(os.path.join(frozen_dir, "lib2to3"), os.path.join(bundle_src, "lib2to3"))
+        _macOS_include_tcl_tk_lib_files_in_bundle()
+        _macOS_copy_lib2to3_lib_to_app_bundle()
         pass
     else:
-        _move_libvlc_dlls_to_subdirectory(frozen_dir)
+        _linux_move_libvlc_dlls_to_subdirectory(frozen_dir)
         shutil.copy("/usr/bin/ffprobe", frozen_dir)
+        pass
 
     log.info("Post-freeze complete.")
 
