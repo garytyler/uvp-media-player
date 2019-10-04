@@ -113,15 +113,23 @@ class DockableWidget(QDockWidget):
     def __init__(self, title="", parent=None, widget=None, w_titlebar: bool = False):
         super().__init__(title, parent=parent)
         self._title = title
+        self.has_titlebar = w_titlebar
         self.setContentsMargins(0, 0, 0, 0)
-        self.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Minimum)
         self.setFeatures(QDockWidget.NoDockWidgetFeatures)
+        self.setFeatures(self.features() | QDockWidget.DockWidgetVerticalTitleBar)
+
         if widget:
             self.setWidget(widget)
-        if w_titlebar:
-            self.setup_title_bar()
+
+        if not self.has_titlebar:
+            self.title_bar = QWidget(parent)
+            super().visibilityChanged.connect(self.on_visibilityChanged)
+        elif self.features() & QDockWidget.DockWidgetVerticalTitleBar:
+            self.title_bar = VerticalDockableWidgetTitleBar(self._title, self)
         else:
-            self.setTitleBarWidget(QWidget(None))
+            self.title_bar = HorizontalDockableWidgetTitleBar(self._title, self)
+
+        self.setTitleBarWidget(self.title_bar)
 
     def setup_title_bar(self):
         if self.features() & QDockWidget.DockWidgetVerticalTitleBar:
@@ -130,6 +138,10 @@ class DockableWidget(QDockWidget):
         else:
             self.title_bar = HorizontalDockableWidgetTitleBar(self._title, self)
             self.setTitleBarWidget(self.title_bar)
+
+    def on_visibilityChanged(self, visible):
+        if visible and not self.has_titlebar:
+            super().setTitleBarWidget(self.title_bar)
 
 
 class DockableTabbedWidget(QDockWidget):

@@ -144,14 +144,16 @@ class AppWindow(QMainWindow):
             main_win=self, fullscreen_mngr=self.fullscreen_mngr
         )
         self.vol_popup_bttn = VolumePopupButton(parent=self, vol_mngr=self.vol_mngr)
-        self.pb_ctrls_slider = FrameResPlaybackSlider(
-            parent=self, listplayer=self.listplayer
-        )
+
         self.connect_wide_button_builder = ConnectWideButtonBuilder(
             parent=self, socket=self.socket
         )
 
     def create_gui_layout(self):
+        # self.setDockOptions(DockOption.AllowNestedDocks | DockOption.AllowTabbedDocks)
+        self.setDockNestingEnabled(True)
+        # self.setUnifiedTitleAndToolBarOnMac(False)
+        # self.setTabbedDock(True)
         self.media_toolbar = ToolBar(
             title="Media",
             objects=[self.open_media_menu, ToolBar.Separator, self.toggle_playlist_act],
@@ -179,41 +181,51 @@ class AppWindow(QMainWindow):
         )
         self.connect_toolbar.setObjectName("borderedbuttons")
 
-        button_bar_widget = QWidget(self)
-        button_bar_widget.setContentsMargins(0, 0, 0, 0)
-        button_bar_widget.setLayout(QGridLayout(button_bar_widget))
-        button_bar_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        button_bar_widget.layout().addWidget(
+        self.button_bar_widget = QWidget(self)
+        self.button_bar_widget.setContentsMargins(0, 0, 0, 0)
+        self.button_bar_widget.setLayout(QGridLayout(self.button_bar_widget))
+        self.button_bar_widget.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding
+        )
+        self.button_bar_widget.layout().addWidget(
             self.view_toolbar, 0, 0, 1, 1, Qt.AlignLeft
         )
-        button_bar_widget.layout().addWidget(
+        self.button_bar_widget.layout().addWidget(
             self.connect_toolbar, 0, 1, 1, 1, Qt.AlignCenter
         )
-        button_bar_widget.layout().addWidget(
+        self.button_bar_widget.layout().addWidget(
             self.media_toolbar, 0, 2, 1, 1, Qt.AlignRight
         )
-        self.button_bar_widget = button_bar_widget
         self.addToolBar(
             Qt.TopToolBarArea,
-            ToolBar("Toolbar", parent=self, objects=[button_bar_widget]),
+            ToolBar("Toolbar", parent=self, objects=[self.button_bar_widget]),
         )
 
-        self.pb_ctrls_left_toolbar = ToolBar(
+        self.playback_ctrls_slider = FrameResPlaybackSlider(
+            parent=self, listplayer=self.listplayer
+        )
+        self.playback_slider_widget = QWidget(self)
+        self.playback_slider_widget.setContentsMargins(0, 0, 0, 0)
+        self.playback_slider_widget.setLayout(QGridLayout(self.playback_slider_widget))
+        self.playback_slider_widget.layout().addWidget(
+            self.playback_ctrls_slider, 0, 0, 1, -1, Qt.AlignTop
+        )
+        self.playback_bttns_left = ToolBar(
             title="Left Control",
             objects=[],
             collapsible=False,
             parent=self,
             icon_size=32,
         )
-        self.pb_ctrls_middle_toolbar = ToolBar(
+        self.playback_bttns_middle = ToolBar(
             title="Playback Controls",
             objects=self.play_actions.actions(),
             parent=self,
             collapsible=False,
             icon_size=60,
         )
-        self.pb_ctrls_middle_toolbar.setObjectName("mainplaybuttons")
-        self.pb_ctrls_right_toolbar = ToolBar(
+        self.playback_bttns_middle.setObjectName("mainplaybuttons")
+        self.playback_bttns_right = ToolBar(
             title="Right Controls",
             objects=[self.playback_mode_act, self.vol_popup_bttn],
             collapsible=False,
@@ -221,42 +233,31 @@ class AppWindow(QMainWindow):
             icon_size=32,
         )
 
-        # Create filter controls panel
-        filters_widget = QWidget(self)
-        filters_widget.setContentsMargins(0, 0, 0, 0)
-        filters_widget.setLayout(QHBoxLayout(filters_widget))
-        filters_dock_widget = DockableWidget(
-            title="Filters", parent=self, widget=filters_widget, w_titlebar=False
+        self.playback_ctrls_widget = QWidget(self)
+        self.playback_ctrls_widget.setContentsMargins(0, 0, 0, 0)
+        self.playback_ctrls_widget.setLayout(QGridLayout(self.playback_ctrls_widget))
+        self.playback_ctrls_widget.layout().addWidget(
+            self.playback_slider_widget, 0, 0, 1, -1, Qt.AlignTop
         )
-        filters_dock_widget.setWidget(filters_widget)
-
-        pb_ctrls_widget = QWidget(self)
-        pb_ctrls_widget.setContentsMargins(0, 0, 0, 0)
-        pb_ctrls_widget.setLayout(QGridLayout(pb_ctrls_widget))
-        pb_ctrls_widget.layout().addWidget(self.pb_ctrls_slider, 1, 0, 1, -1)
-        pb_ctrls_widget.layout().addWidget(
-            self.pb_ctrls_left_toolbar, 2, 0, 1, 1, Qt.AlignJustify
+        self.playback_ctrls_widget.layout().addWidget(
+            self.playback_bttns_left, 1, 0, 1, 1, Qt.AlignHCenter | Qt.AlignVCenter
         )
-        pb_ctrls_widget.layout().addWidget(
-            self.pb_ctrls_middle_toolbar, 2, 1, 1, 1, Qt.AlignHCenter
+        self.playback_ctrls_widget.layout().addWidget(
+            self.playback_bttns_middle, 1, 1, 1, 1, Qt.AlignHCenter | Qt.AlignVCenter
         )
-        pb_ctrls_widget.layout().addWidget(
-            self.pb_ctrls_right_toolbar, 2, 2, 1, 1, Qt.AlignJustify
+        self.playback_ctrls_widget.layout().addWidget(
+            self.playback_bttns_right, 1, 2, 1, 1, Qt.AlignJustify | Qt.AlignVCenter
         )
 
-        pb_ctrls_dock_widget = DockableWidget(
-            title="Playback", parent=self, widget=pb_ctrls_widget, w_titlebar=False
+        self.playback_ctrls_dock_widget = DockableWidget(
+            title="Playback",
+            parent=self,
+            widget=self.playback_ctrls_widget,
+            w_titlebar=False,
         )
-        pb_ctrls_dock_widget.setWidget(pb_ctrls_widget)
 
-        # Add lower dock widgets
-        self.addDockWidget(Qt.BottomDockWidgetArea, pb_ctrls_dock_widget)
-        self.addDockWidget(Qt.BottomDockWidgetArea, filters_dock_widget)
-        self.tabifyDockWidget(pb_ctrls_dock_widget, filters_dock_widget)
-        pb_ctrls_dock_widget.raise_()
-        self.pb_ctrls_dock_widget = pb_ctrls_dock_widget
-        # Add playlist dock widget
         self.addDockWidget(Qt.RightDockWidgetArea, self.dockable_playlist)
+        self.addDockWidget(Qt.BottomDockWidgetArea, self.playback_ctrls_dock_widget)
 
     def create_window_shortcuts(self):
         self.ctrl_w = QShortcut("Ctrl+W", self, self.close)
