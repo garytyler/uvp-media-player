@@ -8,7 +8,7 @@ import fbs
 from fbs.cmdline import command
 
 
-def _linux_move_libvlc_dlls_to_subdirectory(frozen_dir):
+def _linux_move_libvlc_dlls_to_subdirectory():
     """Fix for issue with launching exe from same root as libvlc dll files in linux.
     See: https://github.com/oaubert/python-vlc/issues/104
     """
@@ -46,13 +46,10 @@ def _macOS_include_tcl_tk_lib_files_in_bundle():
 
     for dir_name in ("tcl", "tk"):
         targ_dir = os.path.join(bundle_src, dir_name)
-
         if os.path.isdir(targ_dir):
             shutil.rmtree(targ_dir)
         elif os.path.isfile(targ_dir):
             os.remove(targ_dir)
-
-        os.makedirs(targ_dir)
 
     for stringstart in ("tcl", "tk", "Tk"):
         src_paths = []
@@ -62,12 +59,12 @@ def _macOS_include_tcl_tk_lib_files_in_bundle():
 
         targ_dir = os.path.join(bundle_src, stringstart.lower())
         for src_path in src_paths:
+            src_name = os.path.basename(src_path)
+            targ_path = os.path.join(targ_dir, src_name)
             if os.path.isfile(src_path):
-                src_name = os.path.basename(src_path)
-                targ_path = os.path.join(targ_dir, src_name)
                 shutil.copy(src_path, targ_path)
             elif os.path.isdir(src_path):
-                shutil.copytree(src_path, targ_dir)
+                shutil.copytree(src_path, targ_path)
 
 
 def _macOS_copy_lib2to3_lib_to_app_bundle():
@@ -79,7 +76,9 @@ def _macOS_copy_lib2to3_lib_to_app_bundle():
     app_bundle_root = os.path.join(project_dir, "target", f"{app_name}.app")
     lib2to3_target = os.path.join(app_bundle_root, "Contents", "MacOS", "lib2to3")
     lib2to3_source = os.path.join(frozen_dir, "lib2to3")
-    shutil.copytree(lib2to3_target, os.path.join(lib2to3_source, lib2to3_target))
+    if os.path.isdir(lib2to3_target):
+        shutil.rmtree(lib2to3_target)
+    shutil.copytree(lib2to3_source, lib2to3_target)
 
 
 def _postfreeze():
@@ -94,13 +93,12 @@ def _postfreeze():
     elif sys.platform.startswith("darwin"):
         _macOS_include_tcl_tk_lib_files_in_bundle()
         _macOS_copy_lib2to3_lib_to_app_bundle()
+        shutil.copy("/usr/local/bin/ffmpeg", frozen_dir)
         pass
     else:
-        _linux_move_libvlc_dlls_to_subdirectory(frozen_dir)
+        _linux_move_libvlc_dlls_to_subdirectory()
         shutil.copy("/usr/bin/ffprobe", frozen_dir)
         pass
-
-    log.info("Post-freeze complete.")
 
 
 @command
