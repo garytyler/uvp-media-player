@@ -38,7 +38,8 @@ class ListPlayer(QObject):
     def _handle_media_finished(self):
         """Perform next expected task when media is finished."""
         curr_index = self._item.index()
-        next_index = curr_index.siblingAtRow(self._item.row() + 1)
+        curr_row = self._item.row()
+        next_index = curr_index.sibling(curr_row, curr_row + 1)
         loop_mode = config.state.loop_mode
         if loop_mode == "one" and curr_index.isValid():
             self.mp.stop()
@@ -61,12 +62,12 @@ class ListPlayer(QObject):
             if self._item.index().isValid():
                 self.mp.play()
         elif loop_mode == "all":
-            first_item_index = self._item.index().siblingAtRow(0)
+            first_item_index = self._item.index().sibling(0, 0)
             self.load_media(first_item_index, play=True)
             self.mp.play()
 
     def skip_previous(self):
-        prev_index = self._item.index().siblingAtRow(self._item.row() - 1)
+        prev_index = self._item.index().sibling(self._item.row() - 1, 0)
         is_playing = self.mp.is_playing()
         if prev_index.isValid():
             self._item = self._item.model().itemFromIndex(prev_index)
@@ -79,7 +80,7 @@ class ListPlayer(QObject):
 
     def skip_next(self):
         is_playing = self.mp.is_playing()
-        next_index = self._item.index().siblingAtRow(self._item.row() + 1)
+        next_index = self._item.index().sibling(self._item.row() + 1, 0)
         if next_index.isValid():
             self._item = self._item.model().itemFromIndex(next_index)
             self.load_media(next_index)
@@ -120,17 +121,17 @@ class ListPlayer(QObject):
 
         # Get indexes after current index
         indexes = []
-        index = curr_index.siblingAtRow(self._item.row() + 1)
+        index = curr_index.sibling(self._item.row() + 1, 0)
         while index.isValid():
             indexes.append(index)
-            index = index.siblingAtRow(index.row() + 1)
+            index = index.sibling(index.row() + 1, 0)
 
         # If loop mode is 'all', get indexes before current index
         if loop_mode == "all":
-            index = curr_index.siblingAtRow(0)
+            index = curr_index.sibling(0, 0)
             while index != curr_index:
                 indexes.append(index)
-                index = index.siblingAtRow(index.row() + 1)
+                index = index.sibling(index.row() + 1, 0)
 
         # Look for a valid item in collected indexes and load
         for index in indexes:

@@ -1,5 +1,6 @@
-from ctypes.util import find_library
 import logging
+from ctypes.util import find_library
+
 import vlc
 
 log = logging.getLogger(__name__)
