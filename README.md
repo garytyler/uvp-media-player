@@ -10,9 +10,12 @@ As with any `pyinstaller` build, the build process must be run using the targete
 
 - Windows 10
 - [VLC 3.0.8](https://www.videolan.org/vlc/)
-- [Python 3.7](https://www.python.org/downloads/)
+- [ffmpeg](https://ffmpeg.org/)
+- [Python 3.6](https://www.python.org/downloads/)
 - [pip](https://pip.readthedocs.io/en/stable/installing/)
 - [Pipenv](https://pipenv.readthedocs.io/en/latest/install/#installing-pipenv) (to verify dependency hashes)
+
+NOTE: If using `pipenv`, you will likely encounter [pyinstaller issue #4064](https://github.com/pyinstaller/pyinstaller/issues/4064) with an error like `ImportError: cannot import 'distutils'` or similar when launching the application. A simple workaround is to rollback `virtualenv` to version 16.1 (`virtualenv==16.1`), in both your system `pip` and your virtual environment `pip`.
 
 ### Options
 
