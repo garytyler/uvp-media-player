@@ -4,7 +4,6 @@ from os import getenv, path
 
 log = logging.getLogger(__name__)
 
-
 _CONFIG_FILE_PATH = getenv("VR_PLAYER_CONFIG", ".user_config")
 
 
@@ -49,11 +48,6 @@ class _State:
         # Set values from env vars to local super var
         # Do not call self.__setattr__
         super(_State, self).__setattr__("_state", _state)
-
-        # Create empty config file if one does not exist
-        if not path.isfile(_CONFIG_FILE_PATH):
-            with open(_CONFIG_FILE_PATH, "w") as f:
-                f.write("{}")
 
     def load(self):
         try:

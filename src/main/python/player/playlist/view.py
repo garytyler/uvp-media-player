@@ -211,15 +211,15 @@ class PlaylistWidget(QWidget):
         self.setLayout(QVBoxLayout())
         self.layout().addWidget(self.view)
 
-    def add_media(self, paths):
-        paths = files.get_media_paths(paths)
-        if not paths:
-            log.error(f"No media paths found in {paths}")
-            return None
+    def add_media(self, paths=[]):
+        media_paths = files.get_media_paths(paths)
+        if not media_paths:
+            log.error(f"No media paths found in {media_paths}")
+            return
 
         model = self.view.model()
-        for path in paths:
-            item = MediaItem(path)
+        for media_path in media_paths:
+            item = MediaItem(media_path)
             model.appendRow(item)
 
         first_item = self.view.model().item(0)

@@ -42,8 +42,6 @@ To debug the build, run the build script with `--console` to open a console to m
 
 For logging, use [coloredlogs environment variables](https://coloredlogs.readthedocs.io/en/latest/api.html#environment-variables)
 
-#### `QT_ARGS`
-
 #### `VLC_ARGS`
 
 #### `VR_PLAYER_LOG_FILE`

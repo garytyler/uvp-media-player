@@ -13,11 +13,11 @@ log = logging.getLogger(__name__)
 
 def get_file_paths(paths: list):
     file_paths = []
-    for p in paths:
-        if os.path.isfile(p):
-            file_paths.append(p)
-        elif os.path.isdir(p):
-            for i in os.scandir(p):
+    for path in paths:
+        if os.path.isfile(path):
+            file_paths.append(path)
+        elif os.path.isdir(path):
+            for i in os.scandir(path):
                 if i.is_file():
                     file_paths.append(i.path)
         else:
@@ -53,24 +53,24 @@ def get_media_paths(paths):
         paths = [paths]
 
     file_paths = []
-    for p in paths:
-        if not os.path.exists(p):
-            log.error(f"PATH NOT FOUND path={p}")
-        if os.path.isfile(p):
-            file_paths.append(p)
-            continue
-        for i in os.scandir(p):
-            if i.is_file():
-                file_paths.append(i.path)
+    for path in paths:
+        if not os.path.exists(path):
+            log.error(f"PATH NOT FOUND path={path}")
+        elif os.path.isfile(path):
+            file_paths.append(path)
+        elif os.path.isdir(path):
+            for i in os.scandir(path):
+                if i.is_file():
+                    file_paths.append(i.path)
 
     media_paths = []
-    for p in file_paths:
-        _media = vlcqt.Media(p)
+    for path in file_paths:
+        _media = vlcqt.Media(path)
         _media.parse()
         iter_tracks = _media.tracks_get()
         if not iter_tracks:
             continue
-        media_paths.append(os.path.abspath(p))
+        media_paths.append(os.path.abspath(path))
         del _media
 
     return media_paths

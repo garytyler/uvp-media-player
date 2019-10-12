@@ -12,15 +12,16 @@ from player.window import AppWindow
 
 
 def main():
+    app_context = ApplicationContext()
+
+    # Set working dir to user home after context init and before any i/o operations
+    os.chdir(os.path.expanduser("~"))
+
     initialize_logging()
     config.state.load()
 
     vlc_args = os.environ.get("VLC_ARGS", default="").split(",")
     vlcqt.Instance(vlc_args)
-
-    qt_args = os.environ.get("QT_ARGS", default="").split(",")
-
-    app_context = ApplicationContext()
 
     initialize_style(app_context)
 
