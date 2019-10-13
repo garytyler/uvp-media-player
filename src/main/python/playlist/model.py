@@ -5,7 +5,7 @@ from ffmpeg import probe as ffmpeg_probe
 from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 
-from ..util import config
+from util import config
 
 log = logging.getLogger(__name__)
 

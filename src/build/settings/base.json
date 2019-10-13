@@ -1,7 +1,11 @@
 {
   "app_name": "SeeVR-Player",
   "author": "Gary Tyler",
-  "main_module": "src/main/python/player/main.py",
+  "main_module": "src/main/python/main.py",
   "version": "0.0.0",
-  "hidden_imports": ["PyQt5.QtNetwork", "PyQt5.QtCore", "distutils"]
+  "hidden_imports": [
+    "PyQt5.QtNetwork",
+    "PyQt5.QtCore",
+    "distutils"
+  ]
 }

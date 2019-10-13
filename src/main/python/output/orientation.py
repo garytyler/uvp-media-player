@@ -6,9 +6,9 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QStatusBar
 
-from .. import vlcqt
-from ..gui import fonts, icons
-from .status import IconStatusLabel
+import vlcqt
+from gui import fonts, icons
+from output.status import IconStatusLabel
 
 log = logging.getLogger(__name__)
 

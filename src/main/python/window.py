@@ -6,7 +6,6 @@ from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QApplication,
     QGridLayout,
-    QHBoxLayout,
     QMainWindow,
     QShortcut,
     QSizePolicy,
@@ -14,33 +13,33 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from . import vlcqt
-from .base.docking import DockableWidget, ToolBar
-from .comm.client import IOController
-from .comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
-from .comm.socks import AutoReconnectSocket
-from .gui.ontop import AlwaysOnTopAction
-from .output.frame import MediaPlayerContentFrame
-from .output.fullscreen import FullscreenManager, FullscreenMenu, FullscreenStatusLabel
-from .output.orientation import OrientationStatusLabel, ViewpointManager
-from .output.playback import (
+import vlcqt
+from base.docking import DockableWidget, ToolBar
+from comm.client import IOController
+from comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
+from comm.socks import AutoReconnectSocket
+from gui.ontop import AlwaysOnTopAction
+from output.frame import MediaPlayerContentFrame
+from output.fullscreen import FullscreenManager, FullscreenMenu, FullscreenStatusLabel
+from output.orientation import OrientationStatusLabel, ViewpointManager
+from output.playback import (
     FrameResPlaybackSlider,
     LoopModeManager,
     PlayActions,
     PlaybackModeAction,
 )
-from .output.size import (
+from output.size import (
     FrameSizeManager,
     FrameZoomMenu,
     ZoomControlManager,
     ZoomInAction,
     ZoomOutAction,
 )
-from .output.sound import VolumeManager, VolumePopupButton
-from .playlist.files import OpenMediaMenu
-from .playlist.player import ListPlayer
-from .playlist.view import DockablePlaylist, PlaylistWidget
-from .util.settings import OpenSettingsAction
+from output.sound import VolumeManager, VolumePopupButton
+from playlist.files import OpenMediaMenu
+from playlist.player import ListPlayer
+from playlist.view import DockablePlaylist, PlaylistWidget
+from util.settings import OpenSettingsAction
 
 log = logging.getLogger(__name__)
 

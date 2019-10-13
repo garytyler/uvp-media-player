@@ -9,8 +9,8 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
 )
 
-from ..gui import icons, ontop
-from . import config
+from gui import icons, ontop
+from util import config
 
 
 class SettingsDialog(QDialog):

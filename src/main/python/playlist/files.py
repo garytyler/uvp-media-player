@@ -5,8 +5,8 @@ from typing import Union
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QFileDialog, QMenu
 
-from .. import vlcqt
-from ..gui import icons
+import vlcqt
+from gui import icons
 
 log = logging.getLogger(__name__)
 
@@ -21,7 +21,7 @@ def get_file_paths(paths: list):
                 if i.is_file():
                     file_paths.append(i.path)
         else:
-            log.warning(f"Path does not exist: {p}")
+            log.warning(f"Path does not exist: {path}")
     return file_paths
 
 

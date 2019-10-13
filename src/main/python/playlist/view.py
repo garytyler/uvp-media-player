@@ -14,11 +14,11 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from ..base.docking import DockableWidget
-from ..base.popup import PopupWindowAction, PopupWindowWidget
-from ..gui import icons
-from . import files
-from .model import MediaItem, PlaylistModel
+from base.docking import DockableWidget
+from base.popup import PopupWindowAction, PopupWindowWidget
+from gui import icons
+from playlist import files
+from playlist.model import MediaItem, PlaylistModel
 
 log = logging.getLogger(__name__)
 

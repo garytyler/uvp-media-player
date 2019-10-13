@@ -4,8 +4,8 @@ from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup, QApplication, QMenu
 
-from ..gui import icons
-from ..output.status import IconStatusLabel
+from gui import icons
+from output.status import IconStatusLabel
 
 log = logging.getLogger(__name__)
 

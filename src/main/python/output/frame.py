@@ -4,7 +4,7 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QSplitter, QStackedLayout
 
-from .. import vlcqt
+import vlcqt
 
 log = logging.getLogger(__name__)
 

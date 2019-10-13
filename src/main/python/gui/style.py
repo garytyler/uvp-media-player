@@ -1,8 +1,7 @@
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import QApplication
 
-from ..util import config
-from . import icons
+from gui import icons
+from util import config
 
 
 def dark_palette():

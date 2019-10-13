@@ -1,6 +1,6 @@
 import json
 import logging
-from os import getenv, path
+from os import getenv
 
 log = logging.getLogger(__name__)
 

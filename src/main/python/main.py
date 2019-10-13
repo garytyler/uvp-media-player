@@ -2,13 +2,12 @@ import os
 import sys
 
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
-from PyQt5.QtWidgets import QApplication
 
-from player import vlcqt
-from player.gui.style import initialize_style
-from player.util import config
-from player.util.logs import initialize_logging
-from player.window import AppWindow
+import vlcqt
+from gui.style import initialize_style
+from util import config
+from util.logs import initialize_logging
+from window import AppWindow
 
 
 def main():

@@ -2,9 +2,9 @@ import logging
 
 from PyQt5.QtCore import QModelIndex, QObject, pyqtSignal, pyqtSlot
 
-from .. import vlcqt
-from ..util import config
-from .model import MediaItem
+import vlcqt
+from playlist.model import MediaItem
+from util import config
 
 log = logging.getLogger(__name__)
 

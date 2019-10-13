@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QFrame, QWidget
 
-from ..gui import ontop
+from gui import ontop
 
 
 class PopupControlWidget(QFrame):
@@ -34,8 +34,8 @@ class PopupWindowWidget(QWidget):
         if self.position:
             self.move(self.position)
 
-        is_always_on_top = window.get_always_on_top(self.main_win)
-        window.set_always_on_top(self, is_always_on_top)
+        is_always_on_top = ontop.get_always_on_top(self.main_win)
+        ontop.set_always_on_top(self, is_always_on_top)
 
         self.raise_()
         self.hiddenchanged.emit(True)
