@@ -23,3 +23,7 @@ QtAwesome = "*"
 
 [requires]
 python_version = "3.6"
+
+[scripts]
+freeze = "python build.py freeze"
+installer = "python build.py installer"

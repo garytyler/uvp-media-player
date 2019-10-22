@@ -1,122 +1,134 @@
-import logging
 import os
 import shutil
 import sys
-from os import path
+from contextlib import contextmanager
+from ctypes.util import find_library
+from glob import glob
+from importlib import import_module
+from os import environ, remove
+from os.path import basename, dirname, isdir, isfile, join
 
 import fbs
 from fbs.cmdline import command
-
-
-def _linux_move_libvlc_dlls_to_subdirectory():
-    """Fix for issue with launching exe from same root as libvlc dll files in linux.
-    See: https://github.com/oaubert/python-vlc/issues/104
-    """
-    app_name = fbs.SETTINGS["app_name"]
-    project_dir = fbs.SETTINGS["project_dir"]
-    frozen_dir = os.path.join(project_dir, "target", app_name)
-
-    libvlc_dll_paths = []
-    for file_name in os.listdir(frozen_dir):
-        file_path = os.path.abspath(os.path.join(frozen_dir, file_name))
-        if os.path.isfile(file_path) and file_name.startswith("libvlc"):
-            libvlc_dll_paths.append(file_path)
-
-    if not libvlc_dll_paths:
-        raise FileNotFoundError("libvlc dlls not found in target dir")
-
-    libvlc_dir_path = os.path.join(frozen_dir, "libvlc")
-    os.mkdir(libvlc_dir_path)
-    for file_path in libvlc_dll_paths:
-        shutil.move(file_path, libvlc_dir_path)
+from fbs_runtime import platform
 
 
 def _macOS_include_tcl_tk_lib_files_in_bundle():
     """https://github.com/pyinstaller/pyinstaller/issues/3753"""
     app_name = fbs.SETTINGS["app_name"]
     project_dir = fbs.SETTINGS["project_dir"]
-    app_bundle_root = os.path.join(project_dir, "target", f"{app_name}.app")
-    bundle_src = os.path.join(app_bundle_root, "Contents", "MacOS")
+
+    freeze_prep_dir = join(project_dir, "target", app_name)
+    freeze_dir = fbs.SETTINGS["freeze_dir"]
+    bundle_src = join(freeze_dir, "Contents", "MacOS")
 
     py_ver_major = str(sys.version_info.major)
     py_ver_minor = str(sys.version_info.minor)
     py_ver_major_minor = ".".join((py_ver_major, py_ver_minor))
     py_ver_dir = "/Library/Frameworks/Python.Framework/Versions"
-    py_lib_dir = os.path.join(py_ver_dir, py_ver_major_minor, "lib")
+    py_lib_dir = join(py_ver_dir, py_ver_major_minor, "lib")
 
     for dir_name in ("tcl", "tk"):
-        targ_dir = os.path.join(bundle_src, dir_name)
-        if os.path.isdir(targ_dir):
-            shutil.rmtree(targ_dir)
-        elif os.path.isfile(targ_dir):
-            os.remove(targ_dir)
+        for targ_root in (freeze_prep_dir, bundle_src):
+            targ_dir = join(targ_root, dir_name)
 
-    for stringstart in ("tcl", "tk", "Tk"):
+        if isdir(targ_dir):
+            shutil.rmtree(targ_dir)
+        elif isfile(targ_dir):
+            remove(targ_dir)
+
+    for name_start in ("tcl", "tk"):
         src_paths = []
         for src_name in os.listdir(py_lib_dir):
-            if src_name.startswith(stringstart):
-                src_paths.append(os.path.join(py_lib_dir, src_name))
+            if src_name.startswith(name_start):
+                src_paths.append(join(py_lib_dir, src_name))
 
-        targ_dir = os.path.join(bundle_src, stringstart.lower())
-        for src_path in src_paths:
-            src_name = os.path.basename(src_path)
-            targ_path = os.path.join(targ_dir, src_name)
-            if os.path.isfile(src_path):
-                shutil.copy(src_path, targ_path)
-            elif os.path.isdir(src_path):
-                shutil.copytree(src_path, targ_path)
+        for targ_root in (freeze_prep_dir, bundle_src):
+            targ_dir = join(targ_root, name_start.lower())
 
-
-def _macOS_copy_lib2to3_lib_to_app_bundle():
-    """Copy lib2to3 library files from frozen dir to '.app' bundle"""
-    app_name = fbs.SETTINGS["app_name"]
-    project_dir = fbs.SETTINGS["project_dir"]
-    frozen_dir = os.path.join(project_dir, "target", app_name)
-
-    app_bundle_root = os.path.join(project_dir, "target", f"{app_name}.app")
-    lib2to3_target = os.path.join(app_bundle_root, "Contents", "MacOS", "lib2to3")
-    lib2to3_source = os.path.join(frozen_dir, "lib2to3")
-    if os.path.isdir(lib2to3_target):
-        shutil.rmtree(lib2to3_target)
-    shutil.copytree(lib2to3_source, lib2to3_target)
-
-
-def _postfreeze():
-    """Make any necessary modifications to the frozen target"""
-    log = logging.getLogger()
-    app_name = fbs.SETTINGS["app_name"]
-    project_dir = fbs.SETTINGS["project_dir"]
-    frozen_dir = os.path.join(project_dir, "target", app_name)
-
-    if sys.platform.startswith("win"):
-        pass
-    elif sys.platform.startswith("darwin"):
-        _macOS_include_tcl_tk_lib_files_in_bundle()
-        _macOS_copy_lib2to3_lib_to_app_bundle()
-        shutil.copy("/usr/local/bin/ffmpeg", frozen_dir)
-        pass
-    else:
-        _linux_move_libvlc_dlls_to_subdirectory()
-        shutil.copy("/usr/bin/ffprobe", frozen_dir)
-        pass
+            for src_path in src_paths:
+                if isfile(src_path):
+                    src_name = basename(src_path)
+                    targ_path = join(targ_dir, src_name)
+                    shutil.copy(src_path, targ_path)
+                elif isdir(src_path):
+                    src_name = basename(src_path)
+                    targ_path = join(targ_dir, src_name)
+                    shutil.copytree(src_path, targ_path)
 
 
 @command
-def postfreeze():
-    fbs.init(project_dir=path.dirname(__file__))
-    _postfreeze()
+def pre_freeze():
+    freeze_env = {}
+    if platform.is_windows():
+        vlc = import_module("vlc")
+        app_files_root = vlc.plugin_path
+        freeze_env["PYTHON_VLC_LIB_PATH"] = join(app_files_root, vlc.dll._name)
+        freeze_env["PYTHON_VLC_MODULE_PATH"] = join(app_files_root, "plugins")
+    elif platform.is_ubuntu():
+        os_lib_dir = "/usr/lib/x86_64-linux-gnu"
+        # python-vlc on linux doesn't need to know where the libvlc dlls or vlc shared  # libraries are, but we do, so we define them using the optional environment
+        # variables that are checked by python-vlc on module import.
+        freeze_env["PYTHON_VLC_LIB_PATH"] = join(os_lib_dir, find_library("vlc"))
+        freeze_env["PYTHON_VLC_MODULE_PATH"] = join(os_lib_dir, "vlc", "plugins")
+    elif platform.is_mac():
+        vlc = import_module("vlc")
+        freeze_env["PYTHON_VLC_LIB_PATH"] = vlc.dll._name
+        freeze_env["PYTHON_VLC_MODULE_PATH"] = vlc.plugin_path
+    else:
+        print("Platform unsupported!")
+
+    freeze_env["FFMPEG_LIB_PATH"] = environ["FFMPEG_LIB_PATH"]
+
+    print(f"Setting {len(freeze_env)} build environment variables...")
+    for key, val in freeze_env.items():
+        val = environ.setdefault(key, val)
+        print(f"  {key}={val}")
 
 
-def post_command():
-    command = sys.argv[1]
-    if command == "freeze":
-        _postfreeze()
+@command
+def post_freeze():
+    freeze_dir = fbs.SETTINGS["freeze_dir"]
+    if platform.is_mac():
+        resource_dir = join(freeze_dir, "Contents", "Resources")
+    else:
+        resource_dir = join(freeze_dir)
+
+    # Get shared library source paths
+    plugin_source_path = environ["PYTHON_VLC_MODULE_PATH"]
+    libvlc_source_path = environ["PYTHON_VLC_LIB_PATH"]
+
+    # Copy libvlc libraries
+    os.makedirs(join(resource_dir, "vlc"), exist_ok=True)
+    for i in glob(join(dirname(libvlc_source_path), "libvlc*")):
+        shutil.copy(i, join(resource_dir, "vlc"))
+
+    # Copy plugin libraries
+    shutil.copytree(plugin_source_path, join(join(resource_dir, "vlc"), "plugins"))
+
+    # Copy ffprobe library
+    shutil.copy(environ["FFMPEG_LIB_PATH"], join(resource_dir))
+
+    if platform.is_mac():
+        _macOS_include_tcl_tk_lib_files_in_bundle()
 
 
-def main():
-    fbs.cmdline.main(project_dir=path.dirname(__file__))
-    post_command()
+@contextmanager
+def freeze_context():
+    pre_freeze()
+    print("Freezing...")
+    yield
+    post_freeze()
+    print("Done freezing.")
 
+
+_COMMAND_CONTEXTS = {"freeze": freeze_context}
 
 if __name__ == "__main__":
-    main()
+    project_dir = dirname(__file__)
+    command_context = _COMMAND_CONTEXTS.get(sys.argv[1])
+    if command_context:
+        with command_context():
+            fbs.cmdline.main(project_dir=project_dir)
+    else:
+        fbs.cmdline.main(project_dir=project_dir)
