@@ -1,3 +1,4 @@
+import logging
 import os
 import shutil
 import sys
@@ -6,11 +7,13 @@ from ctypes.util import find_library
 from glob import glob
 from importlib import import_module
 from os import environ, remove
-from os.path import basename, dirname, isdir, isfile, join
+from os.path import basename, dirname, exists, isdir, isfile, join
 
 import fbs
 from fbs.cmdline import command
 from fbs_runtime import platform
+
+log = logging.getLogger(__name__)
 
 
 def _macOS_include_tcl_tk_lib_files_in_bundle():
@@ -63,7 +66,8 @@ def pre_freeze():
     if platform.is_windows():
         vlc = import_module("vlc")
         app_files_root = vlc.plugin_path
-        freeze_env["PYTHON_VLC_LIB_PATH"] = join(app_files_root, vlc.dll._name)
+        lib_path = "libvlc.dll"
+        freeze_env["PYTHON_VLC_LIB_PATH"] = join(app_files_root, lib_path)
         freeze_env["PYTHON_VLC_MODULE_PATH"] = join(app_files_root, "plugins")
     elif platform.is_ubuntu():
         os_lib_dir = "/usr/lib/x86_64-linux-gnu"
@@ -76,14 +80,19 @@ def pre_freeze():
         freeze_env["PYTHON_VLC_LIB_PATH"] = vlc.dll._name
         freeze_env["PYTHON_VLC_MODULE_PATH"] = vlc.plugin_path
     else:
-        print("Platform unsupported!")
+        log.info("Platform unsupported!")
 
     freeze_env["FFMPEG_LIB_PATH"] = environ["FFMPEG_LIB_PATH"]
 
-    print(f"Setting {len(freeze_env)} build environment variables...")
-    for key, val in freeze_env.items():
-        val = environ.setdefault(key, val)
-        print(f"  {key}={val}")
+    for name, value in freeze_env.items():
+        existing_value = environ.get(name)
+        if existing_value:
+            log.debug(f"Required env. var. already set - name={name}, value={value}")
+        else:
+            environ[name] = value
+            log.debug(f"Required env. var. set to default - name={name}, value={value}")
+        if not exists(value):
+            log.warning(f"path does not exist path={value}")
 
 
 @command
@@ -115,11 +124,13 @@ def post_freeze():
 
 @contextmanager
 def freeze_context():
+    log.info("Build step: Pre-freeze...")
     pre_freeze()
-    print("Freezing...")
+    log.info("Build step: Freeze...")
     yield
+    log.info("Build step: Post-freeze...")
     post_freeze()
-    print("Done freezing.")
+    log.info("Build step: Freeze done")
 
 
 _COMMAND_CONTEXTS = {"freeze": freeze_context}

@@ -8,7 +8,7 @@ tempCodeRunnerFile*
 .vscode
 
 # Pipenv
-#Pipfile.lock
+Pipfile.lock
 
 # fbs
 /target/
