@@ -1,10 +1,8 @@
 import logging
 
-import vlc
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QSlider
 
-import vlcqt
 from gui import icons
 from util import config
 
@@ -66,13 +64,15 @@ class PlaybackModeAction(QAction):
 
 
 class PlayActions(QActionGroup):
-    def __init__(self, parent, listplayer):
+    def __init__(self, parent, listplayer, media_player):
         super().__init__(parent)
         self.listplayer = listplayer
-        self.mp = vlcqt.media_player
+        self.mp = media_player
 
         self.prev = PreviousMediaAction(parent=parent, listplayer=listplayer)
-        self.play = PlayPauseAction(parent=parent, listplayer=listplayer)
+        self.play = PlayPauseAction(
+            parent=parent, listplayer=listplayer, media_player=media_player
+        )
         self.next = NextMediaAction(parent=parent, listplayer=listplayer)
         self.addAction(self.prev)
         self.addAction(self.play)
@@ -86,10 +86,10 @@ class PlayActions(QActionGroup):
 
 
 class PlayPauseAction(QAction):
-    def __init__(self, parent, listplayer):
+    def __init__(self, parent, listplayer, media_player):
         super().__init__(parent=parent)
         self.listplayer = listplayer
-        self.mp = vlcqt.media_player
+        self.mp = media_player
 
         self.setToolTip("Play/Pause")
         self.setCheckable(True)
@@ -149,10 +149,10 @@ class NextMediaAction(QAction):
 class FrameResPlaybackSlider(QSlider):
     slider_precision = 100  # Must match multiplier used by timer
 
-    def __init__(self, parent, listplayer):
+    def __init__(self, parent, listplayer, media_player):
         super().__init__(Qt.Horizontal, parent)
         self.listplayer = listplayer
-        self.mp = vlcqt.media_player
+        self.mp = media_player
         self.setToolTip("Position")
         self.curr_pos = self.mp.get_position()
         self.mp_pos = None
@@ -186,12 +186,12 @@ class FrameResPlaybackSlider(QSlider):
     def on_stopped(self, e):
         self.setValue(0)
 
-    @pyqtSlot(vlc.Event)
-    def on_mediachanged(self, e):
+    @pyqtSlot()
+    def on_mediachanged(self):
         self.conform_to_media(media=self.mp.get_media())
 
-    @pyqtSlot(vlc.Event)
-    def on_positionchanged(self, e):
+    @pyqtSlot()
+    def on_positionchanged(self):
         self.mp_pos = self.mp.get_position()
         self.mouse_down = False
 

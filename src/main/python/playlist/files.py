@@ -1,11 +1,11 @@
 import logging
 import os
+from importlib import import_module
 from typing import Union
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QFileDialog, QMenu
 
-import vlcqt
 from gui import icons
 
 log = logging.getLogger(__name__)
@@ -26,7 +26,9 @@ def get_file_paths(paths: list):
 
 
 def get_media_object(path: str):
-    media = vlcqt.Media(path)
+    vlcqt = import_module("vlcqt")
+    media = vlcqt.Instance().media_new(path)
+    # media = vlcqt.Media(path)
     media.parse()
     iter_tracks = media.tracks_get()
     if not iter_tracks:
@@ -63,9 +65,11 @@ def get_media_paths(paths):
                 if i.is_file():
                     file_paths.append(i.path)
 
+    vlcqt = import_module("vlcqt")
     media_paths = []
     for path in file_paths:
-        _media = vlcqt.Media(path)
+        _media = vlcqt.Instance().media_new(path)
+        # _media = vlcqt.Media(path)
         _media.parse()
         iter_tracks = _media.tracks_get()
         if not iter_tracks:

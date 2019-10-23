@@ -1,8 +1,8 @@
 import logging
+from importlib import import_module
 
 from PyQt5.QtCore import QModelIndex, QObject, pyqtSignal, pyqtSlot
 
-import vlcqt
 from playlist.model import MediaItem
 from util import config
 
@@ -12,11 +12,11 @@ log = logging.getLogger(__name__)
 class ListPlayer(QObject):
     mediachanged = pyqtSignal(MediaItem)
 
-    def __init__(self, viewpoint_mngr, loop_mode_mngr):
+    def __init__(self, viewpoint_mngr, loop_mode_mngr, media_player):
         super().__init__()
         self.viewpoint_mngr = viewpoint_mngr
         self.loop_mode_mngr = loop_mode_mngr
-        self.mp = vlcqt.media_player
+        self.mp = media_player
         self._item = None
         self.mp.endreached.connect(self._handle_media_finished)
 
@@ -146,5 +146,6 @@ class ListPlayer(QObject):
 
 def get_media_codec(vlc_media, track_num=0):
     track = [t for t in vlc_media.tracks_get()][track_num]
+    vlcqt = import_module("vlcqt")
     description = vlcqt.libvlc_media_get_codec_description(track.type, track.codec)
     return description

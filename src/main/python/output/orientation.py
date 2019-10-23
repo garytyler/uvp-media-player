@@ -1,7 +1,6 @@
 import logging
 from itertools import cycle
 
-import vlc
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QStatusBar
@@ -18,19 +17,19 @@ class ViewpointManager(QObject):
 
     updatedviewpoint = pyqtSignal(float, float, float)
 
-    def __init__(self, io_ctrlr):
+    def __init__(self, io_ctrlr, media_player):
         super().__init__()
-        self.mp = vlcqt.media_player
+        self.mp = media_player
         self.io_ctrlr = io_ctrlr
 
         # Main viewpoint object
-        self.user_vp = vlc.VideoViewpoint()
+        self.user_vp = vlcqt.VideoViewpoint()
         self.user_vp.field_of_view = 80
         self.user_vp.yaw = self.user_vp.pitch = self.user_vp.roll = 0
         self.user_vp_axes = [self.user_vp.yaw, self.user_vp.pitch, self.user_vp.roll]
 
         # An alt viewpoint object for values that will trigger a frame redraw
-        self.redraw_vp = vlc.VideoViewpoint()
+        self.redraw_vp = vlcqt.VideoViewpoint()
         self.redraw_vp.field_of_view = 80
         self.redraw_vp.yaw = self.user_vp.pitch = self.user_vp.roll = 0
 
@@ -58,7 +57,7 @@ class ViewpointManager(QObject):
         else:
             self.trigger_redraw()
 
-    def _update_viewpoint(self, viewpoint: vlc.VideoViewpoint):
+    def _update_viewpoint(self, viewpoint: vlcqt.VideoViewpoint):
         """Update given viewpoint in player"""
         errorcode = self.mp.video_update_viewpoint(
             p_viewpoint=viewpoint, b_absolute=True

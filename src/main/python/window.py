@@ -13,7 +13,6 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-import vlcqt
 from base.docking import DockableWidget, ToolBar
 from comm.client import IOController
 from comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
@@ -48,11 +47,11 @@ class AppWindow(QMainWindow):
     initialized = pyqtSignal()
     centralwidgetresized = pyqtSignal()
 
-    def __init__(self, flags=None):
+    def __init__(self, media_player, flags=None):
         QMainWindow.__init__(self, flags)
         self._window_state = None
         self.qapp = QApplication.instance()
-        self.media_player = vlcqt.media_player
+        self.media_player = media_player
 
         self.setDockNestingEnabled(True)
 
@@ -87,10 +86,14 @@ class AppWindow(QMainWindow):
     def create_interface(self):
         self.socket = AutoReconnectSocket()
         self.io_ctrlr = IOController(socket=self.socket)
-        self.viewpoint_mngr = ViewpointManager(io_ctrlr=self.io_ctrlr)
+        self.viewpoint_mngr = ViewpointManager(
+            io_ctrlr=self.io_ctrlr, media_player=self.media_player
+        )
         self.loop_mode_mngr = LoopModeManager(parent=self)
         self.listplayer = ListPlayer(
-            viewpoint_mngr=self.viewpoint_mngr, loop_mode_mngr=self.loop_mode_mngr
+            viewpoint_mngr=self.viewpoint_mngr,
+            loop_mode_mngr=self.loop_mode_mngr,
+            media_player=self.media_player,
         )
         self.frame_size_mngr = FrameSizeManager(
             main_win=self,
@@ -98,11 +101,15 @@ class AppWindow(QMainWindow):
             listplayer=self.listplayer,
         )
         self.media_player_content_frame = MediaPlayerContentFrame(
-            main_win=self, frame_size_mngr=self.frame_size_mngr
+            main_win=self,
+            frame_size_mngr=self.frame_size_mngr,
+            media_player=self.media_player,
         )
         self.setCentralWidget(self.media_player_content_frame)
         self.zoom_ctrl_mngr = ZoomControlManager(
-            main_win=self, frame_size_mngr=self.frame_size_mngr
+            main_win=self,
+            frame_size_mngr=self.frame_size_mngr,
+            media_player=self.media_player,
         )
         self.fullscreen_mngr = FullscreenManager(
             main_content_frame=self.media_player_content_frame,
@@ -110,8 +117,12 @@ class AppWindow(QMainWindow):
         )
 
     def create_playback_components(self):
-        self.vol_mngr = VolumeManager(parent=self, listplayer=self.listplayer)
-        self.play_actions = PlayActions(parent=self, listplayer=self.listplayer)
+        self.vol_mngr = VolumeManager(
+            parent=self, listplayer=self.listplayer, media_player=self.media_player
+        )
+        self.play_actions = PlayActions(
+            parent=self, listplayer=self.listplayer, media_player=self.media_player
+        )
         self.playlist_widget = PlaylistWidget(
             listplayer=self.listplayer, play_ctrls=self.play_actions, parent=self
         )
@@ -138,6 +149,7 @@ class AppWindow(QMainWindow):
             main_win=self,
             zoom_ctrl_mngr=self.zoom_ctrl_mngr,
             listplayer=self.listplayer,
+            media_player=self.media_player,
         )
         self.fullscreen_menu = FullscreenMenu(
             main_win=self, fullscreen_mngr=self.fullscreen_mngr
@@ -201,7 +213,7 @@ class AppWindow(QMainWindow):
         )
 
         self.playback_ctrls_slider = FrameResPlaybackSlider(
-            parent=self, listplayer=self.listplayer
+            parent=self, listplayer=self.listplayer, media_player=self.media_player
         )
         self.playback_slider_widget = QWidget(self)
         self.playback_slider_widget.setContentsMargins(0, 0, 0, 0)

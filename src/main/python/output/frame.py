@@ -4,16 +4,14 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QSplitter, QStackedLayout
 
-import vlcqt
-
 log = logging.getLogger(__name__)
 
 
 class BaseContentFrame(QFrame):
-    def __init__(self, parent=None):
+    def __init__(self, media_player, parent=None):
         super().__init__(parent)
         self.setObjectName("output_surface")
-        self.mp = vlcqt.media_player
+        self.mp = media_player
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.black_color = QColor(0, 0, 0)
         self.fill_black()
@@ -39,11 +37,11 @@ class FullscreenContentFrame(BaseContentFrame):
 
 
 class MediaPlayerContentFrame(BaseContentFrame):
-    def __init__(self, main_win, frame_size_mngr):
-        super().__init__(parent=main_win)
+    def __init__(self, main_win, frame_size_mngr, media_player):
+        super().__init__(media_player=media_player, parent=main_win)
         self.main_win = main_win
         self.frame_size_mngr = frame_size_mngr
-        self.mp = vlcqt.media_player
+        self.mp = media_player
         self.mp.set_output_widget(self)
         self.content_qsize = QSize()
 
@@ -60,7 +58,7 @@ class MediaPlayerContentFrame(BaseContentFrame):
 
 
 class MainContentFrame(QFrame):
-    def __init__(self, main_win, frame_size_mngr):
+    def __init__(self, main_win, frame_size_mngr, media_player):
         super().__init__()
 
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -68,7 +66,9 @@ class MainContentFrame(QFrame):
         self.layout().setContentsMargins(0, 0, 0, 0)
         self.main_win = main_win
         self.frame_size_mngr = frame_size_mngr
-        self.filler_frame = BaseContentFrame(parent=self.main_win)
+        self.filler_frame = BaseContentFrame(
+            media_player=media_player, parent=self.main_win
+        )
         self.layout().insertWidget(1, self.filler_frame)
         self.filler_frame.hide()
         self._new_mp_content_frame()

@@ -7,13 +7,13 @@ verify_ssl = true
 pre-commit = "*"
 isort = {extras = ["pipfile"],version = "*"}
 flake8 = "*"
-mypy = "*"
 pytest= "<=5.0.1"
 coloredlogs = "*"
 pytest-qt = "*"
 fbs = "*"
 pyinstaller = "==3.4"
 virtualenv = "==16.1.0"
+black = "*"
 
 [packages]
 ffmpeg-python = "*"
@@ -27,3 +27,6 @@ python_version = "3.6"
 [scripts]
 freeze = "python build.py freeze"
 installer = "python build.py installer"
+
+[pipenv]
+allow_prereleases = true

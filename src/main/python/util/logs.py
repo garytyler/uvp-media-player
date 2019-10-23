@@ -1,15 +1,10 @@
 import logging
 import os
 
-import vlc
-
 log = logging.getLogger()
 
 
 def initialize_logging():
-    # Set vlc log level
-    vlc.logger.setLevel(0)
-
     # Set player log file
     player_log_file = os.getenv("VR_PLAYER_LOG_FILE", None)
     if player_log_file:

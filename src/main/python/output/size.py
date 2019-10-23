@@ -3,7 +3,6 @@ import logging
 from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QToolButton
 
-import vlcqt
 from base.popup import PopupMenuAction
 from gui import icons
 from util import config
@@ -60,13 +59,13 @@ class FrameSizeManager(QObject):
 class ZoomControlManager(QMenu):
     zoomchanged = pyqtSignal(float)
 
-    def __init__(self, main_win, frame_size_mngr):
+    def __init__(self, main_win, frame_size_mngr, media_player):
         super().__init__(parent=main_win)
         self.main_win = main_win
         self.frame_size_mngr = frame_size_mngr
 
         for a in self.actions():
-            a.setEnabled(vlcqt.media_player.has_media())
+            a.setEnabled(media_player.has_media())
 
         self.config_options = sorted(config.options.view_scale)
 
@@ -142,11 +141,12 @@ class ZoomOutAction(QAction):
 
 
 class FrameZoomMenu(QMenu):
-    def __init__(self, main_win, zoom_ctrl_mngr, listplayer):
+    def __init__(self, main_win, zoom_ctrl_mngr, listplayer, media_player):
         super().__init__(parent=main_win)
         self.main_win = main_win
         self.zoom_ctrl_mngr = zoom_ctrl_mngr
         self.listplayer = listplayer
+        self.mp = media_player
 
         self.setTitle("Zoom")
         self.setIcon(icons.get("zoom_menu_button"))
@@ -201,7 +201,7 @@ class FrameZoomMenu(QMenu):
         self.conform_to_media()
 
     def conform_to_media(self):
-        has_media = vlcqt.media_player.has_media()
+        has_media = self.mp.has_media()
         for a in self.actions():
             a.setEnabled(has_media)
         self.option_action_map[config.state.view_scale].setChecked(True)

@@ -40,7 +40,7 @@ class MediaPlayerVlclibSignals(QObject):
     unmuted = pyqtSignal(vlc.Event)
     vout = pyqtSignal(vlc.Event)
 
-    def __init__(self, vlc_media_player: vlc.MediaPlayer):
+    def __init__(self, vlc_media_player):
         super().__init__()
 
         type_slot_pairs = [
@@ -234,7 +234,7 @@ class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
     newframe = pyqtSignal()
     slider_precision = 100
 
-    def __init__(self, vlc_media_player: vlc.MediaPlayer):
+    def __init__(self, vlc_media_player):
         super().__init__(vlc_media_player=vlc_media_player)
         self.timer = QTimer()
         self.timer.setTimerType(Qt.CoarseTimer)
@@ -260,7 +260,7 @@ class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
         playback_fps = media_fps * self.get_rate()
         self.timer.setInterval(self.slider_precision / playback_fps)
 
-    def _get_media_fps(self, vlc_media: vlc.Media) -> float:
+    def _get_media_fps(self, vlc_media) -> float:
         if not vlc_media:
             return 30
         if not vlc_media.is_parsed():
@@ -283,7 +283,7 @@ class MediaVlclibSignals(QObject):
     mediasubitemadded = pyqtSignal(vlc.Event)
     mediasubitemtreeadded = pyqtSignal(vlc.Event)
 
-    def __init__(self, vlc_media: vlc.Media):
+    def __init__(self, vlc_media):
         super().__init__()
 
         type_slot_pairs = [

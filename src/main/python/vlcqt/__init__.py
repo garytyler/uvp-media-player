@@ -1,70 +1,31 @@
+import logging
 import sys
 
 import vlc
 
-from . import vlc_facades
+from . import _facades
 
-Instance = vlc_facades.Instance
-
-
-def set_output_to_widget(media_player, widget):
-    if sys.platform.startswith("linux"):  # for Linux X Server
-        media_player.set_xwindow(widget.winId())
-    elif sys.platform == "win32":  # for Windows
-        media_player.set_hwnd(widget.winId())
-    elif sys.platform == "darwin":  # for MacOS
-        media_player.set_nsobject(int(widget.winId()))
-    else:
-        raise EnvironmentError("Could not determine platform")
+log = logging.getLogger(__name__)
 
 
-class MediaPlayer(vlc_facades.MediaPlayerFacade):
-    def __init__(self):
-        super().__init__()
-
-    def set_output_widget(self, widget):
-        state = self.get_state()
-        time = self.get_time()
-        if state in [vlc.State.Buffering, vlc.State.Playing]:
-            time = self.get_time()
-            self.stop()
-            set_output_to_widget(media_player=self, widget=widget)
-            self.play()
-            self.set_time(time)
-        elif state in [vlc.State.Opening]:
-            self.stop()
-            set_output_to_widget(media_player=self, widget=widget)
-            self.play()
-        elif state in [vlc.State.Paused]:
-            self.stop()
-            set_output_to_widget(media_player=self, widget=widget)
-            self.play()
-            self.set_time(time)
-            self.pause()
-        elif state in [vlc.State.Ended]:
-            self.stop()
-            set_output_to_widget(media_player=self, widget=widget)
-            self.play()
-            self.pause()
-            self.set_time(-1)
-        elif state in [vlc.State.Stopped, vlc.State.Error, vlc.State.NothingSpecial]:
-            self.play()
-            set_output_to_widget(media_player=self, widget=widget)
-            self.stop()
+vlc.logger.setLevel(0)
 
 
-media_player = MediaPlayer()
+__module = sys.modules[__name__]
+for key, val in vlc.__dict__.items():
+    setattr(__module, key, val)
 
 
-class Media(vlc_facades.MediaFacade):
-    """Use to get size: vlcqt.libvlc_video_get_size(self.aux_mp, 0)"""
-
-    def __init__(self, mrl, *options):
-        super().__init__(mrl, *options)
+Instance = _facades.QtVLCInstance
+MediaPlayer = _facades.QtVLCMediaPlayer
+Media = _facades.QtVLCMedia
 
 
-def __getattr__(attribute):
-    try:
-        return locals()[attribute]
-    except KeyError:
-        return vars(vlc)[attribute]
+def initialize(args: list) -> None:
+    """Helper function that initializes the VLC instance singleton with cli args"""
+    Instance(args)
+
+
+log.info(
+    f"New QtVLC instance - vlc.plugin_path={vlc.plugin_path}, vlc.dll._name={vlc.dll._name}"
+)

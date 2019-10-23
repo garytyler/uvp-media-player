@@ -1,6 +1,5 @@
 import logging
 
-import vlc
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtWidgets import QAction, QHBoxLayout, QSlider, QToolButton
 
@@ -15,11 +14,11 @@ log = logging.getLogger(__name__)
 class VolumeManager(QObject):
     volumechanged = pyqtSignal(int)
 
-    def __init__(self, parent, listplayer):
+    def __init__(self, parent, listplayer, media_player):
         super().__init__(parent)
         self.lp = listplayer
-        self.mp = vlcqt.media_player
-        vlc.libvlc_audio_set_volume(self.mp, config.state.volume)
+        self.mp = media_player
+        vlcqt.libvlc_audio_set_volume(self.mp, config.state.volume)
         self.mp.audiovolume.connect(self.on_audiovolume)
         self.lp.mediachanged.connect(self.on_mediachanged)
 
