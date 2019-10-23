@@ -14,10 +14,13 @@ log = logging.getLogger(__name__)
 
 
 class _AppContext(ApplicationContext):
-    def __init__(self, vlc_args=[]):
+    def __init__(self, args=[]):
         super().__init__()
-        self.vlcqt.initialize(args=vlc_args)
+        self.vlcqt.initialize(args=args)
 
+        # TODO These imports should be fine to import globally, but leaving them here
+        # while refactoring other modules is safe, to be sure dependencies are
+        # initialized beforehand.
         from gui.style import initialize_style
         from util.logs import initialize_logging
         from util import config
@@ -52,15 +55,22 @@ class _AppContext(ApplicationContext):
         return import_module("vlcqt")
 
     @cached_property
+    def ffprobe_cmd(self) -> str:
+        """Path to ffmpeg binary"""
+        if is_frozen():
+            if platform.is_windows():
+                return self.get_resource("ffprobe.exe")
+        return "ffmprobe"
+
+    @cached_property
     def media_player(self):
-        # return self.vlcqt.media_player
         return self.vlcqt.MediaPlayer()
 
     @cached_property
     def window(self):
         from window import AppWindow
 
-        window = AppWindow(media_player=self.media_player)
+        window = AppWindow(media_player=self.media_player, ffprobe_cmd=self.ffprobe_cmd)
         window.load_media(sys.argv[1:])
         return window
 
@@ -71,15 +81,10 @@ class _AppContext(ApplicationContext):
 
 def main():
     vlc_args = os.environ.get("VLC_ARGS", default="").split(",")
-    app_context = _AppContext(vlc_args)
+    app_context = _AppContext(args=vlc_args)
 
     # Set working dir to user home after context init and before any i/o operations
     os.chdir(os.path.expanduser("~"))
-
-    # initialize_logging()
-
-    # vlc_args = os.environ.get("VLC_ARGS", default="").split(",")
-    # vlcqt.Instance(vlc_args)
 
     exit_code = app_context.run()
     sys.exit(exit_code)

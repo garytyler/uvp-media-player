@@ -16,10 +16,10 @@ class MediaItem(QStandardItem):
     ProbeRole = Qt.UserRole + 3
     SphericalRole = Qt.UserRole + 4
 
-    def __init__(self, path):
+    def __init__(self, path: str, ffprobe_cmd: str):
         super().__init__()
         # Check probe values
-        probe = ffmpeg_probe(path)
+        probe = ffmpeg_probe(path, cmd=ffprobe_cmd)
         try:
             title = probe["format"]["tags"]["title"]
         except KeyError:

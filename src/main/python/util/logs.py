@@ -10,7 +10,7 @@ def initialize_logging():
     if player_log_file:
         dirpath, filename = os.path.split(player_log_file)
         if dirpath:
-            os.makedirs(os.path.dirname(dirpath))
+            os.makedirs(os.path.dirname(dirpath), exist_ok=True)
         logger = logging.getLogger()
         logger.addHandler(logging.FileHandler(player_log_file))
         logger.info(f"INIT LOGGING")

@@ -197,11 +197,11 @@ class PlaylistView(QTableView):
 
 
 class PlaylistWidget(QWidget):
-    def __init__(self, listplayer, play_ctrls, parent: QMainWindow):
+    def __init__(self, listplayer, play_ctrls, ffprobe_cmd: str, parent: QMainWindow):
         super().__init__(parent=parent)
         self.player = listplayer
         self.play_ctrls = play_ctrls
-
+        self.ffprobe_cmd = ffprobe_cmd
         self.view = PlaylistView(
             listplayer=self.player,
             play_ctrls=self.play_ctrls,
@@ -219,7 +219,7 @@ class PlaylistWidget(QWidget):
 
         model = self.view.model()
         for media_path in media_paths:
-            item = MediaItem(media_path)
+            item = MediaItem(media_path, ffprobe_cmd=self.ffprobe_cmd)
             model.appendRow(item)
 
         first_item = self.view.model().item(0)

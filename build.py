@@ -82,7 +82,7 @@ def pre_freeze():
     else:
         log.info("Platform unsupported!")
 
-    freeze_env["FFMPEG_LIB_PATH"] = environ["FFMPEG_LIB_PATH"]
+    freeze_env["FFPROBE_BINARY_PATH"] = environ["FFPROBE_BINARY_PATH"]
 
     for name, value in freeze_env.items():
         existing_value = environ.get(name)
@@ -116,7 +116,7 @@ def post_freeze():
     shutil.copytree(plugin_source_path, join(join(resource_dir, "vlc"), "plugins"))
 
     # Copy ffprobe library
-    shutil.copy(environ["FFMPEG_LIB_PATH"], join(resource_dir))
+    shutil.copy(environ["FFPROBE_BINARY_PATH"], join(resource_dir))
 
     if platform.is_mac():
         _macOS_include_tcl_tk_lib_files_in_bundle()
