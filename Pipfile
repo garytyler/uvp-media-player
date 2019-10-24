@@ -14,6 +14,7 @@ fbs = "*"
 pyinstaller = "==3.4"
 virtualenv = "==16.1.0"
 black = "*"
+mypy = "*"
 
 [packages]
 ffmpeg-python = "*"

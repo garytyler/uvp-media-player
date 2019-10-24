@@ -158,7 +158,7 @@ class PlaylistView(QTableView):
             rem_selected_text = f"Remove {len(selected_items)} items"
         menu = QMenu(self)
         menu.addAction(
-            icons.file_remove,
+            icons.get("file_remove"),
             rem_selected_text,
             self.remove_selected_items,
             self.rem_selected_items_shortcut.key(),

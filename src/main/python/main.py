@@ -4,7 +4,7 @@ import os
 import sys
 from importlib import import_module
 from os import environ
-from os.path import join
+from os.path import abspath, join
 
 from fbs_runtime import platform
 from fbs_runtime.application_context import cached_property, is_frozen
@@ -56,11 +56,13 @@ class _AppContext(ApplicationContext):
 
     @cached_property
     def ffprobe_cmd(self) -> str:
-        """Path to ffmpeg binary"""
+        """Return command to invoke ffprobe binary. If frozen, use path to binary."""
         if is_frozen():
             if platform.is_windows():
-                return self.get_resource("ffprobe.exe")
-        return "ffmprobe"
+                return abspath(self.get_resource(f"ffmpeg/ffprobe.exe"))
+            else:
+                return abspath(self.get_resource(f"ffmpeg/ffprobe"))
+        return "ffprobe"
 
     @cached_property
     def media_player(self):
