@@ -10,11 +10,11 @@ flake8 = "*"
 pytest= "<=5.0.1"
 coloredlogs = "*"
 pytest-qt = "*"
-fbs = "*"
 pyinstaller = "==3.4"
 virtualenv = "==16.1.0"
 black = "*"
 mypy = "*"
+fbs = {git = "https://github.com/garytyler/fbs",ref = "aab229fd90a431de4173105475591e8d875dd02e"}
 
 [packages]
 ffmpeg-python = "*"
@@ -24,10 +24,6 @@ QtAwesome = "*"
 
 [requires]
 python_version = "3.6"
-
-[scripts]
-freeze = "python build.py freeze"
-installer = "python build.py installer"
 
 [pipenv]
 allow_prereleases = true

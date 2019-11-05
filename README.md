@@ -1,60 +1,57 @@
-# seevr-player
+<center> <h1>seevr-player</h1> </center>
+
+# Application Environment Variables
+
+- `VLC_ARGS`
+- `VR_PLAYER_LOG_FILE`
+- `VR_PLAYER_LOG_LEVELS`
+  - Comma-delimited (`,`) list of Colon-delimited (`:`) name/value pairs
+  - Use "`root`" for name of default logger
+- `VR_PLAYER_CONFIG`
+- `VR_PLAYER_REMOTE_URL`
+- Overridden by setting in config file
 
 # Build
 
-As with any `pyinstaller` build, the build process must be run using the targeted OS platform. For more info, see [PyInstaller Docs: Requirements](https://pyinstaller.readthedocs.io/en/stable/requirements.html?highlight=Windows%20XP#requirements).
+As with any `pyinstaller` build, the build process must be run on the target platform. For more info, see [PyInstaller Docs: Requirements](https://pyinstaller.readthedocs.io/en/stable/requirements.html?highlight=Windows%20XP#requirements).
 
-## Build for Windows
+## Build Requirements
 
-### Requirements
-
-- Windows 10
-- [VLC 3.0.8](https://www.videolan.org/vlc/)
-- [ffmpeg](https://ffmpeg.org/)
+- Supported platforms: Ubuntu 18.04, Windows 10, macOS Mojave 10.14
 - [Python 3.6](https://www.python.org/downloads/)
-- [pip](https://pip.readthedocs.io/en/stable/installing/)
-- [Pipenv](https://pipenv.readthedocs.io/en/latest/install/#installing-pipenv) (to verify dependency hashes)
+- [VLC](https://www.videolan.org/vlc/)
 
 NOTE: If using `pipenv`, you will likely encounter [pyinstaller issue #4064](https://github.com/pyinstaller/pyinstaller/issues/4064) with an error like `ImportError: cannot import 'distutils'` or similar when launching the application. A simple workaround is to rollback `virtualenv` to version 16.1 (`virtualenv==16.1`), in both your system `pip` and your virtual environment `pip`.
 
-### Options
+## Build Environment Variables
 
-The build script for Windows (`build-win.ps1`) accepts [pyinstaller options](https://pyinstaller.readthedocs.io/en/stable/usage.html#options) as arguments. In the case of a conflict, these args will override those already called in the script.
+A few external dependencies are required. They can be specified with paths set to environment variables.
 
-### Instructions
+- `FFPROBE_BINARY_PATH`
+  - Path to a static `ffprobe` binary for the target platform. You can can download this at [ffbinaries.com](https://ffbinaries.com)
+- `PYTHON_VLC_LIB_PATH`
+  - Path to VLC 'libvlc' dynamically linked library
+  - Some typical values are:
+    - Windows: `C:\Program Files\VideoLAN\VLC\libvlc.dll`
+    - Ubuntu: `/usr/lib/x86_64-linux-gnu/libvlc.so`
+    - macOS: `/Applications/VLC.app/Contents/MacOS/lib/libvlc.dylib`
+- `PYTHON_VLC_MODULE_PATH`
+  - Path to VLC plugins directory for the installed VLC application.
+  - Some typical values are:
+    - Windows: `C:\Program Files\VideoLAN\VLC\plugins`
+    - Ubuntu: `/usr/lib/x86_64-linux-gnu/vlc/plugins`
+    - macOS: `/Applications/VLC.app/Contents/MacOS/plugins`
 
-```ps
-# Create a virtual environment with dependencies
-pipenv sync --dev
+## Build Script
 
-# Activate the virtual environment
-pipenv shell
+Run [fbs](https://build-system.fman.io/manual/) build commands with the provided `build.py` script.
 
-# Run windows build script from project root
-.\scripts\build-win.ps1
+```bash
+python build.py clean
+python build.py freeze
+python build.py installer
 ```
 
-To debug the build, run the build script with `--console` to open a console to monitor standard i/o, and use `--debug=imports` to also monitor imports. Also, submit an issue.
+# Support
 
-# Development
-
-## Environment Variables
-
-For logging, use [coloredlogs environment variables](https://coloredlogs.readthedocs.io/en/latest/api.html#environment-variables)
-
-#### `VLC_ARGS`
-
-#### `VR_PLAYER_LOG_FILE`
-
-#### `VR_PLAYER_LOG_LEVELS`
-
-- Comma-delimited (`,`) list of Colon-delimited (`:`) name/value pairs
-- Use "`root`" for name of default logger
-
-#### `VR_PLAYER_CONFIG`
-
-- Overrides setting in config file
-
-#### `VR_PLAYER_REMOTE_URL`
-
-- Overridden by setting in config file
+[Submit an issue](https://github.com/garytyler/seevr-player/issues)

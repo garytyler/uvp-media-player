@@ -4,7 +4,7 @@ import os
 import sys
 from importlib import import_module
 from os import environ
-from os.path import abspath, join
+from os.path import abspath, dirname, join
 
 from fbs_runtime import platform
 from fbs_runtime.application_context import cached_property, is_frozen
@@ -32,22 +32,22 @@ class _AppContext(ApplicationContext):
     @cached_property
     def vlcqt(self):
         if is_frozen():
-            vlc_resource_dir = self.get_resource("vlc")
-            if platform.is_windows():
-                environ["PYTHON_VLC_LIB_PATH"] = join(vlc_resource_dir, "libvlc.dll")
-                environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_resource_dir)
-                # for windows/macOS, load vlccore.dylib into mem before llibvlc.dylib
+            if platform.is_ubuntu():
+                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.so")
+                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
+            elif platform.is_windows():
+                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dll")
+                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
+                # for windows/macOS, load libvlccore into mem before llibvlc.dylib
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(join(vlc_resource_dir, "libvlccore.dll"))
-            elif platform.is_ubuntu():
-                environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_resource_dir)
-                environ["PYTHON_VLC_LIB_PATH"] = join(vlc_resource_dir, "libvlc.so.5")
+                ctypes.CDLL(self.get_resource("libvlccore.dll"))
             elif platform.is_mac():
-                environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_resource_dir)
-                environ["PYTHON_VLC_LIB_PATH"] = join(vlc_resource_dir, "libvlc.dylib")
-                # for windows/macOS, load vlccore.dylib into mem before llibvlc.dylib
+                vlc_bin_dir = join(dirname(self.get_resource()), "MacOS")
+                environ["PYTHON_VLC_LIB_PATH"] = join(vlc_bin_dir, "libvlc.dylib")
+                environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_bin_dir, "plugins")
+                # for windows/macOS, load libvlccore into mem before llibvlc.dylib
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(join(vlc_resource_dir, "libvlccore.dylib"))
+                ctypes.CDLL(join(vlc_bin_dir, "libvlccore.dylib"))
             else:
                 log.warning("Platform unsupported. App may launch if VLC is installed.")
                 environ.unset("PYTHON_VLC_MODULE_PATH")
