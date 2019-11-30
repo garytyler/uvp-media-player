@@ -19,7 +19,13 @@ class SettingsDialog(QDialog):
         self.main_win = main_win
         self.setModal(True)
         self.setMinimumWidth(400)
+
         self.load()
+
+        frame_geo = self.frameGeometry()
+        center_pos = self.main_win.geometry().center()
+        frame_geo.moveCenter(center_pos)
+        self.move(frame_geo.topLeft())
 
     def load(self):
         self.setLayout(QVBoxLayout())
