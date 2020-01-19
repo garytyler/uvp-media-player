@@ -1,8 +1,9 @@
 import logging
+import sys
 
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QPalette
-from PyQt5.QtWidgets import QFrame, QSizePolicy, QSplitter, QStackedLayout
+from PyQt5.QtWidgets import QFrame, QSizePolicy, QSplitter
 
 log = logging.getLogger(__name__)
 
@@ -27,18 +28,10 @@ class BaseContentFrame(QFrame):
         self.setPalette(p)
 
 
-class FullscreenContentFrame(BaseContentFrame):
-    def __init__(self, qscreen):
-        super().__init__(parent=None)
-        self.setWindowState(Qt.WindowFullScreen)  # Lets geo map to non-primary screens
-        self.setGeometry(qscreen.geometry())
-        self.showFullScreen()
-        self.mp.set_output_widget(self)
-
-
 class MediaPlayerContentFrame(BaseContentFrame):
     def __init__(self, main_win, frame_size_mngr, media_player):
         super().__init__(media_player=media_player, parent=main_win)
+        self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.main_win = main_win
         self.frame_size_mngr = frame_size_mngr
         self.mp = media_player
@@ -47,65 +40,20 @@ class MediaPlayerContentFrame(BaseContentFrame):
 
     def start_fullscreen(self, qscreen):
         self.setParent(None)
-        self.setWindowState(Qt.WindowFullScreen)  # Lets geo map to non-primary screens
         self.setGeometry(qscreen.geometry())
-        self.showFullScreen()
+        # TODO: On mac, check if qscreen is main OS screen w/ dock + top bar. If so,
+        # use fullscreen instead of maximized.
+        if sys.platform == "darwin":
+            self.setWindowState(Qt.WindowMaximized)
+            self.showMaximized()
+        else:
+            self.setWindowState(Qt.WindowFullScreen)
+            self.showFullScreen()
 
     def stop_fullscreen(self):
         self.hide()
         self.main_win.setCentralWidget(self)
         self.show()
-
-
-class MainContentFrame(QFrame):
-    def __init__(self, main_win, frame_size_mngr, media_player):
-        super().__init__()
-
-        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        self.setLayout(QStackedLayout(self))
-        self.layout().setContentsMargins(0, 0, 0, 0)
-        self.main_win = main_win
-        self.frame_size_mngr = frame_size_mngr
-        self.filler_frame = BaseContentFrame(
-            media_player=media_player, parent=self.main_win
-        )
-        self.layout().insertWidget(1, self.filler_frame)
-        self.filler_frame.hide()
-        self._new_mp_content_frame()
-
-    def _new_mp_content_frame(self):
-        self.clear_main_content_frame()
-        new_mp_content_frame = MediaPlayerContentFrame(
-            main_win=self.main_win, frame_size_mngr=self.frame_size_mngr
-        )
-        self.mp_content_frame = new_mp_content_frame
-        self.layout().insertWidget(0, self.mp_content_frame)
-        self.layout().setCurrentIndex(0)
-
-    def clear_main_content_frame(self):
-        if hasattr(self, "main_content_frame"):
-            self.mp_content_frame.hide()
-            self.layout().removeWidget(self.mp_content_frame)
-            del self.mp_content_frame
-        if isinstance(self.layout().widget(0), BaseContentFrame):
-            _w = self.layout().widget(0)
-            _w.hide()
-            self.layout().removeWidget(_w)
-            del _w
-
-    def reset_main_content_frame(self):
-        self._new_mp_content_frame()
-        self.frame_size_mngr.conform_to_media()
-
-    def start_fullscreen(self, qscreen):
-        self.fs_frame = FullscreenContentFrame(qscreen)
-        self.fs_frame.show()
-        self.layout().setCurrentIndex(1)
-
-    def stop_fullscreen(self):
-        self.fs_frame.hide()
-        self.layout().setCurrentIndex(0)
-        del self.fs_frame
 
 
 class SplitView(QSplitter):
