@@ -73,7 +73,11 @@ class _AppContext(ApplicationContext):
         from window import AppWindow
 
         window = AppWindow(media_player=self.media_player, ffprobe_cmd=self.ffprobe_cmd)
-        window.load_media(sys.argv[1:])
+        if is_frozen():
+            media_paths = sys.argv[1:]
+        else:
+            media_paths = environ.get("_SEEVR_PLAYER_BUILD_LAUNCH_MEDIA", "").split(",")
+        window.load_media(media_paths)
         return window
 
     def run(self):

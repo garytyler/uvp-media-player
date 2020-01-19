@@ -1,4 +1,5 @@
 import logging
+import os
 import shutil
 import sys
 from os import environ, makedirs
@@ -88,14 +89,29 @@ class FreezeCommandContext:
         shutil.copy(ffprobe_bin_src_file, ffprobe_bin_dst_file)
 
 
-COMMAND_CONTEXTS = {"freeze": FreezeCommandContext}
+class RunCommandContext:
+    def __init__(self):
+        verify_supported_platform()
+
+    def __enter__(self):
+        extra_args = sys.argv[2:]
+        for arg in extra_args:
+            sys.argv.remove(arg)
+        os.environ["_SEEVR_PLAYER_BUILD_LAUNCH_MEDIA"] = ",".join(extra_args)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
+COMMAND_CONTEXTS = {"freeze": FreezeCommandContext, "run": RunCommandContext}
 
 if __name__ == "__main__":
     log.info(f"{__file__} - command='{sys.argv[1:]}', platform={platform.name()}")
+
     project_dir = dirname(__file__)
     fbs.init(project_dir)  # TODO Can I copy dependencies to freeze dir before freezing?
-    command_context = COMMAND_CONTEXTS.get(sys.argv[1])
-    if command_context:
+    if sys.argv[1] in COMMAND_CONTEXTS.keys():
+        command_context = COMMAND_CONTEXTS.get(sys.argv[1])
         with command_context():
             cmdline.main(project_dir=project_dir)
     else:
