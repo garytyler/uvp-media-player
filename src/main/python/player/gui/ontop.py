@@ -32,11 +32,9 @@ class AlwaysOnTopAction(QAction):
         self.setCheckable(True)
 
         self.triggered.connect(self.on_triggered)
-
-        if hasattr(self.main_win, "initialized"):
-            self.main_win.initialized.connect(
-                lambda: self.triggered.emit(config.state.stay_on_top)
-            )
+        self.main_win.initialized.connect(
+            lambda: self.triggered.emit(config.state.stay_on_top)
+        )
 
     def on_triggered(self, checked):
         set_always_on_top(self.main_win, checked)

@@ -1,7 +1,15 @@
 {
-  "app_name": "seevr-player",
+  "org_name": "SeeVR",
+  "app_name": "SeeVR-Player",
   "author": "Gary Tyler",
   "main_module": "src/main/python/main.py",
   "version": "0.0.0",
-  "hidden_imports": []
+  "hidden_imports": [],
+  "public_settings": [
+    "org_name",
+    "app_name",
+    "author",
+    "version",
+    "environment"
+  ]
 }

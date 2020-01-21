@@ -16,18 +16,17 @@ log = logging.getLogger(__name__)
 class _AppContext(ApplicationContext):
     def __init__(self, args=[]):
         super().__init__()
+        self.app.setOrganizationName(self.build_settings["org_name"])
+        self.app.setApplicationName(self.build_settings["app_name"])
+
         self.vlcqt.initialize(args=args)
 
         # TODO These imports should be fine to import globally, but leaving them here
         # while refactoring other modules is safe, to be sure dependencies are
         # initialized beforehand.
-        from player.gui.style import initialize_style
         from player.util.logs import initialize_logging
-        from player import config
 
         initialize_logging()
-        config.state.load()
-        initialize_style(self)
 
     @cached_property
     def vlcqt(self):
@@ -69,10 +68,33 @@ class _AppContext(ApplicationContext):
         return self.vlcqt.MediaPlayer()
 
     @cached_property
+    def settings(self):
+        from player import config
+        from player.config import state
+        from player.gui.style import initialize_style
+
+        settings = config.Settings(
+            self.app.organizationName(), self.app.applicationName()
+        )
+        state.load(settings)
+        initialize_style(self.app, self.stylesheet)
+        return settings
+
+    @cached_property
+    def stylesheet(self):
+        with open(self.get_resource("style/dark.qss")) as stylesheet:
+            return stylesheet.read()
+
+    @cached_property
     def window(self):
         from player.window import AppWindow
 
-        window = AppWindow(media_player=self.media_player, ffprobe_cmd=self.ffprobe_cmd)
+        window = AppWindow(
+            media_player=self.media_player,
+            ffprobe_cmd=self.ffprobe_cmd,
+            settings=self.settings,
+            stylesheet=self.stylesheet,
+        )
         if is_frozen():
             media_paths = sys.argv[1:]
         else:
