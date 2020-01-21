@@ -1,7 +1,7 @@
 import logging
 from ctypes.util import find_library
 
-import vlcqt
+from player import vlcqt
 
 log = logging.getLogger(__name__)
 

@@ -5,8 +5,8 @@ from typing import Union
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QFileDialog, QMenu
 
-import vlcqt
-from gui import icons
+from player import vlcqt
+from player.gui import icons
 
 log = logging.getLogger(__name__)
 
@@ -53,7 +53,7 @@ def get_media_paths(paths):
         paths = [paths]
 
     file_paths = []
-    for path in paths:
+    for path in [string for string in paths if string]:
         if not os.path.exists(path):
             log.error(f"PATH NOT FOUND path={path}")
         elif os.path.isfile(path):

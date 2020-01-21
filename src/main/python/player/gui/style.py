@@ -1,7 +1,7 @@
 from PyQt5.QtGui import QColor, QPalette
 
-from gui import icons
-from util import config
+from player.gui import icons
+from player.util import config
 
 
 def dark_palette():

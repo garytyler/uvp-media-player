@@ -3,8 +3,8 @@ import logging
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QSlider
 
-from gui import icons
-from util import config
+from player.gui import icons
+from player.util import config
 
 log = logging.getLogger(__name__)
 

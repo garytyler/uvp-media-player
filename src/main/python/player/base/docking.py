@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from gui import icons
+from player.gui import icons
 
 
 class ToolBar(QToolBar):

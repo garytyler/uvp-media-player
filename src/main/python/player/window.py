@@ -13,32 +13,36 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from base.docking import DockableWidget, ToolBar
-from comm.client import IOController
-from comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
-from comm.socks import AutoReconnectSocket
-from gui.ontop import AlwaysOnTopAction
-from output.frame import MediaPlayerContentFrame
-from output.fullscreen import FullscreenManager, FullscreenMenu, FullscreenStatusLabel
-from output.orientation import OrientationStatusLabel, ViewpointManager
-from output.playback import (
+from player.base.docking import DockableWidget, ToolBar
+from player.comm.client import IOController
+from player.comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
+from player.comm.socks import AutoReconnectSocket
+from player.gui.ontop import AlwaysOnTopAction
+from player.output.frame import MediaPlayerContentFrame
+from player.output.fullscreen import (
+    FullscreenManager,
+    FullscreenMenu,
+    FullscreenStatusLabel,
+)
+from player.output.orientation import OrientationStatusLabel, ViewpointManager
+from player.output.playback import (
     FrameResPlaybackSlider,
     LoopModeManager,
     PlayActions,
     PlaybackModeAction,
 )
-from output.size import (
+from player.output.size import (
     FrameSizeManager,
     FrameZoomMenu,
     ZoomControlManager,
     ZoomInAction,
     ZoomOutAction,
 )
-from output.sound import VolumeManager, VolumePopupButton
-from playlist.files import OpenMediaMenu
-from playlist.player import ListPlayer
-from playlist.view import DockablePlaylist, PlaylistWidget
-from util.settings import OpenSettingsAction
+from player.output.sound import VolumeManager, VolumePopupButton
+from player.playlist.files import OpenMediaMenu
+from player.playlist.player import ListPlayer
+from player.playlist.view import DockablePlaylist, PlaylistWidget
+from player.util.settings import OpenSettingsAction
 
 log = logging.getLogger(__name__)
 

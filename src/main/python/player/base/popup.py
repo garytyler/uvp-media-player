@@ -1,7 +1,7 @@
 from PyQt5.QtCore import QPoint, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QFrame, QWidget
 
-from gui import ontop
+from player.gui import ontop
 
 
 class PopupControlWidget(QFrame):

@@ -3,8 +3,8 @@ from importlib import import_module
 
 from PyQt5.QtCore import QModelIndex, QObject, pyqtSignal, pyqtSlot
 
-from playlist.model import MediaItem
-from util import config
+from player.playlist.model import MediaItem
+from player.util import config
 
 log = logging.getLogger(__name__)
 
