@@ -13,10 +13,10 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from player.base.docking import DockableWidget, ToolBar
-from player.comm.client import IOController
-from player.comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
-from player.comm.socks import AutoReconnectSocket
+from player.common.docking import DockableWidget, ToolBar
+from player.comms.client import IOController
+from player.comms.connect import ConnectStatusLabel, ConnectWideButtonBuilder
+from player.comms.socks import AutoReconnectSocket
 from player.config.widgets import OpenSettingsAction
 from player.gui.ontop import AlwaysOnTopAction
 from player.gui.style import initialize_style
@@ -44,7 +44,6 @@ from player.output.sound import VolumeManager, VolumePopupButton
 from player.playlist.files import OpenMediaMenu
 from player.playlist.player import ListPlayer
 from player.playlist.view import DockablePlaylist, PlaylistWidget
-from player.util.logs import initialize_logging
 
 log = logging.getLogger(__name__)
 
@@ -54,10 +53,6 @@ class AppWindow(QMainWindow):
     centralwidgetresized = pyqtSignal()
 
     def __init__(self, media_player, ffprobe_cmd, settings, stylesheet, flags=None):
-
-        initialize_logging()
-        # config.state.load()
-
         QMainWindow.__init__(self, flags)
         self.settings = settings
         self._window_state = None
@@ -152,9 +147,7 @@ class AppWindow(QMainWindow):
             parent=self, loop_mode_mngr=self.loop_mode_mngr
         )
         self.always_on_top_act = AlwaysOnTopAction(main_win=self)
-        # self.always_on_top_act = AlwaysOnTopAction(
-        #     settings=self.settings, main_win=self
-        # )
+
         self.zoom_in_act = ZoomInAction(parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr)
         self.zoom_out_act = ZoomOutAction(
             parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr

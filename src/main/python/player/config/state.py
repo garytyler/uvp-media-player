@@ -13,7 +13,6 @@ class _State:
     def load(self, settings: QSettings):
         for key in SCHEMA.keys():
             val = settings.value(key)
-            print(key + ":", val)
             if val:
                 self._state[key] = val
         super().__setattr__("settings", settings)
