@@ -46,7 +46,7 @@ class DependencyEnvironment(dict):
             raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
         else:
             log.info(f"Dependency source (default) - key={key}, value={value}")
-            super().__setitem__(self, key, value)
+            super().__setitem__(key, value)
 
     def __getitem__(self, key: str) -> str:
         if key not in self._dependency_keys:
@@ -107,12 +107,17 @@ COMMAND_CONTEXTS = {"freeze": FreezeCommandContext, "run": RunCommandContext}
 
 if __name__ == "__main__":
     log.info(f"{__file__} - command='{sys.argv[1:]}', platform={platform.name()}")
-
     project_dir = dirname(__file__)
     fbs.init(project_dir)  # TODO Can I copy dependencies to freeze dir before freezing?
-    if sys.argv[1] in COMMAND_CONTEXTS.keys():
-        command_context = COMMAND_CONTEXTS.get(sys.argv[1])
-        with command_context():
-            cmdline.main(project_dir=project_dir)
+    try:
+        command = sys.argv[1]
+    except IndexError:
+        log.error("Error: Script '{__file__}' requires a command.")
     else:
-        cmdline.main(project_dir=project_dir)
+        context = COMMAND_CONTEXTS.get(command)
+        if context:
+            # Ignore type checking bug. See: https://github.com/python/mypy/issues/5512
+            with context():  # type: ignore
+                cmdline.main(project_dir=project_dir)
+        else:
+            cmdline.main(project_dir=project_dir)
