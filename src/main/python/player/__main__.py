@@ -23,7 +23,7 @@ class _AppContext(ApplicationContext):
         # initialized beforehand.
         from player.gui.style import initialize_style
         from player.util.logs import initialize_logging
-        from player.util import config
+        from player import config
 
         initialize_logging()
         config.state.load()

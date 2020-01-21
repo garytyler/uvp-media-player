@@ -6,9 +6,9 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtNetwork import QAbstractSocket
 from PyQt5.QtWidgets import QToolButton, QWidgetAction
 
+from player import config
 from player.gui import icons
 from player.output.status import IconStatusLabel
-from player.util import config
 
 log = logging.getLogger(__name__)
 

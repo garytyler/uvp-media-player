@@ -3,9 +3,9 @@ import logging
 from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QToolButton
 
+from player import config
 from player.base.popup import PopupMenuAction
 from player.gui import icons
-from player.util import config
 
 log = logging.getLogger(__name__)
 

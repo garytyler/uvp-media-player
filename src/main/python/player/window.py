@@ -17,6 +17,7 @@ from player.base.docking import DockableWidget, ToolBar
 from player.comm.client import IOController
 from player.comm.connect import ConnectStatusLabel, ConnectWideButtonBuilder
 from player.comm.socks import AutoReconnectSocket
+from player.config.widgets import OpenSettingsAction
 from player.gui.ontop import AlwaysOnTopAction
 from player.output.frame import MediaPlayerContentFrame
 from player.output.fullscreen import (
@@ -42,7 +43,6 @@ from player.output.sound import VolumeManager, VolumePopupButton
 from player.playlist.files import OpenMediaMenu
 from player.playlist.player import ListPlayer
 from player.playlist.view import DockablePlaylist, PlaylistWidget
-from player.util.settings import OpenSettingsAction
 
 log = logging.getLogger(__name__)
 
