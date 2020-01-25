@@ -9,6 +9,7 @@ SCHEMA = {
     "loop_mode": {"options": ("off", "one", "all"), "default": "off", "type": str},
     "stay_on_top": {"options": (True, False), "default": False, "type": bool},
     "view_scale": {"options": (0.25, 0.5, 1, 2), "default": 1, "type": float},
+    "auto_resize": {"options": (True, False), "default": False, "type": bool},
     "color_theme": {"options": ("light", "dark"), "default": "dark", "type": str},
     "url": {
         "options": (),

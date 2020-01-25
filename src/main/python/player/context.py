@@ -24,6 +24,9 @@ class AppContext(ApplicationContext):
         self.app.setOrganizationName(self.build_settings["org_name"])
         self.app.setApplicationName(self.build_settings["app_name"])
         self.initialize_logging()
+        log.info(
+            f"Launching: {self.app.organizationName()}/{self.app.applicationName()}"
+        )
         self.initialize_vlcqt()
 
     def initialize_vlcqt(self):
@@ -96,6 +99,7 @@ class AppContext(ApplicationContext):
         settings = config.Settings(
             self.app.organizationName(), self.app.applicationName()
         )
+        self.log.info(f"Configuration file: {settings.fileName()}")
         state.load(settings)
         initialize_style(self.app, self.stylesheet)
         return settings

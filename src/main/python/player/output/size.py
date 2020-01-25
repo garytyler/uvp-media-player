@@ -23,8 +23,9 @@ class FrameSizeManager(QObject):
         self.listplayer.mediachanged.connect(self.on_mediachanged)
 
     def on_mediachanged(self, media_item):
-        width, height = media_item.size()
-        self.update_frame_size(height=height, width=width)
+        if config.state.auto_resize:
+            width, height = media_item.size()
+            self.update_frame_size(height=height, width=width)
 
     def set_scale(self, scale) -> float:
         config.state.view_scale = scale
@@ -56,7 +57,7 @@ class FrameSizeManager(QObject):
             return self.default_scale
 
 
-class ZoomControlManager(QMenu):
+class ZoomControlManager(QObject):
     zoomchanged = pyqtSignal(float)
 
     def __init__(self, main_win, frame_size_mngr, media_player):
@@ -64,8 +65,8 @@ class ZoomControlManager(QMenu):
         self.main_win = main_win
         self.frame_size_mngr = frame_size_mngr
 
-        for a in self.actions():
-            a.setEnabled(media_player.has_media())
+        # for a in self.actions():
+        #     a.setEnabled(media_player.has_media())
 
         self.config_options = sorted(config.options.view_scale)
 
@@ -98,6 +99,20 @@ class ZoomControlManager(QMenu):
             log.error(e)
         else:
             self.set_scale(value)
+
+
+class AutoResizeAction(QAction):
+    def __init__(self, parent):
+        super().__init__(parent=parent)
+        self.setText("Auto-resize")
+        self.setToolTip("Auto-resize")
+        self.setCheckable(True)
+        self.setChecked(config.state.auto_resize)
+        self.toggled.connect(self.on_toggled)
+
+    @pyqtSlot(bool)
+    def on_toggled(self, value):
+        config.state.auto_resize = value
 
 
 class ZoomInAction(QAction):
@@ -172,6 +187,7 @@ class FrameZoomMenu(QMenu):
         self.explicit_zooms.addAction(self.half)
         self.explicit_zooms.addAction(self.original)
         self.explicit_zooms.addAction(self.double)
+
         self.addActions(self.explicit_zooms.actions())
 
         self.option_action_map = {
@@ -189,6 +205,9 @@ class FrameZoomMenu(QMenu):
         self.zoom_out.setIcon(icons.get("zoom_out_menu_item"))
         self.addAction(self.zoom_out)
 
+        self.addSeparator()
+        self.addAction(AutoResizeAction(self))
+
         self.conform_to_media()
 
         self.zoom_ctrl_mngr.zoomchanged.connect(self.on_zoomchanged)
@@ -201,10 +220,13 @@ class FrameZoomMenu(QMenu):
         self.conform_to_media()
 
     def conform_to_media(self):
+        self.option_action_map[config.state.view_scale].setChecked(True)
+
+    def enable_zoom_actions(self):
+        """Enable zoom actions if media is loaded and disable them if not."""
         has_media = self.mp.has_media()
         for a in self.actions():
             a.setEnabled(has_media)
-        self.option_action_map[config.state.view_scale].setChecked(True)
 
 
 class FrameZoomMenuButton(QToolButton):
