@@ -2,6 +2,7 @@ import logging
 import os
 import shutil
 import sys
+from glob import glob
 from os import environ, makedirs
 from os.path import basename, dirname, exists, join
 
@@ -89,6 +90,23 @@ class FreezeCommandContext:
         shutil.copy(ffprobe_bin_src_file, ffprobe_bin_dst_file)
 
 
+class InstallerCommandContext:
+    def __init__(self):
+        verify_supported_platform()
+
+    def __enter__(self):
+        if platform.is_mac():
+            mounted_dmg_paths = glob(f"/Volumes/{fbs.SETTINGS['app_name']}*")
+            if mounted_dmg_paths:
+                raise RuntimeError(
+                    f"Eject mounted '{fbs.SETTINGS['app_name']}' installer volumes"
+                    f" from your system: {repr(mounted_dmg_paths)}"
+                )
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        pass
+
+
 class RunCommandContext:
     def __init__(self):
         verify_supported_platform()
@@ -103,7 +121,11 @@ class RunCommandContext:
         pass
 
 
-COMMAND_CONTEXTS = {"freeze": FreezeCommandContext, "run": RunCommandContext}
+COMMAND_CONTEXTS = {
+    "freeze": FreezeCommandContext,
+    "installer": InstallerCommandContext,
+    "run": RunCommandContext,
+}
 
 if __name__ == "__main__":
     log.info(f"{__file__} - command='{sys.argv[1:]}', platform={platform.name()}")
