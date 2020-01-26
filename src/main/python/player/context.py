@@ -99,7 +99,7 @@ class AppContext(ApplicationContext):
         settings = config.Settings(
             self.app.organizationName(), self.app.applicationName()
         )
-        self.log.info(f"Configuration file: {settings.fileName()}")
+        log.info(f"Configuration file: {settings.fileName()}")
         state.load(settings)
         initialize_style(self.app, self.stylesheet)
         return settings
