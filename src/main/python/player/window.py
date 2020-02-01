@@ -28,7 +28,7 @@ from player.output.fullscreen import (
 )
 from player.output.orientation import OrientationStatusLabel, ViewpointManager
 from player.output.playback import (
-    FrameResPlaybackSlider,
+    FrameResolutionTimeSlider,
     LoopModeManager,
     PlayActions,
     PlaybackModeAction,
@@ -42,7 +42,7 @@ from player.output.size import (
 )
 from player.output.sound import VolumeManager, VolumePopupButton
 from player.playlist.files import OpenMediaMenu
-from player.playlist.player import ListPlayer
+from player.playlist.player import MediaListPlayer
 from player.playlist.view import DockablePlaylist, PlaylistWidget
 
 log = logging.getLogger(__name__)
@@ -99,7 +99,7 @@ class AppWindow(QMainWindow):
             io_ctrlr=self.io_ctrlr, media_player=self.media_player
         )
         self.loop_mode_mngr = LoopModeManager(parent=self)
-        self.listplayer = ListPlayer(
+        self.listplayer = MediaListPlayer(
             viewpoint_mngr=self.viewpoint_mngr,
             loop_mode_mngr=self.loop_mode_mngr,
             media_player=self.media_player,
@@ -126,6 +126,12 @@ class AppWindow(QMainWindow):
         )
 
     def create_playback_components(self):
+        # self.playback_ctrls_slider = BasicPlaybackSlider(
+        #     parent=self, listplayer=self.listplayer, media_player=self.media_player
+        # )
+        self.playback_ctrls_slider = FrameResolutionTimeSlider(
+            parent=self, listplayer=self.listplayer, media_player=self.media_player
+        )
         self.vol_mngr = VolumeManager(
             parent=self, listplayer=self.listplayer, media_player=self.media_player
         )
@@ -225,9 +231,6 @@ class AppWindow(QMainWindow):
             ToolBar("Toolbar", parent=self, objects=[self.button_bar_widget]),
         )
 
-        self.playback_ctrls_slider = FrameResPlaybackSlider(
-            parent=self, listplayer=self.listplayer, media_player=self.media_player
-        )
         self.playback_slider_widget = QWidget(self)
         self.playback_slider_widget.setContentsMargins(0, 0, 0, 0)
         self.playback_slider_widget.setLayout(QGridLayout(self.playback_slider_widget))

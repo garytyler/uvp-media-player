@@ -21,7 +21,7 @@ class MediaPlayerVlclibSignals(QObject):
     endreached = pyqtSignal(vlc.Event)
     forward = pyqtSignal(vlc.Event)
     # lengthchanged = pyqtSignal(vlc.Event)
-    mediachanged = pyqtSignal(vlc.Event)
+    # mediachanged = pyqtSignal(vlc.Event)
     muted = pyqtSignal(vlc.Event)
     nothingspecial = pyqtSignal(vlc.Event)
     opening = pyqtSignal(vlc.Event)
@@ -57,7 +57,7 @@ class MediaPlayerVlclibSignals(QObject):
             (vlc.EventType.MediaPlayerEndReached, self._endreached),
             (vlc.EventType.MediaPlayerForward, self._forward),
             # (vlc.EventType.MediaPlayerLengthChanged, self._lengthchanged),
-            (vlc.EventType.MediaPlayerMediaChanged, self._mediachanged),
+            # (vlc.EventType.MediaPlayerMediaChanged, self._mediachanged),
             (vlc.EventType.MediaPlayerMuted, self._muted),
             (vlc.EventType.MediaPlayerNothingSpecial, self._nothingspecial),
             (vlc.EventType.MediaPlayerOpening, self._opening),
@@ -182,7 +182,7 @@ class MediaPlayerVlclibSignals(QObject):
     @pyqtSlot(vlc.Event)
     def _positionchanged(self, e):
         self.positionchanged.emit(e)
-        # log.debug("VLCQT SIGNAL name='positionchanged'")
+        log.debug("VLCQT SIGNAL name='positionchanged'")
 
     @pyqtSlot(vlc.Event)
     def _scrambledchanged(self, e):
@@ -240,11 +240,11 @@ class MediaPlayerCustomSignals(MediaPlayerVlclibSignals):
         self.timer.setTimerType(Qt.CoarseTimer)
         self.timer.timeout.connect(self.on_timeout)
 
-        self.playing.connect(self.timer.start)
-        self.stopped.connect(self.timer.stop)
-        self.paused.connect(self.timer.stop)
+        # self.playing.connect(self.timer.start)
+        # self.stopped.connect(self.timer.stop)
+        # self.paused.connect(self.timer.stop)
 
-        self.mediachanged.connect(self.on_mediachanged)
+        # self.mediachanged.connect(self.on_mediachanged)
 
     def on_timeout(self):
         self.newframe.emit()

@@ -6,6 +6,7 @@ from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 
 from player import config
+from player.common.utils import fraction_string_to_float
 
 log = logging.getLogger(__name__)
 
@@ -15,6 +16,9 @@ class MediaItem(QStandardItem):
     PathRole = Qt.UserRole + 1
     ProbeRole = Qt.UserRole + 3
     SphericalRole = Qt.UserRole + 4
+
+    def __str__(self):
+        return self.title()
 
     def __init__(self, path: str, ffprobe_cmd: str):
         super().__init__()
@@ -49,6 +53,21 @@ class MediaItem(QStandardItem):
         width = int(stream["width"])
         height = int(stream["height"])
         return width, height
+
+    def info(self):
+        probe = self.probe()
+        stream = next((i for i in probe["streams"] if i["codec_type"] == "video"), None)
+        return {
+            "width": int(stream["width"]),
+            "height": int(stream["height"]),
+            "nb_frames": int(stream["nb_frames"]),
+            "has_b_frames": int(stream["has_b_frames"]),
+            "avg_frame_rate": fraction_string_to_float(stream["avg_frame_rate"]),
+            "r_frame_rate": fraction_string_to_float(stream["r_frame_rate"]),
+            "duration": float(stream["duration"]),
+            "duration_ts": float(stream["duration_ts"]),  # duration time scale
+            "time_base": fraction_string_to_float(stream["time_base"]),
+        }
 
     def is_spherical(self) -> bool:
         probe = self.data(MediaItem.ProbeRole)

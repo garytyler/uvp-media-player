@@ -1,7 +1,6 @@
 import logging
-from importlib import import_module
 
-from PyQt5.QtCore import QModelIndex, QObject, pyqtSignal, pyqtSlot
+from PyQt5.QtCore import QModelIndex, QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 
 from player import config
 from player.playlist.model import MediaItem
@@ -9,7 +8,7 @@ from player.playlist.model import MediaItem
 log = logging.getLogger(__name__)
 
 
-class ListPlayer(QObject):
+class _ListPlayer(QObject):
     mediachanged = pyqtSignal(MediaItem)
 
     def __init__(self, viewpoint_mngr, loop_mode_mngr, media_player):
@@ -143,8 +142,35 @@ class ListPlayer(QObject):
         self.mp.stop()
 
 
-def get_media_codec(vlc_media, track_num=0):
-    track = [t for t in vlc_media.tracks_get()][track_num]
-    vlcqt = import_module("vlcqt")
-    description = vlcqt.libvlc_media_get_codec_description(track.type, track.codec)
-    return description
+class MediaListPlayer(_ListPlayer):
+    """WIP to provide most vlc.MediaPlayer functionality in the one class with the
+    playlist.
+    """
+
+    newframe = pyqtSignal()
+    slider_precision = 100
+
+    def __init__(self, viewpoint_mngr, loop_mode_mngr, media_player):
+        super().__init__(
+            viewpoint_mngr=viewpoint_mngr,
+            loop_mode_mngr=loop_mode_mngr,
+            media_player=media_player,
+        )
+        self.timer = QTimer()
+        self.timer.setTimerType(Qt.CoarseTimer)
+        self.timer.timeout.connect(self.on_timeout)
+
+        self.mp.playing.connect(self.timer.start)
+        self.mp.stopped.connect(self.timer.stop)
+        self.mp.paused.connect(self.timer.stop)
+
+        self.mediachanged.connect(self.on_mediachanged)
+
+    def on_timeout(self):
+        self.newframe.emit()
+
+    @pyqtSlot(MediaItem)
+    def on_mediachanged(self, media_item: MediaItem):
+        media_info = media_item.info()
+        media_fps = media_info["avg_frame_rate"]
+        self.timer.setInterval(media_fps)

@@ -5,8 +5,7 @@ from player.context import AppContext
 
 def main():
     app_context = AppContext()
-    exit_code = app_context.run()
-    sys.exit(exit_code)
+    sys.exit(app_context.run())
 
 
 if __name__ == "__main__":

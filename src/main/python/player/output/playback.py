@@ -5,6 +5,7 @@ from PyQt5.QtWidgets import QAction, QActionGroup, QSlider
 
 from player import config
 from player.gui import icons
+from player.playlist.model import MediaItem
 
 log = logging.getLogger(__name__)
 
@@ -146,63 +147,69 @@ class NextMediaAction(QAction):
         self.listplayer.skip_next()
 
 
-class FrameResPlaybackSlider(QSlider):
-    slider_precision = 100  # Must match multiplier used by timer
+class FrameResolutionTimeSlider(QSlider):
+    """Basic playback time slider that updates per position change signal from vlc."""
+
+    # slider_precision = 100  # Must match multiplier used by timer
 
     def __init__(self, parent, listplayer, media_player):
         super().__init__(Qt.Horizontal, parent)
-        self.listplayer = listplayer
+        self.lp = listplayer
         self.mp = media_player
         self.setToolTip("Position")
-        self.curr_pos = self.mp.get_position()
+
         self.mp_pos = None
         self.mouse_down = False
 
-        self.slider_precision = self.slider_precision
-        self.proportion_per_frame = 1
-        self.length = 1
-
-        _media = self.mp.get_media()
-        if _media:
-            self.conform_to_media(media=_media)
-
-        self.listplayer.mediachanged.connect(self.on_mediachanged)
+        self.lp.mediachanged.connect(self.on_mediachanged)
         self.mp.positionchanged.connect(self.on_positionchanged)
         self.mp.stopped.connect(self.on_stopped)
+        self.mp.playing.connect(self.on_playing)
+        self.newframe_conn = self.lp.newframe.connect(self.on_newframe)
 
-        self.newframe_conn = self.mp.newframe.connect(self.on_newframe)
+    @pyqtSlot(MediaItem)
+    def on_mediachanged(self, media_item: MediaItem):
+        self.conform_to_media(media_item)
 
-    def conform_to_media(self, media):
-        duration_secs = media.get_duration() / self.slider_precision
-        self.total_frames = duration_secs * self.get_media_fps(media)
-        self.proportion_per_frame = 1 / self.total_frames
-        self.set_length(self.total_frames)
-        self.curr_pos = self.mp_pos = self.mp.get_position()
-
-    def setValue(self, value):
-        if not self.mouse_down:
-            super().setValue(value)
-
-    def on_stopped(self, e):
+    @pyqtSlot()
+    def on_stopped(self):
         self.setValue(0)
 
     @pyqtSlot()
-    def on_mediachanged(self):
-        self.conform_to_media(media=self.mp.get_media())
+    def on_playing(self):
+        self.curr_pos = self.mp.get_position()
+        self.mouse_down = False
 
     @pyqtSlot()
     def on_positionchanged(self):
-        self.mp_pos = self.mp.get_position()
+        pos = self.mp.get_position()
+        if pos and pos > 0:
+            self.mp_pos = pos * self.length
         self.mouse_down = False
 
     @pyqtSlot()
     def on_newframe(self):
-        if self.mp_pos:
+        if self.mp_pos and self.mp_pos <= 0:
+            self.curr_pos = self.mp_pos
+        elif self.mp_pos and self.mp_pos > 0:
             self.curr_pos = self.mp_pos
             self.mp_pos = None
         else:
-            self.curr_pos = self.curr_pos + self.proportion_per_frame
-        self.setValue(self.curr_pos * self.length)
+            num_frames = self.media_info["nb_frames"]
+            has_b_frames = self.media_info["has_b_frames"]
+            pos_incr = self.length / num_frames + has_b_frames
+            self.curr_pos = self.curr_pos + pos_incr
+        self.setValue(self.curr_pos)
+
+    def conform_to_media(self, media_item):
+        self.media_info = media_item.info()
+        # self.set_length(self.media_info['nb_frames'])
+        self.set_length(100000)
+
+    def setValue(self, value):
+        if self.mouse_down:
+            return
+        super().setValue(value)
 
     def mousePressEvent(self, e):
         if e.button() != Qt.LeftButton:
@@ -230,8 +237,6 @@ class FrameResPlaybackSlider(QSlider):
 
     def set_length(self, value):
         self.setMinimum(0)
-        # If length more than float max use float max.
-        # This is for setting ticks. Can also just be set to 1.
         self.setMaximum(min((value, 2147483647)))
         self.length = self.maximum() - self.minimum()
 
@@ -241,12 +246,3 @@ class FrameResPlaybackSlider(QSlider):
         pos_as_proportion = e.pos().x() / self.width()
         pos_as_slider_val = slider_range * pos_as_proportion + slider_min
         return pos_as_proportion, pos_as_slider_val
-
-    @staticmethod
-    def get_media_fps(vlc_media):
-        if not vlc_media:
-            return None
-        if not vlc_media.is_parsed():
-            vlc_media.parse()
-        # track = [t for t in vlc_media.tracks_get()][0]
-        return 30
