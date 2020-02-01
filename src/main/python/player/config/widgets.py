@@ -63,7 +63,7 @@ class SettingsDialog(QDialog):
         self.raise_()
 
 
-class OpenSettingsAction(QAction):
+class OpenSettingsDialogAction(QAction):
     def __init__(self, main_win):
         super().__init__("Settings")
 

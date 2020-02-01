@@ -17,7 +17,7 @@ from player.common.docking import DockableWidget, ToolBar
 from player.comms.client import IOController
 from player.comms.connect import ConnectStatusLabel, ConnectWideButtonBuilder
 from player.comms.socks import AutoReconnectSocket
-from player.config.widgets import OpenSettingsAction
+from player.config.widgets import OpenSettingsDialogAction
 from player.gui.ontop import AlwaysOnTopAction
 from player.gui.style import initialize_style
 from player.output.frame import MediaPlayerContentFrame
@@ -44,6 +44,7 @@ from player.output.sound import VolumeManager, VolumePopupButton
 from player.playlist.files import OpenMediaMenu
 from player.playlist.player import MediaListPlayer
 from player.playlist.view import DockablePlaylist, PlaylistWidget
+from player.window.adjustments import OpenAdjustmentsPopupWindowAction
 
 log = logging.getLogger(__name__)
 
@@ -158,7 +159,8 @@ class AppWindow(QMainWindow):
         self.zoom_out_act = ZoomOutAction(
             parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
         )
-        self.open_settings_act = OpenSettingsAction(main_win=self)
+        self.open_settings_act = OpenSettingsDialogAction(main_win=self)
+        self.open_adjustments_act = OpenAdjustmentsPopupWindowAction(main_win=self)
 
     def create_other_components(self):
         self.open_media_menu = OpenMediaMenu(
@@ -254,12 +256,15 @@ class AppWindow(QMainWindow):
         self.playback_bttns_middle.setObjectName("mainplaybuttons")
         self.playback_bttns_right = ToolBar(
             title="Right Controls",
-            objects=[self.playback_mode_act, self.vol_popup_bttn],
+            objects=[
+                self.vol_popup_bttn,
+                self.playback_mode_act,
+                self.open_adjustments_act,
+            ],
             collapsible=False,
             parent=self,
             icon_size=32,
         )
-
         self.playback_ctrls_widget = QWidget(self)
         self.playback_ctrls_widget.setContentsMargins(0, 0, 0, 0)
         self.playback_ctrls_widget.setLayout(QGridLayout(self.playback_ctrls_widget))
@@ -275,7 +280,6 @@ class AppWindow(QMainWindow):
         self.playback_ctrls_widget.layout().addWidget(
             self.playback_bttns_right, 1, 2, 1, 1, Qt.AlignJustify | Qt.AlignVCenter
         )
-
         self.playback_ctrls_dock_widget = DockableWidget(
             title="Playback",
             parent=self,

@@ -209,6 +209,7 @@ class PlaylistWidget(QWidget):
         )
 
         self.setLayout(QVBoxLayout())
+        self.layout().setContentsMargins(0, 0, 0, 0)
         self.layout().addWidget(self.view)
 
     def add_media(self, paths=[]):
@@ -241,17 +242,17 @@ class DockablePlaylist(DockableWidget):
         return action
 
 
-class PopupPlaylistWindow(PopupWindowWidget):
-    def __init__(self, playlist_view, main_win):
+class PlaylistPopupWindow(PopupWindowWidget):
+    def __init__(self, playlist_widget, main_win):
         super().__init__(parent=None)
-        self.playlist_view = playlist_view
+        self.playlist_widget = playlist_widget
         self.main_win = main_win
 
         self.setWindowTitle("Playlist")
         self.setLayout(QVBoxLayout(self))
 
         self.layout().setContentsMargins(0, 0, 0, 0)
-        self.layout().addWidget(self.playlist_view)
+        self.layout().addWidget(self.playlist_widget)
 
     def showEvent(self, e):
         width = self.sizeHint().width()
@@ -261,34 +262,10 @@ class PopupPlaylistWindow(PopupWindowWidget):
         super().showEvent(e)
 
 
-class OpenPlaylistAction(QAction):
-    def __init__(
-        self, parent, split_view, playlist_widget, frame_size_mngr, main_content_frame
-    ):
-        super().__init__(parent=parent)
-        self.parent = parent
-        self.split_view = split_view
-        self.playlist_widget = playlist_widget
-        self.frame_size_mngr = frame_size_mngr
-        self.main_content_frame = main_content_frame
-        self.setIcon(icons.get("open_split_view"))
-        self.setShortcutContext(Qt.WidgetWithChildrenShortcut)
-
-        self.toggled.connect(self.setChecked)
-
-        self.setShortcutVisibleInContextMenu(True)
-        self.setCheckable(True)
-        self.setChecked(False)
-
-    @pyqtSlot(bool)
-    def setChecked(self, checked):
-        self.split_view.toggle_playlist(checked)
-
-
-class PopupPlaylistAction(PopupWindowAction):
-    def __init__(self, playlist_view, main_win):
-        self.playlist_win = PopupPlaylistWindow(
-            playlist_view=playlist_view, main_win=main_win
+class OpenPlaylistPopupWindowAction(PopupWindowAction):
+    def __init__(self, playlist_widget, main_win):
+        self.playlist_win = PlaylistPopupWindow(
+            playlist_widget=playlist_widget, main_win=main_win
         )
         super().__init__(
             icon=icons.get("open_playlist"),

@@ -123,6 +123,9 @@ class AppIcons:
         self.toolbar_ext_bttn = qta.icon("mdi.menu-right-outline")
         self.virtual_reality = qta.icon("mdi.virtual-reality")
         self.file_remove = qta.icon("mdi.file-remove")
+        self.open_adjustments = qta.icon(
+            "fa5s.sliders-h", rotated=90, scale_factor=0.70
+        )
 
 
 _APP_ICONS = None
