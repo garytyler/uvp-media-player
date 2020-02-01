@@ -38,8 +38,7 @@ class ListPlayer(QObject):
     def _handle_media_finished(self):
         """Perform next expected task when media is finished."""
         curr_index = self._item.index()
-        curr_row = self._item.row()
-        next_index = curr_index.sibling(curr_row, curr_row + 1)
+        next_index = curr_index.sibling(self._item.row() + 1, 0)
         loop_mode = config.state.loop_mode
         if loop_mode == "one" and curr_index.isValid():
             self.mp.stop()
@@ -52,7 +51,6 @@ class ListPlayer(QObject):
 
     def _handle_playlist_finished(self):
         """Perform next expected task when playlist is finished."""
-        # loop_mode = self.loop_mode_mngr.get_mode()
         loop_mode = config.state.loop_mode
         if loop_mode == "off":
             self.mp.stop()
@@ -97,6 +95,7 @@ class ListPlayer(QObject):
             return False
         item = index.model().itemFromIndex(index)
         if not isinstance(item, MediaItem):
+            log.error(f"Unexpected item type '{type(item)}'. Expected MediaItem.")
             return False
         else:
             self._item = index.model().itemFromIndex(index)
