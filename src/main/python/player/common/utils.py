@@ -1,4 +1,9 @@
 import fractions
+from functools import lru_cache
+
+
+def cached_property(getter):
+    return property(lru_cache()(getter))
 
 
 def fraction_string_to_float(string):

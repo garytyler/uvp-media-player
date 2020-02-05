@@ -160,7 +160,9 @@ class AppWindow(QMainWindow):
             parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
         )
         self.open_settings_act = OpenSettingsDialogAction(main_win=self)
-        self.open_adjustments_act = OpenAdjustmentsPopupWindowAction(main_win=self)
+        self.open_adjustments_act = OpenAdjustmentsPopupWindowAction(
+            main_win=self, media_player=self.media_player
+        )
 
     def create_other_components(self):
         self.open_media_menu = OpenMediaMenu(

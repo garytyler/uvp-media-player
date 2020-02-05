@@ -18,7 +18,7 @@ class _State:
         super().__setattr__("settings", settings)
 
     def __setattr__(self, key, value):
-        options = SCHEMA[key]["options"]  # Never throws error
+        options = SCHEMA[key].get("options")  # Never throws error
         if options and value not in options:
             raise ValueError("Invalid value for this configuration setting")
         self.settings.setValue(key, value)
@@ -27,7 +27,7 @@ class _State:
         value = self.settings.value(
             key, defaultValue=SCHEMA[key]["default"], type=SCHEMA[key]["type"],
         )
-        options = SCHEMA[key]["options"]
+        options = SCHEMA[key].get("options")
         if options and value not in options:
             default = SCHEMA[key]["default"]
             self.settings.setValue(key, default)

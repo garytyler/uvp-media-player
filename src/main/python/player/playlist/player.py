@@ -4,6 +4,7 @@ from PyQt5.QtCore import QModelIndex, QObject, Qt, QTimer, pyqtSignal, pyqtSlot
 
 from player import config
 from player.playlist.model import MediaItem
+import vlcqt
 
 log = logging.getLogger(__name__)
 
@@ -103,6 +104,7 @@ class _ListPlayer(QObject):
             self.viewpoint_mngr.set_redraw_every_frame(is_spherical)
             self.mp.stop()
             self.mp.set_mrl(path)
+            # self.mp.get_media().add_options("--avcodec-hw=none")
             self.mediachanged.emit(self._item)
             self.mp.play()
             return True

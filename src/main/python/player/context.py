@@ -2,7 +2,7 @@ import ctypes
 import logging
 import os
 import sys
-from functools import lru_cache
+from player.common.utils import cached_property
 from importlib import import_module
 from os import environ
 from os.path import abspath, dirname, join
@@ -12,10 +12,6 @@ from fbs_runtime.application_context import is_frozen
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 log = logging.getLogger(__name__)
-
-
-def cached_property(getter):
-    return property(lru_cache()(getter))
 
 
 class AppContext(ApplicationContext):

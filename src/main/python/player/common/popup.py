@@ -24,16 +24,11 @@ class PopupControlWidget(QFrame):
 class PopupWindowWidget(QWidget):
     hiddenchanged = pyqtSignal(bool)
 
-    def __init__(self, parent, widget=None):
-        super().__init__(parent=None)
-        self.parent = parent
-        self.position = None
+    def __init__(self, parent):
+        super().__init__(parent)
         self.setWindowFlags(self.windowFlags() | Qt.Window)
 
     def showEvent(self, e):
-        if self.position:
-            self.move(self.position)
-
         is_always_on_top = ontop.get_always_on_top(self.main_win)
         ontop.set_always_on_top(self, is_always_on_top)
 
@@ -41,11 +36,9 @@ class PopupWindowWidget(QWidget):
         self.hiddenchanged.emit(True)
 
     def hideEvent(self, e):
-        self.position = self.pos()
         self.hiddenchanged.emit(False)
 
     def closeEvent(self, e):
-        self.position = self.pos()
         self.hide()
         e.ignore()
 

@@ -156,6 +156,7 @@ class FrameResolutionTimeSlider(QSlider):
         super().__init__(Qt.Horizontal, parent)
         self.lp = listplayer
         self.mp = media_player
+        self.setObjectName("main-time-slider")
         self.setToolTip("Position")
 
         self.mp_pos = None

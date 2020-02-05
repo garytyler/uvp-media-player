@@ -4,11 +4,6 @@
 }
 
 
-QAbstractButton{
-    border:none;
-}
-
-
 /*
  * QWidget
  */
@@ -118,6 +113,11 @@ QToolButton:hover:disabled{
     background-color: palette(button);
 }
 
+QPushButton:disabled {
+    /* border-style: inset; */
+    /* color:gray; */
+    color: palette(Midlight);
+}
 
 /*
  * QToolButton#bordered
@@ -331,21 +331,20 @@ QScrollArea #scrollAreaWidgetContents {
 QSlider::groove {
     margin: 2px 0;
 }
-
-QSlider::handle {
+QSlider::handle#main-time-slider{
     border-radius: 5px;
     background-color: palette(light);
     max-height: 20px;
 }
-
-QSlider::add-page:horizontal {
+QSlider::add-page:horizontal#main-time-slider {
     background: palette(base);
+    /* background: palette(alternate-base); */
 }
 
-QSlider::sub-page:horizontal {
+QSlider::sub-page:horizontal#main-time-slider {
     background: palette(highlight);
 }
 
-QSlider::sub-page:horizontal:disabled {
+QSlider::sub-page:horizontal:disabled#main-time-slider {
     background-color: palette(light);
 }
