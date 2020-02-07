@@ -197,24 +197,24 @@ class ImageEffectsWidget(QtWidgets.QWidget):
         ]
 
 
-class MediaPlayerAdjustmentsWindow(PopupWindowWidget):
-    def __init__(self, main_win, media_player, parent):
-        super().__init__(parent)
-        self.main_win = main_win
-        self.setWindowTitle("Media Player Adjustments")
-        self.setLayout(QtWidgets.QVBoxLayout(self))
-        self.layout().addWidget(
-            ImageEffectsWidget(parent=self, media_player=media_player)
-        )
+# class MediaPlayerAdjustmentsWindow(PopupWindowWidget):
+#     def __init__(self, main_win, media_player, parent):
+#         super().__init__(parent)
+#         self.main_win = main_win
+#         self.setWindowTitle("Media Player Adjustments")
+#         self.setLayout(QtWidgets.QVBoxLayout(self))
+#         self.layout().addWidget(
+#             ImageEffectsWidget(parent=self, media_player=media_player)
+#         )
 
 
-class OpenMediaPlayerAdjustmentsWindowAction(PopupWindowAction):
-    def __init__(self, main_win, media_player):
-        super().__init__(
-            icon=gui.icons.get("open_media_player_adjustments"),
-            text="Media Player Adjustments",
-            widget=MediaPlayerAdjustmentsWindow(
-                main_win=main_win, media_player=media_player, parent=main_win
-            ),
-            main_win=main_win,
-        )
+# class OpenMediaPlayerAdjustmentsWindowAction(PopupWindowAction):
+#     def __init__(self, main_win, media_player):
+#         super().__init__(
+#             icon=gui.icons.get("open_media_player_adjustments"),
+#             text="Media Player Adjustments",
+#             widget=MediaPlayerAdjustmentsWindow(
+#                 main_win=main_win, media_player=media_player, parent=main_win
+#             ),
+#             main_win=main_win,
+#         )
