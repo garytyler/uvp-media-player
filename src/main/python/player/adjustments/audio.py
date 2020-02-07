@@ -1,8 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 import vlcqt
-from player import config, gui
-from player.base.popup import PopupWindowAction, PopupWindowWidget
+from player import config
 from player.common.utils import cached_property
 
 
@@ -79,8 +78,8 @@ class AdjustmentSliderWidget(QtWidgets.QSlider):
         self.load_state_from_media()
 
 
-class ImageEffectsWidget(QtWidgets.QWidget):
-    """Main gui widget for image effect settings"""
+class AudioEffectsWidget(QtWidgets.QWidget):
+    """Main gui widget for audio effect settings"""
 
     on_enabled = QtCore.pyqtSignal(bool)
 
@@ -88,15 +87,15 @@ class ImageEffectsWidget(QtWidgets.QWidget):
         super().__init__(parent=parent)
         self.mp = media_player
 
-        self.setWindowTitle("Image Effects")
+        self.setWindowTitle("Audio")
         self.setLayout(QtWidgets.QVBoxLayout(self))
 
-        self.top_ctrls_lo = QtWidgets.QGridLayout(self)
+        self.top_ctrls_lo = QtWidgets.QGridLayout()
         self.enable_checkbox = QtWidgets.QCheckBox("Enable Image Effects", parent=self)
         self.top_ctrls_lo.addWidget(self.enable_checkbox)
         self.layout().addLayout(self.top_ctrls_lo)
 
-        self.sliders_layout = QtWidgets.QGridLayout(self)
+        self.sliders_layout = QtWidgets.QGridLayout()
         for index, slider in enumerate(self.sliders):
             label = QtWidgets.QLabel(slider.name.capitalize())
             self.sliders_layout.addWidget(label, index, 1)

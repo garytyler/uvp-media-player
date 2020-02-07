@@ -13,10 +13,12 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from player.base.docking import DockableWidget, ToolBar
-from player.comms.connect import ConnectStatusLabel, ConnectWideButtonBuilder
-from player.comms.controller import IOController
-from player.comms.socks import AutoReconnectSocket
+from player.adjustments import OpenMediaPlayerAdjustmentsWindowAction
+from player.client.configure import OpenClientSettingsDialogAction
+from player.client.connect import ConnectStatusLabel, ConnectWideButtonBuilder
+from player.client.controller import IOController
+from player.client.socks import AutoReconnectSocket
+from player.common.base.docking import DockableWidget, ToolBar
 from player.gui.ontop import AlwaysOnTopAction
 from player.gui.style import initialize_style
 from player.output.frame import MediaPlayerContentFrame
@@ -43,14 +45,12 @@ from player.output.sound import VolumeManager, VolumePopupButton
 from player.playlist.files import OpenMediaMenu
 from player.playlist.player import MediaListPlayer
 from player.playlist.view import DockablePlaylist, PlaylistWidget
-from player.windows.adjustments import OpenMediaPlayerAdjustmentsWindowAction
-from player.windows.client import OpenClientSettingsDialogAction
-from player.windows.preferences import OpenMediaPlayerPreferencesWindowAction
+from player.preferences import OpenMediaPlayerPreferencesWindowAction
 
 log = logging.getLogger(__name__)
 
 
-class AppWindow(QMainWindow):
+class MainWindow(QMainWindow):
     initialized = pyqtSignal()
     centralwidgetresized = pyqtSignal()
 
@@ -220,7 +220,7 @@ class AppWindow(QMainWindow):
 
         self.button_bar_widget = QWidget(self)
         self.button_bar_widget.setContentsMargins(0, 0, 0, 0)
-        self.button_bar_widget.setLayout(QGridLayout(self.button_bar_widget))
+        self.button_bar_widget.setLayout(QGridLayout())
         self.button_bar_widget.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Expanding
         )
@@ -240,7 +240,7 @@ class AppWindow(QMainWindow):
 
         self.playback_slider_widget = QWidget(self)
         self.playback_slider_widget.setContentsMargins(0, 0, 0, 0)
-        self.playback_slider_widget.setLayout(QGridLayout(self.playback_slider_widget))
+        self.playback_slider_widget.setLayout(QGridLayout())
         self.playback_slider_widget.layout().addWidget(
             self.playback_ctrls_slider, 0, 0, 1, -1, Qt.AlignTop
         )
@@ -258,10 +258,9 @@ class AppWindow(QMainWindow):
             collapsible=False,
             icon_size=60,
         )
-        # self.playback_bttns_middle.setObjectName("mainplaybuttons")
         self.playback_bttns_right = ToolBar(
             title="Right Controls",
-            objects=[self.vol_popup_bttn, self.playback_mode_act],
+            objects=[self.playback_mode_act, self.vol_popup_bttn],
             collapsible=False,
             parent=self,
             icon_size=32,

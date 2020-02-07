@@ -107,12 +107,11 @@ class AppContext(ApplicationContext):
 
     @cached_property
     def main_win(self):
-        from player.windows import AppWindow
+        from player.mainwindow import MainWindow
 
-        window = AppWindow(
+        window = MainWindow(
             media_player=self.media_player,
             ffprobe_cmd=self.ffprobe_cmd,
-            # settings=self.settings,
             stylesheet=self.stylesheet,
         )
         if is_frozen():

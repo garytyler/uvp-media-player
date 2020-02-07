@@ -1,6 +1,8 @@
 from PyQt5 import QtWidgets
 
-from player import base, config, gui
+from player import common, config, gui
+
+from .about import AboutTextLabel
 
 
 class EnableHardwareAccelerationCheckbox(QtWidgets.QCheckBox):
@@ -10,23 +12,14 @@ class EnableHardwareAccelerationCheckbox(QtWidgets.QCheckBox):
         )
 
 
-class VLCOptionsGroupBox(QtWidgets.QGroupBox):
-    def __init__(self, parent):
-        super().__init__(title="VLC Options (Require restart)", parent=parent)
-
-        self.setLayout(QtWidgets.QVBoxLayout(self))
-
-        self.enable_hw_accel_checkbox = EnableHardwareAccelerationCheckbox(parent=self)
-        self.layout().addWidget(self.enable_hw_accel_checkbox)
-
-
-class PlayerPreferencesWindow(base.modal.BaseModalSettingsDialog):
+class PlayerPreferencesWindow(common.base.modal.BaseModalSettingsDialog):
     def __init__(self, main_win, media_player):
         super().__init__(title="Media Player Preferences", main_win=main_win)
 
     def create(self, widget):
         widget.setLayout(QtWidgets.QVBoxLayout())
 
+        # VLC Options
         self.vlc_options_group = QtWidgets.QGroupBox(
             title="VLC Options ", parent=widget
         )
@@ -40,6 +33,14 @@ class PlayerPreferencesWindow(base.modal.BaseModalSettingsDialog):
         self.hw_accel_checkbox.setChecked(config.state.hw_accel)
         self.vlc_options_lo.addWidget(self.hw_accel_checkbox)
 
+        # About
+        self.about_group = QtWidgets.QGroupBox(title="About", parent=widget)
+        self.about_lo = QtWidgets.QVBoxLayout()
+        self.about_group.setLayout(self.about_lo)
+        widget.layout().addWidget(self.about_group)
+
+        self.about_lo.addWidget(AboutTextLabel(parent=self))
+
         return widget
 
     def save(self):
@@ -47,11 +48,11 @@ class PlayerPreferencesWindow(base.modal.BaseModalSettingsDialog):
 
 
 class OpenMediaPlayerPreferencesWindowAction(
-    base.modal.BaseOpenModalSettingsDialogAction
+    common.base.modal.BaseOpenModalSettingsDialogAction
 ):
     def __init__(self, main_win, media_player):
         super().__init__(
-            text="Open Media Player Preferences",
+            text="Media Player Preferences",
             main_win=main_win,
             icon=gui.icons.get("open_media_player_preferences"),
         )

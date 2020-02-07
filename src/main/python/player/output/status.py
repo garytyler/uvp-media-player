@@ -38,7 +38,7 @@ class IconStatusLabel(QWidget):
         self._mode = None
         self._state = None
 
-        self.setLayout(QHBoxLayout(self))
+        self.setLayout(QHBoxLayout())
         self.layout().setContentsMargins(0, 0, 0, 0)
 
         self.text_lbl = TextStatusLabel(parent=self)
