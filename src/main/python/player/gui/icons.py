@@ -119,13 +119,15 @@ class AppIcons:
         self.always_on_top = qta.icon("mdi.window-restore", scale_factor=1)
         self.open_playlist = qta.icon("mdi.format-list-bulleted")
         self.open_split_view = qta.icon("mdi.view-split-vertical")
-        self.open_settings = qta.icon("mdi.cogs")
+        # self.open_settings = qta.icon("mdi.cogs")
         self.toolbar_ext_bttn = qta.icon("mdi.menu-right-outline")
         self.virtual_reality = qta.icon("mdi.virtual-reality")
         self.file_remove = qta.icon("mdi.file-remove")
-        self.open_adjustments = qta.icon(
-            "fa5s.sliders-h", rotated=90, scale_factor=0.70
+        self.open_media_player_adjustments = qta.icon(
+            "fa5s.sliders-h", scale_factor=0.70
         )
+        self.open_media_player_preferences = qta.icon("fa5s.cog", scale_factor=0.70)
+        self.open_client_settings = qta.icon("fa5s.user-cog", scale_factor=0.70)
 
 
 _APP_ICONS = None

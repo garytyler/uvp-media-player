@@ -17,7 +17,7 @@ QWidget#popup {
 /*
  * QGroupBox
  */
-
+/*
 QGroupBox {
     background-color: palette(alternate-base);
     border: 1px solid palette(light);
@@ -27,7 +27,7 @@ QGroupBox {
 QGroupBox::title {
     background-color: transparent;
 }
-
+ */
 
 /*
  * QMenu

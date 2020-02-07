@@ -2,7 +2,6 @@ import ctypes
 import logging
 import os
 import sys
-from player.common.utils import cached_property
 from importlib import import_module
 from os import environ
 from os.path import abspath, dirname, join
@@ -10,6 +9,9 @@ from os.path import abspath, dirname, join
 from fbs_runtime import platform
 from fbs_runtime.application_context import is_frozen
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
+
+from player import config
+from player.common.utils import cached_property
 
 log = logging.getLogger(__name__)
 
@@ -19,17 +21,14 @@ class AppContext(ApplicationContext):
         super().__init__()
         self.app.setOrganizationName(self.build_settings["org_name"])
         self.app.setApplicationName(self.build_settings["app_name"])
-        self.initialize_logging()
+        self.init_logging()
         log.info(
             f"Launching: {self.app.organizationName()}/{self.app.applicationName()}"
         )
-        self.initialize_vlcqt()
+        self.init_settings()
+        self.init_vlcqt()
 
-    def initialize_vlcqt(self):
-        vlc_args = os.environ.get("VLC_ARGS", default=None)
-        self.vlcqt.initialize(args=vlc_args.split() if vlc_args else [])
-
-    def initialize_logging(self):
+    def init_logging(self):
         # Set player log file
         player_log_file = os.getenv("VR_PLAYER_LOG_FILE", None)
         if player_log_file:
@@ -46,6 +45,21 @@ class AppContext(ApplicationContext):
             logger = logging.getLogger(name)
             logger.setLevel(level)
             logger.info(f"SET LOGGER LOG LEVEL name={name} level={level}")
+
+    def init_settings(self):
+        settings = config.Settings(
+            self.app.organizationName(), self.app.applicationName()
+        )
+        log.info(f"Configuration file: {settings.fileName()}")
+        config.state.load(settings)
+
+    def init_vlcqt(self):
+        vlc_args = os.environ.get("VLC_ARGS", default="").split()
+        disable_hw_accel_arg = "--avcodec-hw=none"
+        already = bool(disable_hw_accel_arg in vlc_args)
+        if config.state.hw_accel and not already:
+            vlc_args.append(disable_hw_accel_arg)
+        self.vlcqt.initialize(args=vlc_args)
 
     @cached_property
     def vlcqt(self):
@@ -87,32 +101,18 @@ class AppContext(ApplicationContext):
         return self.vlcqt.MediaPlayer()
 
     @cached_property
-    def settings(self):
-        from player import config
-        from player.config import state
-        from player.gui.style import initialize_style
-
-        settings = config.Settings(
-            self.app.organizationName(), self.app.applicationName()
-        )
-        log.info(f"Configuration file: {settings.fileName()}")
-        state.load(settings)
-        initialize_style(self.app, self.stylesheet)
-        return settings
-
-    @cached_property
     def stylesheet(self):
         with open(self.get_resource("style/dark.qss")) as stylesheet:
             return stylesheet.read()
 
     @cached_property
     def main_win(self):
-        from player.window import AppWindow
+        from player.windows import AppWindow
 
         window = AppWindow(
             media_player=self.media_player,
             ffprobe_cmd=self.ffprobe_cmd,
-            settings=self.settings,
+            # settings=self.settings,
             stylesheet=self.stylesheet,
         )
         if is_frozen():

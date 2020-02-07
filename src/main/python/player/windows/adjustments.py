@@ -2,7 +2,7 @@ from PyQt5 import QtCore, QtWidgets
 
 import vlcqt
 from player import config, gui
-from player.common.popup import PopupWindowAction, PopupWindowWidget
+from player.base.popup import PopupWindowAction, PopupWindowWidget
 from player.common.utils import cached_property
 
 
@@ -46,26 +46,37 @@ class AdjustmentSliderWidget(QtWidgets.QSlider):
 
         self.valueChanged.connect(lambda v: self._set_media_state(v))
 
+        self._set_media_state(self.get_stored_state())
+
     def _set_media_state(self, value):
         self.mp.video_set_adjust_float(self.adjust_option_type, float(value / 100))
 
-    def _set_config_state(self, value):
+    def get_media_state(self):
+        return self.mp.video_get_adjust_float(self.adjust_option_type)
+
+    def _set_stored_state(self, value):
         setattr(config.state, self.name, value)
+
+    def get_stored_state(self):
+        return getattr(config.state, self.name) * 100
 
     @QtCore.pyqtSlot()
     def save_state(self):
         """Write current value to config store"""
-        self._set_config_state(self.value() / 100)
+        self._set_stored_state(self.value() / 100)
 
     @QtCore.pyqtSlot()
-    def load_state(self):
+    def load_state_from_media(self):
         """Reset to default value"""
-        self.setValue(getattr(config.state, self.name) * 100)
+        self.setValue(self.get_media_state() * 100)
 
     @QtCore.pyqtSlot()
     def reset_state(self):
         """Reset to default value"""
         self.setValue(config.schema[self.name]["default"] * 100)
+
+    def showEvent(self, e):
+        self.load_state_from_media()
 
 
 class ImageEffectsWidget(QtWidgets.QWidget):
@@ -113,7 +124,11 @@ class ImageEffectsWidget(QtWidgets.QWidget):
 
         for slider in self.sliders:
             slider.sliderPressed.connect(lambda: self.save_button.setEnabled(True))
-            slider.load_state()
+            # sliderdef load_stored_state_to_media()
+
+    def showEvent(self, e):
+        for slider in self.sliders:
+            slider.load_state_from_media()
 
     @QtCore.pyqtSlot()
     def save_state(self):
@@ -182,23 +197,23 @@ class ImageEffectsWidget(QtWidgets.QWidget):
         ]
 
 
-class AdjustmentsPopupWindow(PopupWindowWidget):
+class MediaPlayerAdjustmentsWindow(PopupWindowWidget):
     def __init__(self, main_win, media_player, parent):
         super().__init__(parent)
         self.main_win = main_win
-        self.setWindowTitle("Adjustment")
+        self.setWindowTitle("Media Player Adjustments")
         self.setLayout(QtWidgets.QVBoxLayout(self))
         self.layout().addWidget(
             ImageEffectsWidget(parent=self, media_player=media_player)
         )
 
 
-class OpenAdjustmentsPopupWindowAction(PopupWindowAction):
+class OpenMediaPlayerAdjustmentsWindowAction(PopupWindowAction):
     def __init__(self, main_win, media_player):
         super().__init__(
-            icon=gui.icons.get("open_adjustments"),
-            text="Adjustments",
-            widget=AdjustmentsPopupWindow(
+            icon=gui.icons.get("open_media_player_adjustments"),
+            text="Media Player Adjustments",
+            widget=MediaPlayerAdjustmentsWindow(
                 main_win=main_win, media_player=media_player, parent=main_win
             ),
             main_win=main_win,

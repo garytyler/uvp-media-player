@@ -13,11 +13,10 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from player.common.docking import DockableWidget, ToolBar
-from player.comms.client import IOController
+from player.base.docking import DockableWidget, ToolBar
 from player.comms.connect import ConnectStatusLabel, ConnectWideButtonBuilder
+from player.comms.controller import IOController
 from player.comms.socks import AutoReconnectSocket
-from player.config.widgets import OpenSettingsDialogAction
 from player.gui.ontop import AlwaysOnTopAction
 from player.gui.style import initialize_style
 from player.output.frame import MediaPlayerContentFrame
@@ -44,7 +43,9 @@ from player.output.sound import VolumeManager, VolumePopupButton
 from player.playlist.files import OpenMediaMenu
 from player.playlist.player import MediaListPlayer
 from player.playlist.view import DockablePlaylist, PlaylistWidget
-from player.window.adjustments import OpenAdjustmentsPopupWindowAction
+from player.windows.adjustments import OpenMediaPlayerAdjustmentsWindowAction
+from player.windows.client import OpenClientSettingsDialogAction
+from player.windows.preferences import OpenMediaPlayerPreferencesWindowAction
 
 log = logging.getLogger(__name__)
 
@@ -53,9 +54,8 @@ class AppWindow(QMainWindow):
     initialized = pyqtSignal()
     centralwidgetresized = pyqtSignal()
 
-    def __init__(self, media_player, ffprobe_cmd, settings, stylesheet, flags=None):
+    def __init__(self, media_player, ffprobe_cmd, stylesheet, flags=None):
         QMainWindow.__init__(self, flags)
-        self.settings = settings
         self._window_state = None
         self.qapp = QApplication.instance()
         initialize_style(self.qapp, stylesheet)
@@ -159,8 +159,11 @@ class AppWindow(QMainWindow):
         self.zoom_out_act = ZoomOutAction(
             parent=self, zoom_ctrl_mngr=self.zoom_ctrl_mngr
         )
-        self.open_settings_act = OpenSettingsDialogAction(main_win=self)
-        self.open_adjustments_act = OpenAdjustmentsPopupWindowAction(
+        self.open_settings_act = OpenClientSettingsDialogAction(main_win=self)
+        self.open_adjustments_act = OpenMediaPlayerAdjustmentsWindowAction(
+            main_win=self, media_player=self.media_player
+        )
+        self.open_player_prefs_act = OpenMediaPlayerPreferencesWindowAction(
             main_win=self, media_player=self.media_player
         )
 
@@ -243,7 +246,7 @@ class AppWindow(QMainWindow):
         )
         self.playback_bttns_left = ToolBar(
             title="Left Control",
-            objects=[],
+            objects=[self.open_player_prefs_act, self.open_adjustments_act],
             collapsible=False,
             parent=self,
             icon_size=32,
@@ -255,14 +258,10 @@ class AppWindow(QMainWindow):
             collapsible=False,
             icon_size=60,
         )
-        self.playback_bttns_middle.setObjectName("mainplaybuttons")
+        # self.playback_bttns_middle.setObjectName("mainplaybuttons")
         self.playback_bttns_right = ToolBar(
             title="Right Controls",
-            objects=[
-                self.vol_popup_bttn,
-                self.playback_mode_act,
-                self.open_adjustments_act,
-            ],
+            objects=[self.vol_popup_bttn, self.playback_mode_act],
             collapsible=False,
             parent=self,
             icon_size=32,

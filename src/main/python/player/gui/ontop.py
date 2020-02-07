@@ -11,16 +11,16 @@ def get_always_on_top(window):
 
 
 def set_always_on_top(window, value):
+    is_visible = window.isVisible()
     if value:
         if not get_always_on_top(window):
             _args = window.windowFlags() | Qt.WindowStaysOnTopHint
             window.setWindowFlags(_args)
-            window.show()
     else:
         if get_always_on_top(window):
             _args = window.windowFlags() & ~Qt.WindowStaysOnTopHint
             window.setWindowFlags(_args)
-            window.show()
+    window.setVisible(is_visible)
 
 
 class AlwaysOnTopAction(QAction):

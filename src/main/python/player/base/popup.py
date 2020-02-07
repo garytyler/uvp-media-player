@@ -5,6 +5,8 @@ from player.gui import ontop
 
 
 class PopupControlWidget(QFrame):
+    """Frameless popup window to be created once on init."""
+
     def __init__(self, parent):
         super().__init__(parent=parent)
         self.parent = parent

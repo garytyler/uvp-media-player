@@ -44,6 +44,8 @@ SCHEMA = {
     "hue": {"type": float, "default": 0.0, "min": -180.0, "max": 180.0},
     "saturation": {"type": float, "default": 1.0, "min": 0.0, "max": 3.0},
     "gamma": {"type": float, "default": 1.0, "min": 0.01, "max": 10.0},
+    # VLC options
+    "hw_accel": {"type": bool, "default": True, "options": (True, False)},
 }
 
 
@@ -55,6 +57,7 @@ class Settings(QSettings):
             organization_name,
             application_name,
         )
+        from . import state  # noqa: F401
 
 
 # TODO Change 'config' module name to 'settings' and 'options' obj to 'config'
