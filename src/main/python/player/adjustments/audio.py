@@ -1,7 +1,6 @@
 from PyQt5 import QtCore, QtWidgets
 
-import vlcqt
-from player import config
+from player import config, vlcqt
 from player.common.utils import cached_property
 
 
