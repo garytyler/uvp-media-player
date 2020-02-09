@@ -1,10 +1,13 @@
 import logging
+import os
 
+from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup, QApplication, QMenu
 
 from player.gui import icons
+from player.output import frame
 from player.output.status import IconStatusLabel
 
 log = logging.getLogger(__name__)
@@ -20,8 +23,9 @@ class FullscreenManager(QObject):
     fullscreenstarted = pyqtSignal(QAction)
     fullscreenstopped = pyqtSignal()
 
-    def __init__(self, main_content_frame, viewpoint_mngr):
+    def __init__(self, main_win, main_content_frame, viewpoint_mngr):
         super().__init__()
+        self.main_win = main_win
         self.viewpoint_mngr = viewpoint_mngr
         self.main_content_frame = main_content_frame
 
@@ -33,7 +37,23 @@ class FullscreenManager(QObject):
         self._is_fullscreen = True
         self.fullscreenstarted.emit(action)
 
+        # Set a temp frame with a notification in empty window space
+        temp_frame = frame.BaseContentFrame()
+        temp_frame.setLayout(QtWidgets.QVBoxLayout())
+        temp_label = QtWidgets.QLabel(
+            f"""- Fullscreen Mode -{os.linesep}{qscreen_description_string(qscreen)}"""
+        )
+        temp_label.setAlignment(QtCore.Qt.AlignCenter)
+        temp_frame.layout().addWidget(temp_label)
+        self.main_win.setCentralWidget(temp_frame)
+
+        # Give focus to main window
+        self.main_win.activateWindow()
+
     def stop(self):
+        if not self._is_fullscreen:
+            log.error("Stop Fullscreen requested but fullscreen mode not active.")
+            return
         self.main_content_frame.stop_fullscreen()
         self._is_fullscreen = False
         self.fullscreenstopped.emit()
@@ -61,6 +81,17 @@ class FullscreenStatusLabel(IconStatusLabel):
         self.set_status("Main Window", QIcon.Normal, QIcon.Off)
 
 
+def qscreen_description_string(qscreen):
+    geo = qscreen.geometry()
+    id_attr_names = ("name", "manufacturer", "model")
+    id_string = ""
+    for i in id_attr_names:
+        value = getattr(qscreen, i, "")()
+        if value:
+            id_string += value.strip(".\\")
+    return f"{id_string} - ({geo.width()},{geo.height()})"
+
+
 class StartFullscreenAction(QAction):
     id_attr_names = ("name", "manufacturer", "model")
 
@@ -76,16 +107,7 @@ class StartFullscreenAction(QAction):
         self._main_win = main_win
         self.qscreen = qscreen
         self.fullscreen_mngr = fullscreen_mngr
-        self.geo = self.qscreen.geometry()
-        self.width = self.geo.width()
-        self.height = self.geo.height()
-        self.id_string = ""
-        for i in self.id_attr_names:
-            value = getattr(self.qscreen, i, "")()
-            if value:
-                self.id_string += value.strip(".\\")
-        self.description = f"{self.id_string} - ({self.width},{self.height})"
-
+        self.description = qscreen_description_string(qscreen)
         self.set_description_as_text(is_primary, is_this_screen)
 
         self.triggered.connect(self.on_triggered)

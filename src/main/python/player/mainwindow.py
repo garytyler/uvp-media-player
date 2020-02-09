@@ -1,8 +1,8 @@
 import logging
 from typing import Tuple
 
+from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
     QApplication,
     QGridLayout,
@@ -122,14 +122,12 @@ class MainWindow(QMainWindow):
             media_player=self.media_player,
         )
         self.fullscreen_mngr = FullscreenManager(
+            main_win=self,
             main_content_frame=self.media_player_content_frame,
             viewpoint_mngr=self.viewpoint_mngr,
         )
 
     def create_playback_components(self):
-        # self.playback_ctrls_slider = BasicPlaybackSlider(
-        #     parent=self, listplayer=self.listplayer, media_player=self.media_player
-        # )
         self.playback_ctrls_slider = FrameResolutionTimeSlider(
             parent=self, listplayer=self.listplayer, media_player=self.media_player
         )
@@ -291,13 +289,28 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, self.playback_ctrls_dock_widget)
 
     def create_window_shortcuts(self):
-        self.ctrl_w = QShortcut("Ctrl+W", self, self.close)
+
+        # Close window
+        # Windows: [ctrl] + [w]
+        self.ctrl_w = QtWidgets.QShortcut("Ctrl+W", self, self.close)
+
+        # Zoom in
+        # Windows: [ctrl] + [+]
         self.ctrl_plus = QShortcut(
-            QKeySequence.ZoomIn, self, self.zoom_ctrl_mngr.zoom_in
+            QtGui.QKeySequence.ZoomIn, self, self.zoom_ctrl_mngr.zoom_in
         )
-        self.ctrl_i = QShortcut("Ctrl+I", self, self.zoom_ctrl_mngr.zoom_in)
+
+        # Zoom out
+        # Windows: [ctrl] + [-]
         self.ctrl_minus = QShortcut(
-            QKeySequence.ZoomOut, self, self.zoom_ctrl_mngr.zoom_out
+            QtGui.QKeySequence.ZoomOut, self, self.zoom_ctrl_mngr.zoom_out
+        )
+
+        # Exit fullscreen
+        # Windows: [ESC]
+        self.ctrl_w = QtWidgets.QShortcut("Ctrl+W", self, self.close)
+        self.ctrl_w = QtWidgets.QShortcut(
+            QtGui.QKeySequence.Cancel, self, self.fullscreen_mngr.stop
         )
 
     def _screen_size_threshold_filter(self, target_width, target_height):
@@ -341,3 +354,6 @@ class MainWindow(QMainWindow):
             self._size_hint = QSize(*self._get_win_size(media_w, media_h, scale))
         finally:
             return self._size_hint
+
+    def closeEvent(self, e):
+        self.fullscreen_mngr.stop()

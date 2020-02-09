@@ -5,14 +5,15 @@ from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QColor, QPalette
 from PyQt5.QtWidgets import QFrame, QSizePolicy, QSplitter
 
+# from player.output import fullscreen
+
 log = logging.getLogger(__name__)
 
 
 class BaseContentFrame(QFrame):
-    def __init__(self, media_player, parent=None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("output_surface")
-        self.mp = media_player
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.black_color = QColor(0, 0, 0)
         self.fill_black()
@@ -30,7 +31,7 @@ class BaseContentFrame(QFrame):
 
 class MediaPlayerContentFrame(BaseContentFrame):
     def __init__(self, main_win, frame_size_mngr, media_player):
-        super().__init__(media_player=media_player, parent=main_win)
+        super().__init__(parent=main_win)
         self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
         self.main_win = main_win
         self.frame_size_mngr = frame_size_mngr
