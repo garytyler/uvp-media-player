@@ -143,7 +143,7 @@ class PlaylistModel(QStandardItemModel):
     def insertRows(self, row, count, parent=QModelIndex()):
         """Reimplimentation for signal emissions"""
         first = row
-        last = row + count - 1
+        last = row + count if row == 0 else row + count - 1
         self.beginInsertRows(parent, first, last)
         result = super().insertRows(row, count, parent)
         self.endInsertRows()
@@ -153,7 +153,7 @@ class PlaylistModel(QStandardItemModel):
     def removeRows(self, row, count, parent=QModelIndex()):
         """Reimplimentation for signal emissions"""
         first = row
-        last = row + count - 1
+        last = row + count if row == 0 else row + count - 1
         self.beginRemoveRows(parent, first, last)
         result = super().removeRows(row, count, parent)
         self.endRemoveRows()

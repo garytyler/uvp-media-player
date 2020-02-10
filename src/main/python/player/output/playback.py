@@ -164,12 +164,13 @@ class FrameResolutionTimeSlider(QSlider):
 
         self.lp.mediachanged.connect(self.on_mediachanged)
         self.mp.positionchanged.connect(self.on_positionchanged)
-        self.mp.stopped.connect(self.on_stopped)
         self.mp.playing.connect(self.on_playing)
+        self.mp.stopped.connect(self.on_stopped)
         self.newframe_conn = self.lp.newframe.connect(self.on_newframe)
 
     @pyqtSlot(MediaItem)
     def on_mediachanged(self, media_item: MediaItem):
+        self.curr_pos = 0
         self.conform_to_media(media_item)
 
     @pyqtSlot()
@@ -178,7 +179,6 @@ class FrameResolutionTimeSlider(QSlider):
 
     @pyqtSlot()
     def on_playing(self):
-        self.curr_pos = self.mp.get_position()
         self.mouse_down = False
 
     @pyqtSlot()
@@ -197,15 +197,13 @@ class FrameResolutionTimeSlider(QSlider):
             self.mp_pos = None
         else:
             num_frames = self.media_info["nb_frames"]
-            has_b_frames = self.media_info["has_b_frames"]
-            pos_incr = self.length / num_frames + has_b_frames
-            self.curr_pos = self.curr_pos + pos_incr
+            pos_incr = self.length / num_frames
+            self.curr_pos = getattr(self, "curr_pos", self.mp.get_position()) + pos_incr
         self.setValue(self.curr_pos)
 
     def conform_to_media(self, media_item):
         self.media_info = media_item.info()
-        # self.set_length(self.media_info['nb_frames'])
-        self.set_length(100000)
+        self.set_length(self.media_info["nb_frames"])
 
     def setValue(self, value):
         if self.mouse_down:
