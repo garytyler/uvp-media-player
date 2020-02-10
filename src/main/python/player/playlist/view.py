@@ -1,5 +1,6 @@
 import logging
 
+from PyQt5 import QtGui
 from PyQt5.QtCore import QModelIndex, QPoint, Qt, pyqtSlot
 from PyQt5.QtGui import QKeySequence
 from PyQt5.QtWidgets import (
@@ -83,12 +84,28 @@ class PlaylistView(QTableView):
         self.rem_selected_items_shortcut.setContext(Qt.WidgetWithChildrenShortcut)
         self.rem_selected_items_shortcut.activated.connect(self.remove_selected_items)
 
+        self.play_selected_item_shortcut = QShortcut(self)
+        self.play_selected_item_shortcut.setKey(Qt.Key_Return)
+        self.play_selected_item_shortcut.setContext(Qt.WidgetWithChildrenShortcut)
+        self.play_selected_item_shortcut.activated.connect(self.play_selected_item)
+
         self.setModel(PlaylistModel())
 
         # Setup signals
         self.customContextMenuRequested.connect(self.show_context_menu)
         self.doubleClicked.connect(self.on_doubleClicked)
         self.selectionModel().selectionChanged.connect(self.on_selectionChanged)
+
+    def showEvent(self, e):
+        if self.model().rowCount():
+            if not self.selectionModel().hasSelection():
+                self.setCurrentIndex(self.model().item(0).index())
+        self.setFocus()
+
+    @pyqtSlot()
+    def play_selected_item(self):
+        self.player.load_media(index=self.currentIndex())
+        self.player.mp.play()
 
     def mousePressEvent(self, e):
         """Clear both row and current index selections when clicking away from items."""
@@ -181,16 +198,10 @@ class PlaylistView(QTableView):
         # Unload from player
         self.player.unload_media(items=items)
 
-        # Remove items
-        while items:
-            seq = [self.model().indexFromItem(items.pop(0)).row()]
-            while items:
-                row = self.model().indexFromItem(items[0]).row()
-                if row != seq[-1] + 1:
-                    break
-                items.pop(0)
-                seq.append(row)
-            self.model().removeRows(seq[0], len(seq))
+        # Remove from model
+        start_row = self.model().indexFromItem(items[0]).row()
+        num_rows = len(items)
+        self.model().removeRows(start_row, num_rows)
 
         # Push status message
         self.status_bar.showMessage(status_msg)
@@ -234,12 +245,12 @@ class DockablePlaylist(DockableWidget):
         self.setContentsMargins(0, 0, 0, 0)
         self.setWidget(playlist_widget)
         self.setVisible(False)
-
-    def toggleViewAction(self):
-        action = super().toggleViewAction()
-        action.setIcon(icons.get("open_playlist"))
-        action.setEnabled(True)
-        return action
+        self.toggleViewAction().setIcon(icons.get("open_playlist"))
+        self.toggleViewAction().setEnabled(True)
+        self.toggleViewAction().setShortcut(QtGui.QKeySequence("Ctrl+M"))
+        self.toggleViewAction().setText(
+            f"Open Playlist {self.toggleViewAction().shortcut().toString()}"
+        )
 
 
 class PlaylistPopupWindow(PopupWindowWidget):
