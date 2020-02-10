@@ -71,12 +71,12 @@ class PlayActions(QActionGroup):
         self.mp = media_player
 
         self.prev = PreviousMediaAction(parent=parent, listplayer=listplayer)
-        self.play = PlayPauseAction(
+        self.play_pause = PlayPauseAction(
             parent=parent, listplayer=listplayer, media_player=media_player
         )
         self.next = NextMediaAction(parent=parent, listplayer=listplayer)
         self.addAction(self.prev)
-        self.addAction(self.play)
+        self.addAction(self.play_pause)
         self.addAction(self.next)
         self.setEnabled(False)
 

@@ -289,28 +289,29 @@ class MainWindow(QMainWindow):
         self.addDockWidget(Qt.BottomDockWidgetArea, self.playback_ctrls_dock_widget)
 
     def create_window_shortcuts(self):
-
         # Close window
-        # Windows: [ctrl] + [w]
-        self.ctrl_w = QtWidgets.QShortcut("Ctrl+W", self, self.close)
+        self.shortcut_exit = QtWidgets.QShortcut(
+            QtGui.QKeySequence.Close, self, self.close
+        )
 
         # Zoom in
-        # Windows: [ctrl] + [+]
-        self.ctrl_plus = QShortcut(
+        self.shortcut_zoom_in = QShortcut(
             QtGui.QKeySequence.ZoomIn, self, self.zoom_ctrl_mngr.zoom_in
         )
 
         # Zoom out
-        # Windows: [ctrl] + [-]
-        self.ctrl_minus = QShortcut(
+        self.shortcut_zoom_out = QShortcut(
             QtGui.QKeySequence.ZoomOut, self, self.zoom_ctrl_mngr.zoom_out
         )
 
         # Exit fullscreen
-        # Windows: [ESC]
-        self.ctrl_w = QtWidgets.QShortcut("Ctrl+W", self, self.close)
         self.ctrl_w = QtWidgets.QShortcut(
             QtGui.QKeySequence.Cancel, self, self.fullscreen_mngr.stop
+        )
+
+        # Play media
+        self.shortcut_play = QtWidgets.QShortcut(
+            QtGui.QKeySequence(Qt.Key_Space), self, self.play_actions.play_pause.trigger
         )
 
     def _screen_size_threshold_filter(self, target_width, target_height):
