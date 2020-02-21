@@ -39,7 +39,7 @@ class ViewpointManager(QObject):
         self.param_indexes_cycle = cycle((0, 1, 2))
         self.is_enabled = False
 
-        self.mp.newframe.connect(self.on_newframe)
+        # self.mp.newframe.connect(self.on_newframe) # Signal connected in MainWindow
         self.mp.vout.connect(self.trigger_redraw)  # Not needed if updating per frame
 
     def set_redraw_every_frame(self, value):

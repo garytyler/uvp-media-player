@@ -105,6 +105,7 @@ class MainWindow(QMainWindow):
             loop_mode_mngr=self.loop_mode_mngr,
             media_player=self.media_player,
         )
+        self.listplayer.newframe.connect(self.viewpoint_mngr.on_newframe)
         self.frame_size_mngr = FrameSizeManager(
             main_win=self,
             viewpoint_mngr=self.viewpoint_mngr,
