@@ -19,7 +19,7 @@ class EnableImageEffectsCheckBox(QtWidgets.QCheckBox):
         config.state.image_effects_enable = True if value else False
 
 
-class AdjustmentSliderWidget(QtWidgets.QSlider):
+class ImageEffectAdjustmentSliderWidget(QtWidgets.QSlider):
     def __init__(
         self,
         name,
@@ -122,7 +122,6 @@ class ImageEffectsWidget(QtWidgets.QWidget):
 
         for slider in self.sliders:
             slider.sliderPressed.connect(lambda: self.save_button.setEnabled(True))
-            # sliderdef load_stored_state_to_media()
 
     def showEvent(self, e):
         for slider in self.sliders:
@@ -147,7 +146,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
     @cached_property
     def sliders(self):
         return [
-            AdjustmentSliderWidget(
+            ImageEffectAdjustmentSliderWidget(
                 name="contrast",
                 adjust_option_type=vlcqt.VideoAdjustOption.Contrast,
                 min_value=0.0,
@@ -156,7 +155,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 media_player=self.mp,
                 parent=self,
             ),
-            AdjustmentSliderWidget(
+            ImageEffectAdjustmentSliderWidget(
                 name="brightness",
                 adjust_option_type=vlcqt.VideoAdjustOption.Brightness,
                 min_value=0.0,
@@ -165,7 +164,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 media_player=self.mp,
                 parent=self,
             ),
-            AdjustmentSliderWidget(
+            ImageEffectAdjustmentSliderWidget(
                 name="hue",
                 adjust_option_type=vlcqt.VideoAdjustOption.Hue,
                 min_value=-180,
@@ -174,7 +173,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 media_player=self.mp,
                 parent=self,
             ),
-            AdjustmentSliderWidget(
+            ImageEffectAdjustmentSliderWidget(
                 name="saturation",
                 adjust_option_type=vlcqt.VideoAdjustOption.Saturation,
                 min_value=0.0,
@@ -183,7 +182,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 media_player=self.mp,
                 parent=self,
             ),
-            AdjustmentSliderWidget(
+            ImageEffectAdjustmentSliderWidget(
                 name="gamma",
                 adjust_option_type=vlcqt.VideoAdjustOption.Gamma,
                 min_value=0.01,

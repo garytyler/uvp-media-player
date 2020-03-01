@@ -27,7 +27,7 @@ class MediaPlayerAdjustmentsWindow(PopupWindowWidget):
 
     @cached_property
     def audio_effects_widget(self):
-        return audio.AudioEffectsWidget(parent=self, media_player=self.mp)
+        return audio.AudioEqualizerWidget(parent=self, media_player=self.mp)
 
 
 class OpenMediaPlayerAdjustmentsWindowAction(PopupWindowAction):
