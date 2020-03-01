@@ -2,7 +2,6 @@ from PyQt5 import QtWidgets
 
 from player import gui
 from player.base.popup import PopupWindowAction, PopupWindowWidget
-from player.utils import cached_property
 
 from . import audio, image
 
@@ -18,16 +17,12 @@ class MediaPlayerAdjustmentsWindow(PopupWindowWidget):
         self.tab_widget = QtWidgets.QTabWidget()
         self.layout().addWidget(self.tab_widget)
 
-        self.tab_widget.addTab(self.image_effects_widget, "Image")
-        self.tab_widget.addTab(self.audio_effects_widget, "Audio")
-
-    @cached_property
-    def image_effects_widget(self):
-        return image.ImageEffectsWidget(parent=self, media_player=self.mp)
-
-    @cached_property
-    def audio_effects_widget(self):
-        return audio.AudioEqualizerWidget(parent=self, media_player=self.mp)
+        self.tab_widget.addTab(
+            image.ImageEffectsWidget(parent=self, media_player=self.mp), "Image"
+        )
+        self.tab_widget.addTab(
+            audio.AudioEqualizerWidget(parent=self, media_player=self.mp), "Audio"
+        )
 
 
 class OpenMediaPlayerAdjustmentsWindowAction(PopupWindowAction):

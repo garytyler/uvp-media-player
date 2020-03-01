@@ -147,7 +147,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
     def sliders(self):
         return [
             ImageEffectAdjustmentSliderWidget(
-                name="contrast",
+                name="image_effects_contrast",
                 adjust_option_type=vlcqt.VideoAdjustOption.Contrast,
                 min_value=0.0,
                 max_value=2.0,
@@ -156,7 +156,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 parent=self,
             ),
             ImageEffectAdjustmentSliderWidget(
-                name="brightness",
+                name="image_effects_brightness",
                 adjust_option_type=vlcqt.VideoAdjustOption.Brightness,
                 min_value=0.0,
                 max_value=2.0,
@@ -165,7 +165,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 parent=self,
             ),
             ImageEffectAdjustmentSliderWidget(
-                name="hue",
+                name="image_effects_hue",
                 adjust_option_type=vlcqt.VideoAdjustOption.Hue,
                 min_value=-180,
                 max_value=180,
@@ -174,7 +174,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 parent=self,
             ),
             ImageEffectAdjustmentSliderWidget(
-                name="saturation",
+                name="image_effects_saturation",
                 adjust_option_type=vlcqt.VideoAdjustOption.Saturation,
                 min_value=0.0,
                 max_value=3.0,
@@ -183,7 +183,7 @@ class ImageEffectsWidget(QtWidgets.QWidget):
                 parent=self,
             ),
             ImageEffectAdjustmentSliderWidget(
-                name="gamma",
+                name="image_effects_gamma",
                 adjust_option_type=vlcqt.VideoAdjustOption.Gamma,
                 min_value=0.01,
                 max_value=10.0,
