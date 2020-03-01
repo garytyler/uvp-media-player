@@ -11,7 +11,7 @@ from fbs_runtime.application_context import is_frozen
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
 
 from player import config
-from player.common.utils import cached_property
+from player.utils import cached_property
 
 log = logging.getLogger(__name__)
 

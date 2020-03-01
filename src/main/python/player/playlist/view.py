@@ -15,8 +15,8 @@ from PyQt5.QtWidgets import (
     QWidget,
 )
 
-from player.common.base.docking import DockableWidget
-from player.common.base.popup import PopupWindowAction, PopupWindowWidget
+from player.base.docking import DockableWidget
+from player.base.popup import PopupWindowAction, PopupWindowWidget
 from player.gui import icons
 from player.playlist import files
 from player.playlist.model import MediaItem, PlaylistModel

@@ -1,9 +1,9 @@
 from PyQt5 import QtWidgets
 
-from player import common, config, gui
+from player import base, config, gui
 
 
-class ClientSettingsDialog(common.base.modal.BaseModalSettingsDialog):
+class ClientSettingsDialog(base.modal.BaseModalSettingsDialog):
     def __init__(self, main_win):
         super().__init__(main_win=main_win, modal=True)
 
@@ -19,9 +19,7 @@ class ClientSettingsDialog(common.base.modal.BaseModalSettingsDialog):
         config.state.url = self.server_url_edit.text()
 
 
-class OpenClientSettingsDialogAction(
-    common.base.modal.BaseOpenModalSettingsDialogAction
-):
+class OpenClientSettingsDialogAction(base.modal.BaseOpenModalSettingsDialogAction):
     def __init__(self, main_win):
         super().__init__(
             text="Client Settings",

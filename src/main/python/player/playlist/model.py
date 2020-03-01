@@ -6,7 +6,7 @@ from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
 
 from player import config
-from player.common.utils import fraction_string_to_float
+from player.utils import fraction_string_to_float
 
 log = logging.getLogger(__name__)
 

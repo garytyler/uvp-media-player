@@ -1,6 +1,6 @@
 from PyQt5 import QtWidgets
 
-from player import common, config, gui
+from player import base, config, gui
 
 from .about import AboutTextLabel
 
@@ -12,7 +12,7 @@ class EnableHardwareAccelerationCheckbox(QtWidgets.QCheckBox):
         )
 
 
-class PlayerPreferencesWindow(common.base.modal.BaseModalSettingsDialog):
+class PlayerPreferencesWindow(base.modal.BaseModalSettingsDialog):
     def __init__(self, main_win, media_player):
         super().__init__(title="Media Player Preferences", main_win=main_win)
 
@@ -48,7 +48,7 @@ class PlayerPreferencesWindow(common.base.modal.BaseModalSettingsDialog):
 
 
 class OpenMediaPlayerPreferencesWindowAction(
-    common.base.modal.BaseOpenModalSettingsDialogAction
+    base.modal.BaseOpenModalSettingsDialogAction
 ):
     def __init__(self, main_win, media_player):
         super().__init__(

@@ -1,7 +1,7 @@
 from PyQt5 import QtCore, QtWidgets
 
 from player import config, vlcqt
-from player.common.utils import cached_property
+from player.utils import cached_property
 
 
 class EnableImageEffectsCheckBox(QtWidgets.QCheckBox):

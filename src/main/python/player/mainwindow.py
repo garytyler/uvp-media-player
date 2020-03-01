@@ -14,11 +14,11 @@ from PyQt5.QtWidgets import (
 )
 
 from player.adjustments import OpenMediaPlayerAdjustmentsWindowAction
+from player.base.docking import DockableWidget, ToolBar
 from player.client.configure import OpenClientSettingsDialogAction
 from player.client.connect import ConnectStatusLabel, ConnectWideButtonBuilder
 from player.client.controller import IOController
 from player.client.socks import AutoReconnectSocket
-from player.common.base.docking import DockableWidget, ToolBar
 from player.gui.ontop import AlwaysOnTopAction
 from player.gui.style import initialize_style
 from player.output.frame import MediaPlayerContentFrame

@@ -1,8 +1,8 @@
 from PyQt5 import QtWidgets
 
 from player import gui
-from player.common.base.popup import PopupWindowAction, PopupWindowWidget
-from player.common.utils import cached_property
+from player.base.popup import PopupWindowAction, PopupWindowWidget
+from player.utils import cached_property
 
 from . import audio, image
 
