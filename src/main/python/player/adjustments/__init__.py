@@ -18,10 +18,13 @@ class MediaPlayerAdjustmentsWindow(PopupWindowWidget):
         self.layout().addWidget(self.tab_widget)
 
         self.tab_widget.addTab(
-            image.ImageEffectsWidget(parent=self, media_player=self.mp), "Image"
+            image.ImageEffectsSliderGroup(parent=self, media_player=self.mp), "Image"
         )
         self.tab_widget.addTab(
-            audio.AudioEqualizerWidget(parent=self, media_player=self.mp), "Audio"
+            audio.AudioEqualizerSliderGroupWithPresets(
+                parent=self, media_player=self.mp
+            ),
+            "Audio",
         )
 
 
