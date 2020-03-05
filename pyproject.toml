@@ -1,0 +1,27 @@
+[tool.poetry]
+name = "seevr-player"
+version = "0.0.0"
+description = ""
+authors = ["Gary Tyler <mail@garytyler.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.6"
+PyQt5-sip = "*"
+pyqt5 = "==5.9.2"
+
+ffmpeg-python = "*"
+python-vlc = "*"
+qtawesome = "*"
+
+
+[tool.poetry.dev-dependencies]
+black = { version = "*", allow-prereleases = true }
+pyinstaller = "==3.4"
+fbs = {git = "https://github.com/garytyler/fbs"}
+flake8 = "*"
+isort = "*"
+mypy = "*"
+pre-commit = "*"
+pytest = "<=5.0.1"
+pytest-qt = "*"
+virtualenv = "==16.1.0"
