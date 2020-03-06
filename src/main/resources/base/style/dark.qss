@@ -126,7 +126,8 @@ QPushButton:disabled {
 QToolButton#connect {
     color: crimson;
     font-weight: bolder;
-    font: 12px;
+    font: 14px;
+    font-weight:bold;
 }
 
 QToolButton#connect:disabled {
@@ -178,9 +179,6 @@ QToolBar#mainplaybuttons QToolButton{
     background: pallete(window);
 }
 
-QToolButton#connect:!disabled:hover:!checked {
-    color: red;
-}
 
 /*
  * QTabBar

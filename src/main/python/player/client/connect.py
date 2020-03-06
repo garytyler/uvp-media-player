@@ -1,9 +1,8 @@
 import logging
 from typing import List
 
-from PyQt5.QtCore import Qt, pyqtSlot
+from PyQt5 import QtCore, QtNetwork
 from PyQt5.QtGui import QIcon
-from PyQt5.QtNetwork import QAbstractSocket
 from PyQt5.QtWidgets import QToolButton, QWidgetAction
 
 from player import config
@@ -14,41 +13,49 @@ log = logging.getLogger(__name__)
 
 
 CONNECTION_STATUS_TIPS = {
-    QAbstractSocket.ConnectedState: "Connected",
-    QAbstractSocket.ConnectingState: "Connecting...",
-    QAbstractSocket.UnconnectedState: "Disconnected",
+    QtNetwork.QAbstractSocket.ConnectedState: "Connected",
+    QtNetwork.QAbstractSocket.ConnectingState: "Connecting...",
+    QtNetwork.QAbstractSocket.UnconnectedState: "Disconnected",
 }
 CONNECTION_TOOL_TIPS = {
-    QAbstractSocket.ConnectedState: "Press To Disonnect",
-    QAbstractSocket.ConnectingState: "Connecting...",
-    QAbstractSocket.UnconnectedState: "Press To Connect",
+    QtNetwork.QAbstractSocket.ConnectedState: "Press To Disconnect",
+    QtNetwork.QAbstractSocket.ConnectingState: "Connecting...",
+    QtNetwork.QAbstractSocket.UnconnectedState: "Press To Connect",
 }
 
 
 def connection_status_tip(state):
-    if state in (QAbstractSocket.ConnectedState, QAbstractSocket.UnconnectedState):
+    if state in (
+        QtNetwork.QAbstractSocket.ConnectedState,
+        QtNetwork.QAbstractSocket.UnconnectedState,
+    ):
         return CONNECTION_STATUS_TIPS[state]
     else:
-        return CONNECTION_STATUS_TIPS[QAbstractSocket.ConnectingState]
+        return CONNECTION_STATUS_TIPS[QtNetwork.QAbstractSocket.ConnectingState]
 
 
 def connection_tool_tip(state):
-    if state in (QAbstractSocket.ConnectedState, QAbstractSocket.UnconnectedState):
+    if state in (
+        QtNetwork.QAbstractSocket.ConnectedState,
+        QtNetwork.QAbstractSocket.UnconnectedState,
+    ):
         return CONNECTION_TOOL_TIPS[state]
     else:
-        return CONNECTION_TOOL_TIPS[QAbstractSocket.ConnectingState]
+        return CONNECTION_TOOL_TIPS[QtNetwork.QAbstractSocket.ConnectingState]
 
 
 class ConnectAction(QWidgetAction):
+    changed = QtCore.pyqtSignal(QtNetwork.QAbstractSocket.SocketState)
+
     def __init__(self, socket, parent):
         super().__init__(parent)
         self.socket = socket
         self.button = None
         self.setCheckable(True)
         self.setIcon(icons.get("connect_to_server_status"))
-        self.update_state(self.socket.state())
+        self.update(self.socket.state())
 
-        self.socket.stateChanged.connect(self.update_state)
+        self.socket.stateChanged.connect(self.update)
         self.triggered.connect(self.on_triggered)
 
     def on_triggered(self, checked):
@@ -57,20 +64,18 @@ class ConnectAction(QWidgetAction):
         else:
             self.socket.disconnect()
 
-    @pyqtSlot(QAbstractSocket.SocketState)
-    def update_state(self, state):
-        self.setStatusTip(self.statusTip())
-        self.setToolTip(self.toolTip())
-        self.setText(self.text())
-        if state == self.socket.ConnectedState:
+    @QtCore.pyqtSlot(QtNetwork.QAbstractSocket.SocketState)
+    def update(self, socketState: QtNetwork.QAbstractSocket.SocketState):
+        if socketState == QtNetwork.QAbstractSocket.ConnectedState:
             self.setEnabled(True)
             self.setChecked(True)
-        elif state == self.socket.UnconnectedState:
+        elif socketState == QtNetwork.QAbstractSocket.UnconnectedState:
             self.setEnabled(True)
             self.setChecked(False)
-        elif state == self.socket.ConnectingState:
+        elif socketState == QtNetwork.QAbstractSocket.ConnectingState:
             self.setEnabled(False)
             self.setChecked(False)
+        self.changed.emit(socketState)
 
     def statusTip(self):
         state = self.socket.state()
@@ -84,6 +89,23 @@ class ConnectAction(QWidgetAction):
         return self.statusTip()
 
 
+class ConnectWideButtonBuilder(ConnectAction):
+    extra_width_chars = 2
+
+    def __init__(self, parent, socket):
+        super().__init__(parent=parent, socket=socket)
+        self.button = None
+
+    def setText(self, text):
+        if self.button:
+            self.button.setText(text)
+
+    def createWidget(self, parent):
+        self.text_width_chars = "***"
+        self.button = ConnectWideButton(parent=parent, action=self)
+        return self.button
+
+
 class ConnectWideButton(QToolButton):
 
     extra_width_chars = 2
@@ -91,7 +113,7 @@ class ConnectWideButton(QToolButton):
     def __init__(self, parent, action: ConnectAction):
         super().__init__(parent)
         self.setObjectName("connect")
-        self.setToolButtonStyle(Qt.ToolButtonTextBesideIcon)
+        self.setToolButtonStyle(QtCore.Qt.ToolButtonTextBesideIcon)
         self.setDefaultAction(action)
 
         text_strings: List[str] = []
@@ -114,17 +136,38 @@ class ConnectWideButton(QToolButton):
 
         # Init
         self.setText(action.text())
-        action.socket.stateChanged.connect(action.update_state)
+        self.defaultAction().changed.connect(self.updateText)
 
-    def enterEvent(self, e):
-        self.is_hovering = True
+    def event(self, e):
+        """Set action as unchecked when button is clicked while disabled, to allow
+        forced cancelling of a connection attempt before timeout.
+        """
+        if e.type() == QtCore.QEvent.MouseButtonPress:
+            action = self.defaultAction()
+            socket = action.socket
+            if socket.state() == socket.ConnectingState:
+                socket.disconnect()
+                return True
+        return super().event(e)
+
+    def on_socket_stateChanged(self, state):
         action = self.defaultAction()
         self.setText(action.toolTip())
+        self.updateText(hovering=self.underMouse())
+
+    def enterEvent(self, e):
+        self.updateText(hovering=True)
 
     def leaveEvent(self, e):
-        self.is_hovering = False
-        action = self.defaultAction()
-        self.setText(action.statusTip())
+        self.updateText(hovering=False)
+
+    def updateText(self, hovering=None):
+        if hovering if not None else self.underMouse():
+            action = self.defaultAction()
+            self.setText(action.toolTip())
+        else:
+            action = self.defaultAction()
+            self.setText(action.statusTip())
 
     def max_default_button_width(self, text_strings):
         start_text = self.text()
@@ -140,23 +183,6 @@ class ConnectWideButton(QToolButton):
         super().setText(text.center(self.text_area_width_chars))
 
 
-class ConnectWideButtonBuilder(ConnectAction):
-    extra_width_chars = 2
-
-    def __init__(self, parent, socket):
-        super().__init__(parent=parent, socket=socket)
-        self.button = None
-
-    def setText(self, text):
-        if self.button:
-            self.button.setText(text)
-
-    def createWidget(self, parent):
-        self.text_width_chars = "***"
-        self.button = ConnectWideButton(parent=parent, action=self)
-        return self.button
-
-
 class ConnectStatusLabel(IconStatusLabel):
     def __init__(self, parent, socket):
         super().__init__(parent=parent, icon=icons.get("connect_to_server_status"))
@@ -164,7 +190,7 @@ class ConnectStatusLabel(IconStatusLabel):
         self.update_state(self.socket.state())
         self.socket.stateChanged.connect(self.update_state)
 
-    @pyqtSlot(QAbstractSocket.SocketState)
+    @QtCore.pyqtSlot(QtNetwork.QAbstractSocket.SocketState)
     def update_state(self, state):
         status_tip = connection_status_tip(state)
         if state == self.socket.ConnectedState:
@@ -172,21 +198,21 @@ class ConnectStatusLabel(IconStatusLabel):
                 text=f"{status_tip} ({config.state.url})",
                 mode=QIcon.Selected,
                 state=QIcon.On,
-                elide_mode=Qt.ElideMiddle,
+                elide_mode=QtCore.Qt.ElideMiddle,
             )
         elif state == self.socket.ConnectingState:
             self.set_status(
                 text=f"{status_tip} ({config.state.url})",
                 mode=QIcon.Disabled,
                 state=QIcon.Off,
-                elide_mode=Qt.ElideMiddle,
+                elide_mode=QtCore.Qt.ElideMiddle,
             )
         elif state == self.socket.UnconnectedState:
             self.set_status(
                 text=f"{status_tip} ({config.state.url})",
                 mode=QIcon.Normal,
                 state=QIcon.Off,
-                elide_mode=Qt.ElideMiddle,
+                elide_mode=QtCore.Qt.ElideMiddle,
             )
 
     def get_status_txt(self, status, url=""):

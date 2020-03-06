@@ -74,6 +74,7 @@ class AppIcons:
             color_off_active="red",
             color_on="darkgreen",
             color_off="crimson",
+            color_disabled="gray",
         )
         self.server_disconnected = qta.icon("mdi.server-network-off")
         open_file_bg_scale = 0.8
