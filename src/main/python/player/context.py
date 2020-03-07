@@ -9,7 +9,6 @@ from os.path import abspath, dirname, join
 from fbs_runtime import platform
 from fbs_runtime.application_context import is_frozen
 from fbs_runtime.application_context.PyQt5 import ApplicationContext
-
 from player import config
 from player.utils import cached_property
 
@@ -114,13 +113,18 @@ class AppContext(ApplicationContext):
             ffprobe_cmd=self.ffprobe_cmd,
             stylesheet=self.stylesheet,
         )
-        if is_frozen():
-            media_paths = sys.argv[1:]
-        else:
-            media_paths = environ.get("_SEEVR_PLAYER_BUILD_LAUNCH_MEDIA", "").split(",")
-        window.load_media(media_paths)
+        window.load_media(media_path_args())
         return window
 
     def run(self):
         self.main_win.show()
         return self.app.exec_()
+
+
+def media_path_args():
+    if not is_frozen():
+        build_script_run_args = environ.get("_BUILD_SCRIPT_RUN_ARGS", "").split(",")
+        media_paths = [i for i in build_script_run_args if i.strip()]
+        if media_paths:
+            return media_paths
+    return sys.argv[1:]

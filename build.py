@@ -115,7 +115,7 @@ class RunCommandContext:
         extra_args = sys.argv[2:]
         for arg in extra_args:
             sys.argv.remove(arg)
-        os.environ["_SEEVR_PLAYER_BUILD_LAUNCH_MEDIA"] = ",".join(extra_args)
+        os.environ["_BUILD_SCRIPT_RUN_ARGS"] = ",".join(extra_args)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         pass
