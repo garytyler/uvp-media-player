@@ -257,3 +257,6 @@ $RECYCLE.BIN/
 # Ignore pipenv configuration - use poetry instead.
 Pipfile
 Pipfile.lock
+
+# Mac system files
+.DS_Store
