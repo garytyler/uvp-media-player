@@ -1,6 +1,6 @@
 $directions = "Run script from project root using `'$MyInvocation.MyCommand.Name`'"
 
-$app_module = "player"
+$app_module = "app"
 $_name = 'player'
 
 
@@ -44,11 +44,13 @@ $default_args = @(
     '--name=player'
     '--hidden-import=PyQt5.QtNetwork'
     '--hidden-import=PyQt5.QtCore'
-    "--paths=${env:PROGRAMFILES}/VideoLAN/VLC/"
-    "--add-data=./media/*;media"
+    # "--paths=${env:PROGRAMFILES}/VideoLAN/VLC/"
+    # "--add-data=./resources/media/*;media"
     "--add-data=./resources/*;resources"
-    "--add-binary=${env:PROGRAMFILES}/VideoLAN/VLC/plugins/*;plugins"
-    "--add-binary=${env:PROGRAMFILES}/VideoLAN/VLC/libvlc.dll;."
+    "--additional-hooks-dir=./hooks"
+    "--console"
+    # "--add-binary=${env:PROGRAMFILES}/VideoLAN/VLC/plugins/*;plugins"
+    # "--add-binary=${env:PROGRAMFILES}/VideoLAN/VLC/libvlc.dll;."
 )
 
 # Append passed args and application script path to default args
@@ -56,12 +58,3 @@ $pyinstaller_args = $default_args + $args + "$app_script"
 
 Write-Host -ForegroundColor DarkCyan "Building `'$_name`': `'$app_script`' and pyinstaller arguments: [$pyinstaller_args]"
 Invoke-Command { pyinstaller @args } -args $pyinstaller_args
-
-### Cleanup ###
-
-Write-Host -ForegroundColor DarkCyan "Clean-up: Removing `'*.pyo`' files from project directory"
-Get-ChildItem -Path "*.pyo" -Recurse  -ErrorAction SilentlyContinue -File | Remove-Item
-
-### Done ###
-
-Write-Host -ForegroundColor DarkCyan "Done"

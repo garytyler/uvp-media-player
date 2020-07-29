@@ -7,8 +7,9 @@ from os import environ
 from os.path import abspath, dirname, join
 
 import config
-from fbs_runtime.application_context import is_frozen
 from PyQt5.QtWidgets import QApplication
+
+# from fbs_runtime.application_context import is_frozen
 from utils import cached_property
 
 log = logging.getLogger(__name__)
@@ -19,8 +20,8 @@ class AppContext:
         super().__init__()
         self.base_dir = base_dir
         self.app = QApplication(args)
-        self.app.setOrganizationName(os.environ["ORGANIZATION_NAME"])
-        self.app.setApplicationName(os.environ["APPLICATION_NAME"])
+        self.app.setOrganizationName("UVP")
+        self.app.setApplicationName("SeeVR Player")
         self.init_logging()
         log.info(
             f"Launching: {self.app.organizationName()}/{self.app.applicationName()}"
@@ -63,37 +64,37 @@ class AppContext:
 
     @cached_property
     def vlcqt(self):
-        if is_frozen():
-            if sys.platform.startswith("linux"):
-                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.so")
-                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
-            elif sys.platform == "win64":
-                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dll")
-                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
-                # for windows/macOS, load libvlccore into mem before llibvlc.dylib
-                # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(self.get_resource("libvlccore.dll"))
-            elif sys.platform == "darwin":
-                vlc_bin_dir = join(dirname(self.get_resource()), "MacOS")
-                environ["PYTHON_VLC_LIB_PATH"] = join(vlc_bin_dir, "libvlc.dylib")
-                environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_bin_dir, "plugins")
-                # for windows/macOS, load libvlccore into mem before llibvlc.dylib
-                # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(join(vlc_bin_dir, "libvlccore.dylib"))
-            else:
-                log.warning("Platform unsupported. App may launch if VLC is installed.")
-                environ.unset("PYTHON_VLC_MODULE_PATH")
-                environ.unset("PYTHON_VLC_LIB_PATH")
+        # if is_frozen():
+        #     if sys.platform.startswith("linux"):
+        #         environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.so")
+        #         environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
+        #     elif sys.platform == "win64":
+        #         environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dll")
+        #         environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
+        #         # for windows/macOS, load libvlccore into mem before llibvlc.dylib
+        #         # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
+        #         ctypes.CDLL(self.get_resource("libvlccore.dll"))
+        #     elif sys.platform == "darwin":
+        #         vlc_bin_dir = join(dirname(self.get_resource()), "MacOS")
+        #         environ["PYTHON_VLC_LIB_PATH"] = join(vlc_bin_dir, "libvlc.dylib")
+        #         environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_bin_dir, "plugins")
+        #         # for windows/macOS, load libvlccore into mem before llibvlc.dylib
+        #         # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
+        #         ctypes.CDLL(join(vlc_bin_dir, "libvlccore.dylib"))
+        #     else:
+        #         log.warning("Platform unsupported. App may launch if VLC is installed.")
+        #         environ.unset("PYTHON_VLC_MODULE_PATH")
+        #         environ.unset("PYTHON_VLC_LIB_PATH")
         return import_module(name="vlcqt")
 
     @cached_property
     def ffprobe_cmd(self) -> str:
         """Return command to invoke ffprobe binary. If frozen, use path to binary."""
-        if is_frozen():
-            if sys.platform == "win64":
-                return abspath(os.path.join(self.base_dir, "ffmpeg", "ffprobe.exe"))
-            else:
-                return abspath(os.path.join(self.base_dir, "ffmpeg", "ffprobe"))
+        # if is_frozen():
+        #     if sys.platform == "win64":
+        #         return abspath(os.path.join(self.base_dir, "ffmpeg", "ffprobe.exe"))
+        #     else:
+        #         return abspath(os.path.join(self.base_dir, "ffmpeg", "ffprobe"))
         return "ffprobe"
 
     @cached_property
@@ -124,9 +125,9 @@ class AppContext:
 
 
 def media_path_args():
-    if not is_frozen():
-        build_script_run_args = environ.get("_BUILD_SCRIPT_RUN_ARGS", "").split(",")
-        media_paths = [i for i in build_script_run_args if i.strip()]
-        if media_paths:
-            return media_paths
+    # if not is_frozen():
+    build_script_run_args = environ.get("_BUILD_SCRIPT_RUN_ARGS", "").split(",")
+    media_paths = [i for i in build_script_run_args if i.strip()]
+    if media_paths:
+        return media_paths
     return sys.argv[1:]

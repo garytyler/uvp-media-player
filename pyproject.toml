@@ -5,7 +5,7 @@ description = ""
 authors = ["Gary Tyler <mail@garytyler.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.6"
+python = "^3.8"
 PyQt5-sip = "*"
 pyqt5 = "*"
 ffmpeg-python = "*"
@@ -15,12 +15,11 @@ qtawesome = "*"
 
 [tool.poetry.dev-dependencies]
 black = { version = "*", allow-prereleases = true }
-pyinstaller = "==3.4"
-fbs = {git = "https://github.com/garytyler/fbs"}
+pyinstaller = "*"
 flake8 = "*"
 isort = "*"
 mypy = "*"
 pre-commit = "*"
-pytest = "<=5.0.1"
+pytest = "*"
 pytest-qt = "*"
-virtualenv = "==16.1.0"
+pywin32-ctypes = { version = "^0.2.0", markers = "sys_platform == 'win32'" }
