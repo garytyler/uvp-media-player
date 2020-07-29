@@ -1,20 +1,36 @@
 import logging
 import os
 import shutil
+import subprocess
 import sys
 from glob import glob
-from os import environ, makedirs
-from os.path import basename, dirname, exists, join
 
-import fbs
-from fbs import cmdline
-from fbs_runtime import platform
+import typer
 
 log = logging.getLogger(__name__)
 
 
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+SETTINGS = {
+    "app_name": "SeeVR Player",
+    "freeze_dir": os.path.join(BASE_DIR, "dist", "app"),
+}
+
+
+def is_mac():
+    return sys.platform == "darwin"
+
+
+def is_windows():
+    return sys.platform == "win32"
+
+
+def is_ubuntu():
+    return sys.platform == "linux"
+
+
 def verify_supported_platform():
-    if not any((platform.is_windows(), platform.is_ubuntu(), platform.is_mac())):
+    if not any((is_windows(), is_ubuntu(), is_mac())):
         github_url = "https://github.com/garytyler/seevr-player/issues"
         raise RuntimeError(f"Platform unsupported. Request support at {github_url}")
 
@@ -31,10 +47,10 @@ class DependencyEnvironment(dict):
     def __init__(self):
         super().__init__({})
         for key in self._dependency_keys:
-            value = environ.get(key)
+            value = os.environ.get(key)
             if not value:
                 super().__setitem__(key, None)
-            elif not exists(value):
+            elif not os.path.exists(value):
                 raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
             else:
                 super().__setitem__(key, value)
@@ -43,7 +59,7 @@ class DependencyEnvironment(dict):
     def __setitem__(self, key: str, value: str) -> None:
         if key not in self._dependency_keys:
             raise ValueError(f"'{key}' is not a valid dependency environment variable")
-        elif not exists(value):
+        elif not os.path.exists(value):
             raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
         else:
             log.info(f"Dependency source (default) - key={key}, value={value}")
@@ -74,19 +90,21 @@ class FreezeCommandContext:
         In all platforms except Mac, this is the parent directory of the app executable.
         In Mac, it's a separate 'Resources' directory in the .app bundle.
         """
-        if platform.is_mac():
-            return join(fbs.SETTINGS["freeze_dir"], "Contents", "Resources")
+        if is_mac():
+            return os.path.join(SETTINGS["freeze_dir"], "Contents", "Resources")
         else:
-            return fbs.SETTINGS["freeze_dir"]
+            return SETTINGS["freeze_dir"]
 
     def freeze_ffmpeg_binaries(self) -> None:
         # Make ffmpeg resources dir
-        ffmpeg_dst_dir = join(self.resources_dst_dir, "ffmpeg")
-        makedirs(ffmpeg_dst_dir, exist_ok=True)
+        ffmpeg_dst_dir = os.path.join(self.resources_dst_dir, "ffmpeg")
+        os.makedirs(ffmpeg_dst_dir, exist_ok=True)
 
         # Copy ffprobe binary
         ffprobe_bin_src_file = self.dep_environ["FFPROBE_BINARY_PATH"]
-        ffprobe_bin_dst_file = join(ffmpeg_dst_dir, basename(ffprobe_bin_src_file))
+        ffprobe_bin_dst_file = os.path.join(
+            ffmpeg_dst_dir, os.path.basename(ffprobe_bin_src_file)
+        )
         shutil.copy(ffprobe_bin_src_file, ffprobe_bin_dst_file)
 
 
@@ -95,11 +113,11 @@ class InstallerCommandContext:
         verify_supported_platform()
 
     def __enter__(self):
-        if platform.is_mac():
-            mounted_dmg_paths = glob(f"/Volumes/{fbs.SETTINGS['app_name']}*")
+        if is_mac():
+            mounted_dmg_paths = glob(f"/Volumes/{SETTINGS['app_name']}*")
             if mounted_dmg_paths:
                 raise RuntimeError(
-                    f"Eject mounted '{fbs.SETTINGS['app_name']}' installer volumes"
+                    f"Eject mounted '{SETTINGS['app_name']}' installer volumes"
                     f" from your system: {repr(mounted_dmg_paths)}"
                 )
 
@@ -127,19 +145,26 @@ COMMAND_CONTEXTS = {
     "run": RunCommandContext,
 }
 
+cli = typer.Typer()
+
+
+@cli.command()
+def run():
+    with RunCommandContext():
+        subprocess.run([sys.executable, "app"])
+
+
+@cli.command()
+def freeze():
+    with FreezeCommandContext():
+        typer.echo("Freeze")
+
+
+@cli.command()
+def installer():
+    with InstallerCommandContext():
+        typer.echo("Installer")
+
+
 if __name__ == "__main__":
-    log.info(f"{__file__} - command='{sys.argv[1:]}', platform={platform.name()}")
-    project_dir = dirname(__file__)
-    fbs.init(project_dir)  # TODO Can I copy dependencies to freeze dir before freezing?
-    try:
-        command = sys.argv[1]
-    except IndexError:
-        log.error("Error: Script '{__file__}' requires a command.")
-    else:
-        context = COMMAND_CONTEXTS.get(command)
-        if context:
-            # Ignore type checking bug. See: https://github.com/python/mypy/issues/5512
-            with context():  # type: ignore
-                cmdline.main(project_dir=project_dir)
-        else:
-            cmdline.main(project_dir=project_dir)
+    cli()
