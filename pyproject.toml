@@ -5,17 +5,17 @@ description = ""
 authors = ["Gary Tyler <mail@garytyler.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.8"
-PyQt5-sip = "*"
-pyqt5 = "*"
-ffmpeg-python = "*"
-python-vlc = "*"
-qtawesome = "*"
+python = "^3.8pyin"
+PyQt5-sip = "^12.8"
+pyqt5 = "^5.15"
+ffmpeg-python = "^0.2"
+python-vlc = "^3.0.11115"
+qtawesome = "^0.7"
 
 
 [tool.poetry.dev-dependencies]
 black = { version = "*", allow-prereleases = true }
-pyinstaller = "*"
+pyinstaller = "^3.6"
 flake8 = "*"
 isort = "*"
 mypy = "*"
@@ -23,3 +23,6 @@ pre-commit = "*"
 pytest = "*"
 pytest-qt = "*"
 pywin32-ctypes = { version = "^0.2.0", markers = "sys_platform == 'win32'" }
+typer = "^0.3.1"
+colorama = "^0.4.3"
+shellingham = "^1.3"
