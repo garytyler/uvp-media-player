@@ -21,16 +21,16 @@ def is_mac():
     return sys.platform == "darwin"
 
 
+def is_linux():
+    return sys.platform == "linux"
+
+
 def is_windows():
     return sys.platform == "win32"
 
 
-def is_ubuntu():
-    return sys.platform == "linux"
-
-
 def verify_supported_platform():
-    if not any((is_windows(), is_ubuntu(), is_mac())):
+    if not any((is_mac(), is_linux(), is_windows())):
         github_url = "https://github.com/garytyler/seevr-player/issues"
         raise RuntimeError(f"Platform unsupported. Request support at {github_url}")
 

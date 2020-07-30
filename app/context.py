@@ -8,15 +8,19 @@ from os.path import abspath, dirname, join
 
 import config
 from PyQt5.QtWidgets import QApplication
-from utils import cached_property
+from utils import cached_property, platform
 
 log = logging.getLogger(__name__)
 
 
-class AppContext:
-    def __init__(self, base_dir, args=[]):
+class BaseAppContext:
+    def is_frozen(self):
+        return getattr(sys, "frozen", False)
+
+
+class AppContext(BaseAppContext):
+    def __init__(self, args=[]):
         super().__init__()
-        self.base_dir = base_dir
         self.app = QApplication(args)
         self.app.setOrganizationName("UVP")
         self.app.setApplicationName("SeeVR Player")
@@ -26,6 +30,29 @@ class AppContext:
         )
         self.init_settings()
         self.init_vlcqt()
+
+    def run(self):
+        self.main_win.show()
+        return self.app.exec_()
+
+    @cached_property
+    def main_win(self):
+        from mainwindow import MainWindow
+
+        window = MainWindow(
+            media_player=self.media_player,
+            ffprobe_cmd=self.ffprobe_cmd,
+            stylesheet=self.stylesheet,
+        )
+
+        if self.is_frozen():
+            media_paths = sys.argv[1:]
+        else:
+            build_script_run_args = environ.get("_BUILD_SCRIPT_RUN_ARGS", "").split(",")
+            media_paths = [i for i in build_script_run_args if i.strip()]
+
+        window.load_media(media_paths)
+        return window
 
     def init_logging(self):
         # Set player log file
@@ -62,17 +89,17 @@ class AppContext:
 
     @cached_property
     def vlcqt(self):
-        if is_frozen():
-            if sys.platform.startswith("linux"):
+        if self.is_frozen():
+            if platform.is_linux():
                 environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.so")
                 environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
-            elif sys.platform == "win64":
+            elif platform.is_windows():
                 environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dll")
                 environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
                 # for windows/macOS, load libvlccore into mem before llibvlc.dylib
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
                 ctypes.CDLL(self.get_resource("libvlccore.dll"))
-            elif sys.platform == "darwin":
+            elif platform.s_mac():
                 vlc_bin_dir = join(dirname(self.get_resource()), "MacOS")
                 environ["PYTHON_VLC_LIB_PATH"] = join(vlc_bin_dir, "libvlc.dylib")
                 environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_bin_dir, "plugins")
@@ -80,7 +107,10 @@ class AppContext:
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
                 ctypes.CDLL(join(vlc_bin_dir, "libvlccore.dylib"))
             else:
-                log.warning("Platform unsupported. App may launch if VLC is installed.")
+                log.warning(
+                    f"Platform unsupported: '{sys.platform}'"
+                    "If problems, try installing VLC."
+                )
                 environ.unset("PYTHON_VLC_MODULE_PATH")
                 environ.unset("PYTHON_VLC_LIB_PATH")
         return import_module(name="vlcqt")
@@ -88,11 +118,11 @@ class AppContext:
     @cached_property
     def ffprobe_cmd(self) -> str:
         """Return command to invoke ffprobe binary. If frozen, use path to binary."""
-        if is_frozen():
-            if sys.platform == "win64":
-                return abspath(os.path.join(self.base_dir, "ffmpeg", "ffprobe.exe"))
+        if self.is_frozen():
+            if platform.is_windows():
+                return abspath(os.path.join(".", "ffmpeg", "ffprobe.exe"))
             else:
-                return abspath(os.path.join(self.base_dir, "ffmpeg", "ffprobe"))
+                return abspath(os.path.join(".", "ffmpeg", "ffprobe"))
         return "ffprobe"
 
     @cached_property
@@ -101,35 +131,6 @@ class AppContext:
 
     @cached_property
     def stylesheet(self):
-        qss_path = os.path.join(self.base_dir, "resources", "style", "dark.qss")
+        qss_path = os.path.join(".", "resources", "style", "dark.qss")
         with open(qss_path) as stylesheet:
             return stylesheet.read()
-
-    @cached_property
-    def main_win(self):
-        from mainwindow import MainWindow
-
-        window = MainWindow(
-            media_player=self.media_player,
-            ffprobe_cmd=self.ffprobe_cmd,
-            stylesheet=self.stylesheet,
-        )
-        window.load_media(media_path_args())
-        return window
-
-    def run(self):
-        self.main_win.show()
-        return self.app.exec_()
-
-
-def media_path_args():
-    if not is_frozen():
-        build_script_run_args = environ.get("_BUILD_SCRIPT_RUN_ARGS", "").split(",")
-        media_paths = [i for i in build_script_run_args if i.strip()]
-        if media_paths:
-            return media_paths
-    return sys.argv[1:]
-
-
-def is_frozen():
-    return getattr(sys, "frozen", False)

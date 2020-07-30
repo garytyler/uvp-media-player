@@ -1,13 +1,10 @@
-import os
 import sys
 
 from context import AppContext
 
 
 def main():
-    # base_dir = os.path.dirname(os.path.dirname(os.path.realpath(__file__)))
-    base_dir = "."
-    app_context = AppContext(base_dir=base_dir)
+    app_context = AppContext()
     app = app_context.run()
     sys.exit(app)
 
