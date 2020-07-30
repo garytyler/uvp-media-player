@@ -4,7 +4,6 @@ import os
 import sys
 from importlib import import_module
 from os import environ
-from os.path import abspath, dirname, join
 
 import config
 from PyQt5.QtWidgets import QApplication
@@ -16,6 +15,16 @@ log = logging.getLogger(__name__)
 class BaseAppContext:
     def is_frozen(self):
         return getattr(sys, "frozen", False)
+
+    def get_frozen_resource(self, *path_parts):
+        print(path_parts)
+        print(*path_parts)
+        exec_dir = os.path.dirname(sys.executable)
+        if platform.is_mac():
+            resources_dir = os.path.join(exec_dir, os.path.pardir, "Resources")
+        else:
+            resources_dir = os.path.join(exec_dir)
+        return os.path.join(resources_dir, *path_parts)
 
 
 class AppContext(BaseAppContext):
@@ -91,28 +100,33 @@ class AppContext(BaseAppContext):
     def vlcqt(self):
         if self.is_frozen():
             if platform.is_linux():
-                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.so")
-                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
+                environ["PYTHON_VLC_LIB_PATH"] = self.get_frozen_resource("libvlc.so")
+                environ["PYTHON_VLC_MODULE_PATH"] = self.get_frozen_resource("plugins")
             elif platform.is_windows():
-                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dll")
-                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
+                environ["PYTHON_VLC_LIB_PATH"] = self.get_frozen_resource("libvlc.dll")
+                environ["PYTHON_VLC_MODULE_PATH"] = self.get_frozen_resource("plugins")
                 # for windows/macOS, load libvlccore into mem before llibvlc.dylib
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(self.get_resource("libvlccore.dll"))
+                ctypes.CDLL(self.get_frozen_resource("libvlccore.dll"))
             elif platform.s_mac():
-                vlc_bin_dir = join(dirname(self.get_resource()), "MacOS")
-                environ["PYTHON_VLC_LIB_PATH"] = join(vlc_bin_dir, "libvlc.dylib")
-                environ["PYTHON_VLC_MODULE_PATH"] = join(vlc_bin_dir, "plugins")
+                vlc_bin_dir = os.path.join(
+                    os.path.dirname(self.get_frozen_resource("MacOS"))
+                )
+                environ["PYTHON_VLC_LIB_PATH"] = os.path.join(
+                    vlc_bin_dir, "libvlc.dylib"
+                )
+                environ["PYTHON_VLC_MODULE_PATH"] = os.path.join(vlc_bin_dir, "plugins")
                 # for windows/macOS, load libvlccore into mem before llibvlc.dylib
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(join(vlc_bin_dir, "libvlccore.dylib"))
+                ctypes.CDLL(os.path.join(vlc_bin_dir, "libvlccore.dylib"))
             else:
+                environ.unset("PYTHON_VLC_MODULE_PATH")
+                environ.unset("PYTHON_VLC_LIB_PATH")
                 log.warning(
                     f"Platform unsupported: '{sys.platform}'"
                     "If problems, try installing VLC."
                 )
-                environ.unset("PYTHON_VLC_MODULE_PATH")
-                environ.unset("PYTHON_VLC_LIB_PATH")
+
         return import_module(name="vlcqt")
 
     @cached_property
@@ -120,9 +134,9 @@ class AppContext(BaseAppContext):
         """Return command to invoke ffprobe binary. If frozen, use path to binary."""
         if self.is_frozen():
             if platform.is_windows():
-                return abspath(os.path.join(".", "ffmpeg", "ffprobe.exe"))
+                return self.get_frozen_resource("ffmpeg", "ffprobe.exe")
             else:
-                return abspath(os.path.join(".", "ffmpeg", "ffprobe"))
+                return self.get_frozen_resource("ffmpeg", "ffprobe")
         return "ffprobe"
 
     @cached_property
@@ -131,6 +145,6 @@ class AppContext(BaseAppContext):
 
     @cached_property
     def stylesheet(self):
-        qss_path = os.path.join(".", "resources", "style", "dark.qss")
+        qss_path = self.get_frozen_resource("style", "dark.qss")
         with open(qss_path) as stylesheet:
             return stylesheet.read()

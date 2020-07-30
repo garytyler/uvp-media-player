@@ -1,5 +1,4 @@
 import json
-import logging
 import os
 import shutil
 import subprocess
@@ -9,27 +8,7 @@ from glob import glob
 
 import typer
 
-log = logging.getLogger(__name__)
-
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-APP_MODULE = os.path.join(BASE_DIR, "app")
-FREEZE_DIR = os.path.join(BASE_DIR, "dist", "app")
-CONFIG = {}
-
-
-def load_build_config():
-    global CONFIG
-    config_path = os.path.join(BASE_DIR, "build.json")
-    with open(config_path) as f:
-        data = json.loads(f.read())
-        CONFIG.update(data.get("base", {}))
-        if is_mac():
-            CONFIG.update(data.get("mac", {}))
-        if is_linux():
-            CONFIG.update(data.get("linux", {}))
-        if is_windows():
-            CONFIG.update(data.get("windows", {}))
 
 
 def is_mac():
@@ -48,6 +27,37 @@ def verify_supported_platform():
     if not any((is_mac(), is_linux(), is_windows())):
         github_url = "https://github.com/garytyler/seevr-player/issues"
         raise RuntimeError(f"Platform unsupported. Request support at {github_url}")
+
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+
+class BuildSettings(dict):
+    def __init__(self):
+        self.file_path = os.path.join(BASE_DIR, "build.json")
+        with open(self.file_path) as f:
+            data = json.loads(f.read())
+        self.update(data.get("base", {}))
+        if is_mac():
+            self.update(data.get("mac", {}))
+        if is_linux():
+            self.update(data.get("linux", {}))
+        if is_windows():
+            self.update(data.get("windows", {}))
+
+    def __getitem__(self, key: str) -> str:
+        if key not in self:
+            raise ValueError(f"'{key}' is not a valid dependency environment variable")
+        else:
+            return super().__getitem__(key)
+
+    def __setitem__(self, key: str, value: str) -> None:
+        raise RuntimeError(f"Build configuration is read-only:'{self.file_path}'")
+
+
+BUILD_SETTINGS = BuildSettings()
+APP_MODULE = os.path.join(BASE_DIR, "app")
+FREEZE_DIR = os.path.join(BASE_DIR, "dist", BUILD_SETTINGS["app_name"])
 
 
 class DependencyEnvironment(dict):
@@ -69,7 +79,7 @@ class DependencyEnvironment(dict):
                 raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
             else:
                 super().__setitem__(key, value)
-                log.info(f"Dependency source (user) - key={key}, value={value}")
+                print(f"Dependency source (user) - key={key}, value={value}")
 
     def __setitem__(self, key: str, value: str) -> None:
         if key not in self._dependency_keys:
@@ -77,7 +87,7 @@ class DependencyEnvironment(dict):
         elif not os.path.exists(value):
             raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
         else:
-            log.info(f"Dependency source (default) - key={key}, value={value}")
+            print(f"Dependency source (default) - key={key}, value={value}")
             super().__setitem__(key, value)
 
     def __getitem__(self, key: str) -> str:
@@ -156,10 +166,10 @@ def create_build_env(self):
 class InstallerCommandContext:
     def __enter__(self):
         if is_mac():
-            mounted_dmg_paths = glob(f"/Volumes/{CONFIG['app_name']}*")
+            mounted_dmg_paths = glob(f"/Volumes/{BUILD_SETTINGS['app_name']}*")
             if mounted_dmg_paths:
                 raise RuntimeError(
-                    f"Eject mounted '{CONFIG['app_name']}' installer volumes"
+                    f"Eject mounted '{BUILD_SETTINGS['app_name']}' installer volumes"
                     f" from your system: {repr(mounted_dmg_paths)}"
                 )
 
@@ -190,12 +200,12 @@ def freeze():
             "--clean",
             "--onedir",
             "--windowed",
-            f"--name={CONFIG['app_name']}",
             "--hidden-import=PyQt5.QtNetwork",
             "--hidden-import=PyQt5.QtCore",
-            "--add-data='./resources/*;resources}'",
-            "--additional-hooks-dir=./hooks",
-            "--console",
+            f"--add-data='{os.path.join(BASE_DIR, 'media')};media'",
+            f"--add-data='{os.path.join(BASE_DIR, 'style')};style'",
+            f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
+            f"--name={BUILD_SETTINGS['app_name']}",
             os.path.join(BASE_DIR, "app", "__main__.py"),
         ]
         if is_windows():
@@ -211,5 +221,4 @@ def installer():
 
 if __name__ == "__main__":
     verify_supported_platform()
-    load_build_config()
     cli()
