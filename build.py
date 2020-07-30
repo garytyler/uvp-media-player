@@ -73,9 +73,6 @@ class DependencyEnvironment(dict):
 
 
 class FreezeCommandContext:
-    def __init__(self):
-        verify_supported_platform()
-
     def __enter__(self):
         self.dep_environ = DependencyEnvironment()
 
@@ -109,9 +106,6 @@ class FreezeCommandContext:
 
 
 class InstallerCommandContext:
-    def __init__(self):
-        verify_supported_platform()
-
     def __enter__(self):
         if is_mac():
             mounted_dmg_paths = glob(f"/Volumes/{SETTINGS['app_name']}*")
@@ -125,33 +119,16 @@ class InstallerCommandContext:
         pass
 
 
-class RunCommandContext:
-    def __init__(self):
-        verify_supported_platform()
-
-    def __enter__(self):
-        extra_args = sys.argv[2:]
-        for arg in extra_args:
-            sys.argv.remove(arg)
-        os.environ["_BUILD_SCRIPT_RUN_ARGS"] = ",".join(extra_args)
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
-COMMAND_CONTEXTS = {
-    "freeze": FreezeCommandContext,
-    "installer": InstallerCommandContext,
-    "run": RunCommandContext,
-}
-
 cli = typer.Typer()
 
 
 @cli.command()
 def run():
-    with RunCommandContext():
-        subprocess.run([sys.executable, "app"])
+    extra_args = sys.argv[2:]
+    for arg in extra_args:
+        sys.argv.remove(arg)
+    os.environ["_BUILD_SCRIPT_RUN_ARGS"] = ",".join(extra_args)
+    subprocess.run([sys.executable, "app"])
 
 
 @cli.command()
@@ -167,4 +144,5 @@ def installer():
 
 
 if __name__ == "__main__":
+    verify_supported_platform()
     cli()
