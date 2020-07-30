@@ -1,8 +1,10 @@
+import json
 import logging
 import os
 import shutil
 import subprocess
 import sys
+import tempfile
 from glob import glob
 
 import typer
@@ -11,10 +13,23 @@ log = logging.getLogger(__name__)
 
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-SETTINGS = {
-    "app_name": "SeeVR Player",
-    "freeze_dir": os.path.join(BASE_DIR, "dist", "app"),
-}
+APP_MODULE = os.path.join(BASE_DIR, "app")
+FREEZE_DIR = os.path.join(BASE_DIR, "dist", "app")
+CONFIG = {}
+
+
+def load_build_config():
+    global CONFIG
+    config_path = os.path.join(BASE_DIR, "build.json")
+    with open(config_path) as f:
+        data = json.loads(f.read())
+        CONFIG.update(data.get("base", {}))
+        if is_mac():
+            CONFIG.update(data.get("mac", {}))
+        if is_linux():
+            CONFIG.update(data.get("linux", {}))
+        if is_windows():
+            CONFIG.update(data.get("windows", {}))
 
 
 def is_mac():
@@ -75,6 +90,7 @@ class DependencyEnvironment(dict):
 class FreezeCommandContext:
     def __enter__(self):
         self.dep_environ = DependencyEnvironment()
+        return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.freeze_ffmpeg_binaries()
@@ -88,9 +104,9 @@ class FreezeCommandContext:
         In Mac, it's a separate 'Resources' directory in the .app bundle.
         """
         if is_mac():
-            return os.path.join(SETTINGS["freeze_dir"], "Contents", "Resources")
+            return os.path.join(FREEZE_DIR, "Contents", "Resources")
         else:
-            return SETTINGS["freeze_dir"]
+            return FREEZE_DIR
 
     def freeze_ffmpeg_binaries(self) -> None:
         # Make ffmpeg resources dir
@@ -105,13 +121,45 @@ class FreezeCommandContext:
         shutil.copy(ffprobe_bin_src_file, ffprobe_bin_dst_file)
 
 
+def create_build_env(self):
+    freeze_proc_dir = tempfile.mkdtemp()
+
+    venv_path = os.path.join(freeze_proc_dir, "release_venv")
+    subprocess.run([sys.executable, "-m", "venv", venv_path])
+
+    req_txt = os.path.join(freeze_proc_dir, "requirements.txt")
+    subprocess.run(["poetry", "update"], shell=True)
+    subprocess.run(
+        [
+            "poetry",
+            "export",
+            "--dev",
+            "--without-hashes",
+            "-f",
+            "requirements.txt",
+            ">",
+            req_txt,
+        ],
+        shell=True,
+    )
+
+    if is_windows():
+        release_python = os.path.join(venv_path, "Scripts", "python.exe")
+    else:
+        release_python = os.path.join(venv_path, "bin", "python")
+
+    subprocess.run([release_python, "-m", "pip", "install", "-r", req_txt])
+    subprocess.run([release_python, "-m", "pip", "install", "-r", req_txt])
+    return venv_path
+
+
 class InstallerCommandContext:
     def __enter__(self):
         if is_mac():
-            mounted_dmg_paths = glob(f"/Volumes/{SETTINGS['app_name']}*")
+            mounted_dmg_paths = glob(f"/Volumes/{CONFIG['app_name']}*")
             if mounted_dmg_paths:
                 raise RuntimeError(
-                    f"Eject mounted '{SETTINGS['app_name']}' installer volumes"
+                    f"Eject mounted '{CONFIG['app_name']}' installer volumes"
                     f" from your system: {repr(mounted_dmg_paths)}"
                 )
 
@@ -128,13 +176,31 @@ def run():
     for arg in extra_args:
         sys.argv.remove(arg)
     os.environ["_BUILD_SCRIPT_RUN_ARGS"] = ",".join(extra_args)
-    subprocess.run([sys.executable, "app"])
+    subprocess.run([sys.executable, APP_MODULE])
 
 
 @cli.command()
 def freeze():
     with FreezeCommandContext():
-        typer.echo("Freeze")
+        os.chdir(BASE_DIR)
+        command = [
+            "pyinstaller",
+            "--log-level=INFO",
+            "--noconfirm",
+            "--clean",
+            "--onedir",
+            "--windowed",
+            f"--name={CONFIG['app_name']}",
+            "--hidden-import=PyQt5.QtNetwork",
+            "--hidden-import=PyQt5.QtCore",
+            "--add-data='./resources/*;resources}'",
+            "--additional-hooks-dir=./hooks",
+            "--console",
+            os.path.join(BASE_DIR, "app", "__main__.py"),
+        ]
+        if is_windows():
+            command = ["powershell.exe", "-c"] + command
+        subprocess.run(command, shell=True)
 
 
 @cli.command()
@@ -145,4 +211,5 @@ def installer():
 
 if __name__ == "__main__":
     verify_supported_platform()
+    load_build_config()
     cli()
