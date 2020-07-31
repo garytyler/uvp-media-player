@@ -1,10 +1,10 @@
 import json
 import os
 import shutil
-import subprocess
 import sys
 import tempfile
 from glob import glob
+from subprocess import check_call
 
 import typer
 
@@ -135,11 +135,11 @@ def create_build_env(self):
     freeze_proc_dir = tempfile.mkdtemp()
 
     venv_path = os.path.join(freeze_proc_dir, "release_venv")
-    subprocess.run([sys.executable, "-m", "venv", venv_path])
+    check_call([sys.executable, "-m", "venv", venv_path])
 
     req_txt = os.path.join(freeze_proc_dir, "requirements.txt")
-    subprocess.run(["poetry", "update"], shell=True)
-    subprocess.run(
+    check_call(["poetry", "update"], shell=True)
+    check_call(
         [
             "poetry",
             "export",
@@ -158,8 +158,8 @@ def create_build_env(self):
     else:
         release_python = os.path.join(venv_path, "bin", "python")
 
-    subprocess.run([release_python, "-m", "pip", "install", "-r", req_txt])
-    subprocess.run([release_python, "-m", "pip", "install", "-r", req_txt])
+    check_call([release_python, "-m", "pip", "install", "-r", req_txt])
+    check_call([release_python, "-m", "pip", "install", "-r", req_txt])
     return venv_path
 
 
@@ -186,13 +186,14 @@ def run():
     for arg in extra_args:
         sys.argv.remove(arg)
     os.environ["_BUILD_SCRIPT_RUN_ARGS"] = ",".join(extra_args)
-    subprocess.run([sys.executable, APP_MODULE])
+    check_call([sys.executable, APP_MODULE])
 
 
 @cli.command()
 def freeze():
     with FreezeCommandContext():
         os.chdir(BASE_DIR)
+
         command = [
             "pyinstaller",
             "--log-level=INFO",
@@ -202,6 +203,7 @@ def freeze():
             "--windowed",
             "--hidden-import=PyQt5.QtNetwork",
             "--hidden-import=PyQt5.QtCore",
+            f"--icon='{os.path.join(BASE_DIR, 'icons', 'Icon.ico')}'",
             f"--add-data='{os.path.join(BASE_DIR, 'media')};media'",
             f"--add-data='{os.path.join(BASE_DIR, 'style')};style'",
             f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
@@ -210,7 +212,7 @@ def freeze():
         ]
         if is_windows():
             command = ["powershell.exe", "-c"] + command
-        subprocess.run(command, shell=True)
+        check_call(command, shell=True)
 
 
 @cli.command()
