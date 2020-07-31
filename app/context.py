@@ -17,8 +17,6 @@ class BaseAppContext:
         return getattr(sys, "frozen", False)
 
     def get_frozen_resource(self, *path_parts):
-        print(path_parts)
-        print(*path_parts)
         exec_dir = os.path.dirname(sys.executable)
         if platform.is_mac():
             resources_dir = os.path.join(exec_dir, os.path.pardir, "Resources")

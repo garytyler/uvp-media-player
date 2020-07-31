@@ -1,14 +1,11 @@
 import json
 import os
-import shutil
 import sys
 import tempfile
 from glob import glob
 from subprocess import check_call
 
 import typer
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 def is_mac():
@@ -97,40 +94,6 @@ class DependencyEnvironment(dict):
             return super().__getitem__(key)
 
 
-class FreezeCommandContext:
-    def __enter__(self):
-        self.dep_environ = DependencyEnvironment()
-        return self
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        self.freeze_ffmpeg_binaries()
-
-    @property
-    def resources_dst_dir(self):
-        """Return the same root directory that calling fbs_runtime.get_resource() from a
-        frozen app would return.
-
-        In all platforms except Mac, this is the parent directory of the app executable.
-        In Mac, it's a separate 'Resources' directory in the .app bundle.
-        """
-        if is_mac():
-            return os.path.join(FREEZE_DIR, "Contents", "Resources")
-        else:
-            return FREEZE_DIR
-
-    def freeze_ffmpeg_binaries(self) -> None:
-        # Make ffmpeg resources dir
-        ffmpeg_dst_dir = os.path.join(self.resources_dst_dir, "ffmpeg")
-        os.makedirs(ffmpeg_dst_dir, exist_ok=True)
-
-        # Copy ffprobe binary
-        ffprobe_bin_src_file = self.dep_environ["FFPROBE_BINARY_PATH"]
-        ffprobe_bin_dst_file = os.path.join(
-            ffmpeg_dst_dir, os.path.basename(ffprobe_bin_src_file)
-        )
-        shutil.copy(ffprobe_bin_src_file, ffprobe_bin_dst_file)
-
-
 def create_build_env(self):
     freeze_proc_dir = tempfile.mkdtemp()
 
@@ -163,20 +126,6 @@ def create_build_env(self):
     return venv_path
 
 
-class InstallerCommandContext:
-    def __enter__(self):
-        if is_mac():
-            mounted_dmg_paths = glob(f"/Volumes/{BUILD_SETTINGS['app_name']}*")
-            if mounted_dmg_paths:
-                raise RuntimeError(
-                    f"Eject mounted '{BUILD_SETTINGS['app_name']}' installer volumes"
-                    f" from your system: {repr(mounted_dmg_paths)}"
-                )
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
-
-
 cli = typer.Typer()
 
 
@@ -191,34 +140,46 @@ def run():
 
 @cli.command()
 def freeze():
-    with FreezeCommandContext():
-        os.chdir(BASE_DIR)
-
-        command = [
-            "pyinstaller",
-            "--log-level=INFO",
-            "--noconfirm",
-            "--clean",
-            "--onedir",
-            "--windowed",
-            "--hidden-import=PyQt5.QtNetwork",
-            "--hidden-import=PyQt5.QtCore",
-            f"--icon='{os.path.join(BASE_DIR, 'icons', 'Icon.ico')}'",
-            f"--add-data='{os.path.join(BASE_DIR, 'media')};media'",
-            f"--add-data='{os.path.join(BASE_DIR, 'style')};style'",
-            f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
-            f"--name={BUILD_SETTINGS['app_name']}",
-            os.path.join(BASE_DIR, "app", "__main__.py"),
-        ]
-        if is_windows():
-            command = ["powershell.exe", "-c"] + command
-        check_call(command, shell=True)
+    dep_environ = DependencyEnvironment()
+    command = [
+        "pyinstaller",
+        "--log-level=INFO",
+        "--noconfirm",
+        "--clean",
+        "--onedir",
+        "--windowed",
+        "--hidden-import=PyQt5.QtNetwork",
+        "--hidden-import=PyQt5.QtCore",
+        f"--name={BUILD_SETTINGS['app_name']}",
+        f"--icon='{os.path.join(BASE_DIR, 'icons', 'Icon.ico')}'",
+        f"--add-data='{os.path.join(BASE_DIR, 'media')};media'",
+        f"--add-data='{os.path.join(BASE_DIR, 'style')};style'",
+        f"--add-binary='{dep_environ['FFPROBE_BINARY_PATH']};ffmpeg'",
+        f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
+    ]
+    # adding vlc binary paths args here satisfies warnings during bundling
+    command += [f"--paths={p}" for p in dep_environ.values() if os.path.isdir(p)]
+    command += [
+        f"--paths={os.path.dirname(p)}"
+        for p in dep_environ.values()
+        if os.path.isfile(p)
+    ]
+    # target script
+    command.append(os.path.join(BASE_DIR, "app", "__main__.py"))
+    if is_windows():
+        command = ["powershell.exe", "-c"] + command
+    check_call(command)
 
 
 @cli.command()
 def installer():
-    with InstallerCommandContext():
-        typer.echo("Installer")
+    if is_mac():
+        mounted_dmg_paths = glob(f"/Volumes/{BUILD_SETTINGS['app_name']}*")
+        if mounted_dmg_paths:
+            raise RuntimeError(
+                f"Eject mounted '{BUILD_SETTINGS['app_name']}' installer volumes"
+                f" from your system: {repr(mounted_dmg_paths)}"
+            )
 
 
 if __name__ == "__main__":
