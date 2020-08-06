@@ -253,6 +253,7 @@ $RECYCLE.BIN/
 
 # Project-specific
 .user_config*
+.iconset
 
 # Ignore pipenv configuration - use poetry instead.
 Pipfile
