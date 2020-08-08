@@ -8,6 +8,7 @@ from pathlib import Path
 from subprocess import check_call
 from textwrap import dedent
 
+import imageio
 import PyInstaller.__main__
 import typer
 
@@ -131,9 +132,9 @@ def create_build_env(self):
     return venv_path
 
 
-def generate_mac_icns_file(src_img_path, dst_dir):
-    src_img_stem = Path(src_img_path).stem
-    src_img_ext = Path(src_img_path).suffix
+def generate_icns(src_img, dst_dir):
+    src_img_stem = Path(src_img).stem
+    src_img_ext = Path(src_img).suffix
     dst_file_path = os.path.join(dst_dir, f"{src_img_stem}.icns")
     iconset_dir = tempfile.mkdtemp(suffix=".iconset")
     widths_scales = []
@@ -151,7 +152,7 @@ def generate_mac_icns_file(src_img_path, dst_dir):
                 "-z",
                 str(width),
                 str(width),
-                os.path.join(BASE_DIR, "icons", src_img_path),
+                os.path.join(BASE_DIR, "icons", src_img),
                 "--out",
                 os.path.join(iconset_dir, icon_name),
             ]
@@ -161,17 +162,24 @@ def generate_mac_icns_file(src_img_path, dst_dir):
     return dst_file_path
 
 
+def generate_ico(src_img, dst_dir):
+    ico_dst_path = Path(dst_dir, f"{Path(src_img).stem}.ico")
+    img_data = imageio.imread(src_img)
+    imageio.imwrite(ico_dst_path, img_data)
+    return ico_dst_path
+
+
 cli = typer.Typer()
 
 
 @cli.command()
 def run():
-    if is_mac():
-        for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
-            try:
-                del os.environ[i]
-            except KeyError:
-                pass
+    # if is_mac():
+    for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
+        try:
+            del os.environ[i]
+        except KeyError:
+            pass
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -198,12 +206,10 @@ class BaseContext:
 
 class FreezeContextMac(BaseContext):
     def __enter__(self):
-        icns_dst_dir = tempfile.mkdtemp()
-        icns_file_path = generate_mac_icns_file(
-            src_img_path=ICON_PNG, dst_dir=icns_dst_dir
-        )
+        self.icns_tmp_dir = tempfile.mkdtemp()
+        generaged_icns = generate_icns(src_img_path=ICON_PNG, dst_dir=self.icns_tmp_dir)
         self.command.append("--osx-bundle-identifier=com.uvp.videoplayer")
-        self.command.append(f"--icon={icns_file_path}")
+        self.command.append(f"--icon={generaged_icns}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         plist_path = Path(
@@ -227,20 +233,26 @@ class FreezeContextMac(BaseContext):
         )
         with open(plist_path, "wb") as f:
             plistlib.dump(plist_data, f)
+        shutil.rmtree(self.icns_tmp_dir, ignore_errors=True)
 
 
 class FreezeContextLinux(BaseContext):
     def __enter__(self):
-        pass
+        self.ico_tmp_dir = tempfile.mkdtemp()
+        generated_ico = generate_icns(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
+        self.command.append(f"--icon={generated_ico}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        shutil.rmtree(self.ico_tmp_dir, ignore_errors=True)
 
 
 class FreezeContextWindows(BaseContext):
     def __enter__(self):
+        self.ico_tmp_dir = tempfile.mkdtemp()
+        generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.dep_environ = DependencyEnvironment()
         self.command.append(f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}")
+        self.command.append(f"--icon={generated_ico}")
         # add vlc binary paths args to satisfy warnings during bundling with hooks
         self.command += [
             f"--paths={p}"
@@ -255,7 +267,7 @@ class FreezeContextWindows(BaseContext):
         return self
 
     def __exit__(self, exc_type, exc_val, exc_tb):
-        pass
+        shutil.rmtree(self.ico_tmp_dir, ignore_errors=True)
 
 
 class FreezeContext:
@@ -291,11 +303,10 @@ def freeze():
         "--hidden-import=PyQt5.QtNetwork",
         "--hidden-import=PyQt5.QtCore",
         f"--name={BUILD_SETTINGS['app_name']}",
-        f"--icon={ICON_PNG}",
         f"--add-data={os.path.join(BASE_DIR, 'build.json')}{delimiter}.",
         f"--add-data={os.path.join(BASE_DIR, 'media')}{delimiter}media",
         f"--add-data={os.path.join(BASE_DIR, 'style')}{delimiter}style",
-        f"--add-binary=/Users/g/proj/seevr-player/ffmpeg/ffprobe{delimiter}ffmpeg",
+        f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}ffmpeg",
     ]
     with FreezeContext(base_command=base_command) as context:
         context.command.append(os.path.join(BASE_DIR, "app", "__main__.py"))
@@ -396,10 +407,16 @@ def create_mac_installer():
     os.remove(dmgbuild_settings)
 
 
+def create_windows_installer():
+    pass
+
+
 @cli.command()
 def installer():
     if is_mac():
         create_mac_installer()
+    elif is_windows():
+        create_windows_installer()
 
 
 if __name__ == "__main__":
