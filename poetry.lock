@@ -225,17 +225,6 @@ pipfile_deprecated_finder = ["pipreqs", "requirementslib", "tomlkit (>=0.5.3)"]
 requirements_deprecated_finder = ["pipreqs", "pip-api"]
 
 [[package]]
-category = "main"
-description = "Mach-O header analysis and editing"
-name = "macholib"
-optional = false
-python-versions = "*"
-version = "1.14"
-
-[package.dependencies]
-altgraph = ">=0.15"
-
-[[package]]
 category = "dev"
 description = "Generate/parse Mac OS Alias records from Python"
 name = "mac-alias"
@@ -610,7 +599,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "862214854f6212828af38424fc994ee5c766a8ee179ddc9119bb54874ba0d10f"
+content-hash = "8e2c4cd21e10153eacdb9584c44069fb5aac1336cde8b86a6c7d942b29e4406d"
 lock-version = "1.0"
 python-versions = "^3.7"
 
@@ -695,6 +684,9 @@ iniconfig = [
 isort = [
     {file = "isort-5.3.2-py3-none-any.whl", hash = "sha256:5196bd2f5b23dc91215734b1c96c6d28390061d69860a948094c12635d6d64e6"},
     {file = "isort-5.3.2.tar.gz", hash = "sha256:ba83762132a8661d3525f87a86549712fb7d8da79eeb452e01f327ada9e87920"},
+]
+mac-alias = [
+    {file = "mac_alias-2.0.7.tar.gz", hash = "sha256:c485e3eb9d600208cc0aa906282f0d575a535395306289bcdb4096599189e223"},
 ]
 macholib = [
     {file = "macholib-1.14-py2.py3-none-any.whl", hash = "sha256:c500f02867515e6c60a27875b408920d18332ddf96b4035ef03beddd782d4281"},

@@ -4,9 +4,9 @@ import plistlib
 import shutil
 import sys
 import tempfile
-from glob import glob
 from pathlib import Path
 from subprocess import check_call
+from textwrap import dedent
 
 import PyInstaller.__main__
 import typer
@@ -196,7 +196,7 @@ class BaseContext:
         raise NotImplementedError
 
 
-class MacFreezeContext(BaseContext):
+class FreezeContextMac(BaseContext):
     def __enter__(self):
         icns_dst_dir = tempfile.mkdtemp()
         icns_file_path = generate_mac_icns_file(
@@ -229,7 +229,7 @@ class MacFreezeContext(BaseContext):
             plistlib.dump(plist_data, f)
 
 
-class LinuxFreezeContext(BaseContext):
+class FreezeContextLinux(BaseContext):
     def __enter__(self):
         pass
 
@@ -237,7 +237,7 @@ class LinuxFreezeContext(BaseContext):
         pass
 
 
-class WindowsFreezeContext(BaseContext):
+class FreezeContextWindows(BaseContext):
     def __enter__(self):
         self.dep_environ = DependencyEnvironment()
         self.command.append(f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}")
@@ -261,11 +261,11 @@ class WindowsFreezeContext(BaseContext):
 class FreezeContext:
     def __init__(self, base_command):
         if is_mac():
-            self.context = MacFreezeContext(base_command=base_command)
+            self.context = FreezeContextMac(base_command=base_command)
         elif is_linux():
-            self.context = LinuxFreezeContext(base_command=base_command)
+            self.context = FreezeContextLinux(base_command=base_command)
         elif is_windows():
-            self.context = WindowsFreezeContext(base_command=base_command)
+            self.context = FreezeContextWindows(base_command=base_command)
         else:
             raise EnvironmentError("Platform not supported.")
 
@@ -302,15 +302,104 @@ def freeze():
         PyInstaller.__main__.run(context.command)
 
 
+def create_mac_installer():
+    dmgbuild_settings = tempfile.mkstemp()[1]
+    with open(dmgbuild_settings, "w") as f:
+        f.write(
+            dedent(
+                f"""
+        import biplist
+        import os.path
+        application = defines.get(
+            "app", "{Path(BASE_DIR, "dist", f"{BUILD_SETTINGS['app_name']}.app")}"
+        )
+        appname = os.path.basename(application)
+        def icon_from_app(app_path):
+            plist_path = os.path.join(app_path, "Contents", "Info.plist")
+            plist = biplist.readPlist(plist_path)
+            icon_name = plist["CFBundleIconFile"]
+            icon_root, icon_ext = os.path.splitext(icon_name)
+            if not icon_ext:
+                icon_ext = ".icns"
+            icon_name = icon_root + icon_ext
+            return os.path.join(app_path, "Contents", "Resources", icon_name)
+        size = defines.get("size", None)
+        format = defines.get("format", "UDBZ")
+        size = defines.get("size", None)
+        files = [application]
+        symlinks = {{"Applications": "/Applications"}}
+        badge_icon = icon_from_app(application)
+        icon_locations = {{appname: (140, 120), "Applications": (500, 120)}}
+        background = "builtin-arrow"
+        show_status_bar = False
+        show_tab_view = False
+        show_toolbar = False
+        show_pathbar = False
+        show_sidebar = False
+        sidebar_width = 180
+        window_rect = ((100, 100), (640, 280))
+        default_view = "icon-view"
+        show_icon_preview = False
+        include_icon_view_settings = "auto"
+        include_list_view_settings = "auto"
+        arrange_by = None
+        grid_offset = (0, 0)
+        grid_spacing = 100
+        scroll_position = (0, 0)
+        label_pos = "bottom"  # or 'right'
+        text_size = 16
+        icon_size = 128
+        list_icon_size = 16
+        list_text_size = 12
+        list_scroll_position = (0, 0)
+        list_sort_by = "name"
+        list_use_relative_dates = True
+        list_calculate_all_sizes = (False,)
+        list_columns = ("name", "date-modified", "size", "kind", "date-added")
+        list_column_widths = {{
+            "name": 300,
+            "date-modified": 181,
+            "date-created": 181,
+            "date-added": 181,
+            "date-last-opened": 181,
+            "size": 97,
+            "kind": 115,
+            "label": 100,
+            "version": 75,
+            "comments": 300,
+        }}
+        list_column_sort_directions = {{
+            "name": "ascending",
+            "date-modified": "descending",
+            "date-created": "descending",
+            "date-added": "descending",
+            "date-last-opened": "descending",
+            "size": "descending",
+            "kind": "ascending",
+            "label": "ascending",
+            "version": "ascending",
+            "comments": "ascending",
+        }}
+    """
+            )
+        )
+    dst_dmg_name = f"{BUILD_SETTINGS['app_name']}-v{BUILD_SETTINGS['version']}.dmg"
+    dst_dmg_path = Path(BASE_DIR, "dist", dst_dmg_name)
+    check_call(
+        [
+            "dmgbuild",
+            f"-s={dmgbuild_settings}",
+            BUILD_SETTINGS["app_name"],
+            dst_dmg_path,
+        ]
+    )
+    os.remove(dmgbuild_settings)
+
+
 @cli.command()
 def installer():
     if is_mac():
-        mounted_dmg_paths = glob(f"/Volumes/{BUILD_SETTINGS['app_name']}*")
-        if mounted_dmg_paths:
-            raise RuntimeError(
-                f"Eject mounted '{BUILD_SETTINGS['app_name']}' installer volumes"
-                f" from your system: {repr(mounted_dmg_paths)}"
-            )
+        create_mac_installer()
 
 
 if __name__ == "__main__":
