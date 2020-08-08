@@ -12,6 +12,7 @@ ffmpeg-python = "*"
 python-vlc = "*"
 qtawesome = "*"
 macholib = "*"
+imageio = "^2.9.0"
 
 [tool.poetry.dev-dependencies]
 black = { version = "*", allow-prereleases = true }

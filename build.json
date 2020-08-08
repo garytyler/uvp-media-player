@@ -1,6 +1,7 @@
 {
     "base": {
         "version": "0.0.4",
-        "app_name": "SeeVR-Player"
+        "app_name": "SeeVR-Player",
+        "author": "UVP"
     }
 }
