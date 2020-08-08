@@ -39,6 +39,14 @@ tests = ["coverage", "hypothesis", "pympler", "pytest (>=4.3.0)", "six", "zope.i
 
 [[package]]
 category = "dev"
+description = "biplist is a library for reading/writing binary plists."
+name = "biplist"
+optional = false
+python-versions = "*"
+version = "1.0.3"
+
+[[package]]
+category = "dev"
 description = "The uncompromising code formatter."
 name = "black"
 optional = false
@@ -96,6 +104,30 @@ name = "distlib"
 optional = false
 python-versions = "*"
 version = "0.3.1"
+
+[[package]]
+category = "dev"
+description = "macOS command line utility to build disk images"
+name = "dmgbuild"
+optional = false
+python-versions = "*"
+version = "1.3.3"
+
+[package.dependencies]
+ds_store = ">=1.1.0"
+mac_alias = ">=2.0.1"
+
+[[package]]
+category = "dev"
+description = "Manipulate Finder .DS_Store files from Python"
+name = "ds-store"
+optional = false
+python-versions = "*"
+version = "1.1.2"
+
+[package.dependencies]
+biplist = ">=0.6"
+mac_alias = ">=2.0.1"
 
 [[package]]
 category = "main"
@@ -191,6 +223,25 @@ version = "5.3.2"
 colors = ["colorama (>=0.4.3,<0.5.0)"]
 pipfile_deprecated_finder = ["pipreqs", "requirementslib", "tomlkit (>=0.5.3)"]
 requirements_deprecated_finder = ["pipreqs", "pip-api"]
+
+[[package]]
+category = "main"
+description = "Mach-O header analysis and editing"
+name = "macholib"
+optional = false
+python-versions = "*"
+version = "1.14"
+
+[package.dependencies]
+altgraph = ">=0.15"
+
+[[package]]
+category = "dev"
+description = "Generate/parse Mac OS Alias records from Python"
+name = "mac-alias"
+optional = false
+python-versions = "*"
+version = "2.0.7"
 
 [[package]]
 category = "main"
@@ -580,6 +631,9 @@ attrs = [
     {file = "attrs-19.3.0-py2.py3-none-any.whl", hash = "sha256:08a96c641c3a74e44eb59afb61a24f2cb9f4d7188748e76ba4bb5edfa3cb7d1c"},
     {file = "attrs-19.3.0.tar.gz", hash = "sha256:f7b7ce16570fe9965acd6d30101a28f62fb4a7f9e926b3bbc9b61f8b04247e72"},
 ]
+biplist = [
+    {file = "biplist-1.0.3.tar.gz", hash = "sha256:4c0549764c5fe50b28042ec21aa2e14fe1a2224e239a1dae77d9e7f3932aa4c6"},
+]
 black = [
     {file = "black-19.10b0-py36-none-any.whl", hash = "sha256:1b30e59be925fafc1ee4565e5e08abef6b03fe455102883820fe5ee2e4734e0b"},
     {file = "black-19.10b0.tar.gz", hash = "sha256:c2edb73a08e9e0e6f65a0e6af18b059b8b1cdd5bef997d7a0b181df93dc81539"},
@@ -604,6 +658,12 @@ dis3 = [
 distlib = [
     {file = "distlib-0.3.1-py2.py3-none-any.whl", hash = "sha256:8c09de2c67b3e7deef7184574fc060ab8a793e7adbb183d942c389c8b13c52fb"},
     {file = "distlib-0.3.1.zip", hash = "sha256:edf6116872c863e1aa9d5bb7cb5e05a022c519a4594dc703843343a9ddd9bff1"},
+]
+dmgbuild = [
+    {file = "dmgbuild-1.3.3.tar.gz", hash = "sha256:2004a3a304bd29ac541af990a2b1d531b82c49f9465dbbf33e5b30efc48b620d"},
+]
+ds-store = [
+    {file = "ds_store-1.1.2.tar.gz", hash = "sha256:f569659cfd66b21273c5a2405d5e1e0f54fddebf627130329f01404f271a074c"},
 ]
 ffmpeg-python = [
     {file = "ffmpeg-python-0.2.0.tar.gz", hash = "sha256:65225db34627c578ef0e11c8b1eb528bb35e024752f6f10b78c011f6f64c4127"},
