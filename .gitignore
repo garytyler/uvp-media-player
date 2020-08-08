@@ -248,12 +248,10 @@ $RECYCLE.BIN/
 # Ignore editor configuration
 .vscode
 
-# fbs
-!src/**/*
-
 # Project-specific
 .user_config*
 .iconset
+!nsis/plugins/*
 
 # Ignore pipenv configuration - use poetry instead.
 Pipfile
