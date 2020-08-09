@@ -8,9 +8,9 @@ from pathlib import Path
 from subprocess import check_call
 from textwrap import dedent
 
-import imageio
 import PyInstaller.__main__
 import typer
+from PIL import Image
 
 
 def is_mac():
@@ -61,6 +61,12 @@ BUILD_SETTINGS = BuildSettings()
 APP_MODULE = os.path.join(BASE_DIR, "app")
 FREEZE_DIR = os.path.join(BASE_DIR, "dist", BUILD_SETTINGS["app_name"])
 ICON_PNG = Path(BASE_DIR, "icons", "icon.png")
+if is_mac():
+    ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024]
+elif is_linux():
+    ICON_SIZES = [16, 24, 48, 96]
+elif is_windows():
+    ICON_SIZES = [16, 24, 32, 48, 256]
 
 
 class DependencyEnvironment(dict):
@@ -141,22 +147,15 @@ def generate_icns(src_img, dst_dir):
     for width in [32, 64, 256, 512, 1024]:
         widths_scales.extend([(width, 1), (width, 2)])
     for width, scale in widths_scales:
-        icon_name = (
+        icon_version_name = (
             f"icon_{width}x{width}{src_img_ext}"
             if scale != 1
-            else f"icon_{width//2}x{width//2}@2x{src_img_ext}"
+            else f"icon_{width//scale}x{width//scale}@{scale}x{src_img_ext}"
         )
-        check_call(
-            [
-                "sips",
-                "-z",
-                str(width),
-                str(width),
-                os.path.join(BASE_DIR, "icons", src_img),
-                "--out",
-                os.path.join(iconset_dir, icon_name),
-            ]
-        )
+        img_data = Image.open(src_img)
+        img_resized_data = img_data.resize((round(width * scale), round(width * scale)))
+        img_resized_data.show()
+        img_resized_data.save(Path(iconset_dir, icon_version_name))
     check_call(["iconutil", "-c", "icns", iconset_dir, "-o", dst_file_path])
     shutil.rmtree(iconset_dir)
     return dst_file_path
@@ -164,8 +163,9 @@ def generate_icns(src_img, dst_dir):
 
 def generate_ico(src_img, dst_dir):
     ico_dst_path = Path(dst_dir, f"{Path(src_img).stem}.ico")
-    img_data = imageio.imread(src_img)
-    imageio.imwrite(ico_dst_path, img_data)
+    img_data = Image.open(src_img)
+    sizes = [(i, i) for i in ICON_SIZES]
+    img_data.save(ico_dst_path, format="ico", sizes=sizes)
     return ico_dst_path
 
 
@@ -174,12 +174,12 @@ cli = typer.Typer()
 
 @cli.command()
 def run():
-    # if is_mac():
-    for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
-        try:
-            del os.environ[i]
-        except KeyError:
-            pass
+    if is_linux() or is_windows():
+        for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
+            try:
+                del os.environ[i]
+            except KeyError:
+                pass
 
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -239,7 +239,7 @@ class FreezeContextMac(BaseContext):
 class FreezeContextLinux(BaseContext):
     def __enter__(self):
         self.ico_tmp_dir = tempfile.mkdtemp()
-        generated_ico = generate_icns(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
+        generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.command.append(f"--icon={generated_ico}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
