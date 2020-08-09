@@ -126,22 +126,18 @@ class AppContext(BaseAppContext):
                         del os.environ[i]
                     except KeyError:
                         pass
-
             elif platform.is_windows:  # bundled vlc
                 environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dll")
                 environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
-                # for windows/macOS, load libvlccore into mem before llibvlc.dylib
+                # for windows/macOS w/ bundled vlc, load libvlccore into mem first
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
                 ctypes.CDLL(self.get_frozen_resource("libvlccore.dll"))
-            elif platform.is_mac:  # separate vlc installation required
-                for i in ["PYTHON_VLC_MODULE_PATH", "PYTHON_VLC_LIB_PATH"]:
-                    try:
-                        del os.environ[i]
-                    except KeyError:
-                        pass
-                # for windows/macOS with bundled vlc, load libvlccore into mem before llibvlc.dylib
+            elif platform.is_mac:
+                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dylib")
+                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
+                # for windows/macOS w/ bundled vlc, load libvlccore into mem first
                 # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                # # ctypes.CDLL(os.path.join(vlc_bin_dir, "libvlccore.dylib"))
+                ctypes.CDLL(self.get_resource("libvlccore.dylib"))
             else:
                 for i in ["PYTHON_VLC_MODULE_PATH", "PYTHON_VLC_LIB_PATH"]:
                     try:
@@ -160,12 +156,11 @@ class AppContext(BaseAppContext):
         """Return command to invoke ffprobe binary. If frozen, use path to binary."""
         if not self.is_frozen:
             return os.environ["FFPROBE_BINARY_PATH"]
-        elif platform.is_linux:
-            return "ffprobe"
-        else:
-            return self.get_resource(
-                "ffmpeg", "ffprobe.exe" if platform.is_windows else "ffprobe"
-            )
+        return (
+            "ffprobe"
+            if platform.is_linux
+            else self.get_resource("ffprobe.exe" if platform.is_windows else "ffprobe")
+        )
 
     @cached_property
     def media_player(self):

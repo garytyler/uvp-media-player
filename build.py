@@ -166,7 +166,6 @@ def generate_icns(src_img, dst_dir):
         )
         img_data = Image.open(src_img)
         img_resized_data = img_data.resize((round(width * scale), round(width * scale)))
-        img_resized_data.show()
         img_resized_data.save(Path(iconset_dir, icon_version_name))
     check_call(["iconutil", "-c", "icns", iconset_dir, "-o", dst_file_path])
     shutil.rmtree(iconset_dir)
@@ -220,10 +219,11 @@ class BaseContext:
 class FreezeContextMac(BaseContext):
     def __enter__(self):
         self.icns_tmp_dir = tempfile.mkdtemp()
-        generaged_icns = generate_icns(src_img_path=ICON_PNG, dst_dir=self.icns_tmp_dir)
+        generaged_icns = generate_icns(src_img=ICON_PNG, dst_dir=self.icns_tmp_dir)
         self.command.append("--onedir")
         self.command.append("--osx-bundle-identifier=com.uvp.videoplayer")
         self.command.append(f"--icon={generaged_icns}")
+        self.command.append(f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         plist_path = Path(
