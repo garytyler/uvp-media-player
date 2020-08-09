@@ -1,5 +1,5 @@
 [[package]]
-category = "main"
+category = "dev"
 description = "Python graph (network) package"
 name = "altgraph"
 optional = false
@@ -188,7 +188,7 @@ version = "1.4.25"
 license = ["editdistance"]
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Library for reading and writing a wide range of image, video, scientific, and volumetric data formats."
 name = "imageio"
 optional = false
@@ -252,7 +252,7 @@ python-versions = "*"
 version = "2.0.7"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Mach-O header analysis and editing"
 name = "macholib"
 optional = false
@@ -311,7 +311,7 @@ python-versions = "*"
 version = "1.4.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "NumPy is the fundamental package for array computing with Python."
 name = "numpy"
 optional = false
@@ -339,7 +339,7 @@ python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*, !=3.4.*"
 version = "0.8.0"
 
 [[package]]
-category = "main"
+category = "dev"
 description = "Python Imaging Library (Fork)"
 name = "pillow"
 optional = false
@@ -634,7 +634,7 @@ docs = ["sphinx", "jaraco.packaging (>=3.2)", "rst.linker (>=1.9)"]
 testing = ["jaraco.itertools", "func-timeout"]
 
 [metadata]
-content-hash = "3a3e213efcd32a1f9ef0fb32c791c462f717412c156c4dd76958c8f6ede4b9b1"
+content-hash = "434574b5c0c22a5c88309e3cd02cfff5ae6b0f85b59c6eba386d80467780422c"
 lock-version = "1.0"
 python-versions = "^3.7"
 
