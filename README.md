@@ -26,6 +26,13 @@ As with any `pyinstaller` build, the build process must be run on the target pla
 - [VLC](https://www.videolan.org/vlc/) system installation
 - [ffprobe](https://ffbinaries.com/downloads) binary for your platform
 
+## Platform-specific
+
+- Ubuntu (64-bit)
+  - [fpm](https://fpm.readthedocs.io/en/latest/installing.html)
+- Windows (64-bit)
+  - [nsis](https://nsis.sourceforge.io/Main_Page)
+
 ## Build Environment Variables
 
 A few external dependencies are required. They can be specified with paths set to environment variables.

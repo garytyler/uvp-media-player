@@ -1,4 +1,5 @@
 import fractions
+import sys
 from functools import lru_cache
 
 
@@ -23,3 +24,20 @@ def move_window_to_center(target_win, center_of_win):
     center_pos = center_of_win.geometry().center()
     frame_geo.moveCenter(center_pos)
     target_win.move(frame_geo.topLeft())
+
+
+class _Platform:
+    @cached_property
+    def is_mac(self):
+        return sys.platform == "darwin"
+
+    @cached_property
+    def is_linux(self):
+        return sys.platform == "linux"
+
+    @cached_property
+    def is_windows(self):
+        return sys.platform == "win32"
+
+
+platform = _Platform()

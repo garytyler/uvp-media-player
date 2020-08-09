@@ -13,6 +13,11 @@ import typer
 from PIL import Image
 
 
+class PlatformNotSupportedError(Exception):
+    def __str__(self):
+        return "Platform not supported."
+
+
 def is_mac():
     return sys.platform == "darwin"
 
@@ -25,27 +30,34 @@ def is_windows():
     return sys.platform == "win32"
 
 
-def verify_supported_platform():
-    if not any((is_mac(), is_linux(), is_windows())):
-        github_url = "https://github.com/garytyler/seevr-player/issues"
-        raise RuntimeError(f"Platform unsupported. Request support at {github_url}")
-
-
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
 class BuildSettings(dict):
+    base = {
+        "app_name": None,
+        "version": None,
+        "description": None,
+        "author": None,
+        "author_email": None,
+        "url": None,
+        "depends": ["ffmpeg"],
+    }
+
     def __init__(self):
         self.file_path = os.path.join(BASE_DIR, "build.json")
+        self.update(self.base)
         with open(self.file_path) as f:
             data = json.loads(f.read())
         self.update(data.get("base", {}))
         if is_mac():
             self.update(data.get("mac", {}))
-        if is_linux():
+        elif is_linux():
             self.update(data.get("linux", {}))
-        if is_windows():
+        elif is_windows():
             self.update(data.get("windows", {}))
+        else:
+            raise PlatformNotSupportedError
 
     def __getitem__(self, key: str) -> str:
         if key not in self:
@@ -174,6 +186,7 @@ cli = typer.Typer()
 
 @cli.command()
 def run():
+    os.environ["IS_DEVRUN"] = "1"
     if is_linux() or is_windows():
         for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
             try:
@@ -208,6 +221,7 @@ class FreezeContextMac(BaseContext):
     def __enter__(self):
         self.icns_tmp_dir = tempfile.mkdtemp()
         generaged_icns = generate_icns(src_img_path=ICON_PNG, dst_dir=self.icns_tmp_dir)
+        self.command.append("--onedir")
         self.command.append("--osx-bundle-identifier=com.uvp.videoplayer")
         self.command.append(f"--icon={generaged_icns}")
 
@@ -240,7 +254,9 @@ class FreezeContextLinux(BaseContext):
     def __enter__(self):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
+        self.command.append("--onefile")
         self.command.append(f"--icon={generated_ico}")
+        self.command.append(f"--additional-hooks-dir={Path(BASE_DIR, 'hooks')}")
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.ico_tmp_dir, ignore_errors=True)
@@ -251,6 +267,7 @@ class FreezeContextWindows(BaseContext):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.dep_environ = DependencyEnvironment()
+        self.command.append("--onedir")
         self.command.append(f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}")
         self.command.append(f"--icon={generated_ico}")
         # add vlc binary paths args to satisfy warnings during bundling with hooks
@@ -298,7 +315,6 @@ def freeze():
         "--log-level=INFO",
         "--noconfirm",
         "--clean",
-        "--onedir",
         "--windowed",
         "--hidden-import=PyQt5.QtNetwork",
         "--hidden-import=PyQt5.QtCore",
@@ -306,7 +322,7 @@ def freeze():
         f"--add-data={os.path.join(BASE_DIR, 'build.json')}{delimiter}.",
         f"--add-data={os.path.join(BASE_DIR, 'media')}{delimiter}media",
         f"--add-data={os.path.join(BASE_DIR, 'style')}{delimiter}style",
-        f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}ffmpeg",
+        f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}.",
     ]
     with FreezeContext(base_command=base_command) as context:
         context.command.append(os.path.join(BASE_DIR, "app", "__main__.py"))
@@ -530,14 +546,63 @@ def create_windows_installer():
     check_call(["makensis", str(installer_nsi)])
 
 
+def create_linux_installer():
+    deb_dst_name = f"{BUILD_SETTINGS['app_name']}-v{BUILD_SETTINGS['version']}.deb"
+    deb_dst_path = Path(BASE_DIR, "dist", deb_dst_name)
+    if deb_dst_path.exists():
+        os.remove(deb_dst_path)
+    pkg_name = BUILD_SETTINGS["app_name"].lower()
+    cmd = [
+        "fpm",
+        "--input-type=dir",
+        "--log=info",
+        f"--name={pkg_name}",
+        f"--version={BUILD_SETTINGS['version']}",
+        f"--vendor={BUILD_SETTINGS['author']}",
+        "--output-type=deb",
+        f"--package={deb_dst_path}",
+        "--no-deb-auto-config-files",
+        f'--deb-default={Path(BASE_DIR, "build.json")}',
+    ]
+    if BUILD_SETTINGS["description"]:
+        cmd.append(f"--description={BUILD_SETTINGS['description']}")
+    if BUILD_SETTINGS["author_email"]:
+        cmd.append(
+            f"--maintainer={BUILD_SETTINGS['author']} <{BUILD_SETTINGS['author_email']}>"
+        )
+    if BUILD_SETTINGS["url"]:
+        cmd.append(f"--url={BUILD_SETTINGS['url']}")
+    for dependency in BUILD_SETTINGS["depends"]:
+        cmd.append(f"--depends={dependency}")
+    cmd.extend(
+        [
+            f'{Path(BASE_DIR, "dist", BUILD_SETTINGS["app_name"])}=/usr/bin/{pkg_name}',
+            f'{Path(BASE_DIR, "build.json")}=/usr/share/{pkg_name}/build.json',
+            f'{Path(BASE_DIR, "style")}=/usr/share/{pkg_name}',
+        ]
+    )
+
+    try:
+        check_call(cmd)
+    except FileNotFoundError:
+        raise FileNotFoundError(
+            "fbs could not find executable 'fpm'. Please install fpm using the "
+            "instructions at "
+            "https://fpm.readthedocs.io/en/latest/installing.html."
+        )
+
+
 @cli.command()
 def installer():
     if is_mac():
         create_mac_installer()
     elif is_windows():
         create_windows_installer()
+    elif is_linux():
+        create_linux_installer()
+    else:
+        raise PlatformNotSupportedError
 
 
 if __name__ == "__main__":
-    verify_supported_platform()
     cli()
