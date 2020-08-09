@@ -6,15 +6,15 @@ authors = ["Gary Tyler <mail@garytyler.com>"]
 
 [tool.poetry.dependencies]
 python = "^3.7"
-pip = "^20.2"
 PyQt5-sip = "12.8.0"
 pyqt5 = "^5.14"
 ffmpeg-python = "0.2.0"
 python-vlc = "^3.0"
 qtawesome = "0.7.2"
+black = "^19.10b0"
 
 [tool.poetry.dev-dependencies]
-black = { version = "*", allow-prereleases = true }
+black = "^19.10b0"
 pyinstaller = "^3.6"
 flake8 = "*"
 isort = "*"
