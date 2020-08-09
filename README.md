@@ -17,11 +17,14 @@ As with any `pyinstaller` build, the build process must be run on the target pla
 
 ## Build Requirements
 
-- Supported platforms: Ubuntu 18.04, Windows 10, macOS Mojave 10.14
-- [Python 3.6](https://www.python.org/downloads/)
-- [VLC](https://www.videolan.org/vlc/)
-
-NOTE: If using `pipenv`, you will likely encounter [pyinstaller issue #4064](https://github.com/pyinstaller/pyinstaller/issues/4064) with an error like `ImportError: cannot import 'distutils'` or similar when launching the application. A simple workaround is to rollback `virtualenv` to version 16.1 (`virtualenv==16.1`), in both your system `pip` and your virtual environment `pip`.
+- Supported platforms
+  - Ubuntu (64-bit)
+  - Windows (64-bit)
+  - macOS
+- [Python 3.7](https://www.python.org/downloads/) w/ development packages
+  - If building Python yourself, please rebuild your Python with `--enable-shared` (on Linux) or `--enable-framework` (on Darwin). If using `pyenv`, use the `CONFIGURE_OPTS` environment variable (`CONFIGURE_OPTS="--enable-shared"` on Linux or `CONFIGURE_OPTS="--enable-framework"` on Darwin).
+- [VLC](https://www.videolan.org/vlc/) system installation
+- [ffprobe](https://ffbinaries.com/downloads) binary for your platform
 
 ## Build Environment Variables
 
@@ -43,14 +46,6 @@ A few external dependencies are required. They can be specified with paths set t
     - macOS: `/Applications/VLC.app/Contents/MacOS/plugins`
 
 ## Build Script
-
-Run [fbs](https://build-system.fman.io/manual/) build commands with the provided `build.py` script.
-
-```bash
-python build.py clean
-python build.py freeze
-python build.py installer
-```
 
 # Support
 
