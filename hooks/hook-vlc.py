@@ -17,11 +17,19 @@ def get_lib_file():
     if lib_file and os.path.exists(lib_file):
         return lib_file
     elif is_linux:
-        return join("/", "usr", "lib", "x86_64-linux-gnu", "libvlc.so")
+        path = join("/", "usr", "lib", "x86_64-linux-gnu", "libvlc.so")
     elif is_darwin:
-        return join(
+        path = join(
             "/", "Applications", "VLC.app", "Contents", "MacOS", "lib", "libvlc.dylib",
         )
+    elif is_win:
+        path = join("C:\\", "Program Files", "VideoLAN", "VLC", "libvlc.dll")
+    if os.path.exists(path):
+        return path
+    raise FileNotFoundError(
+        "vlc plugins directory not found."
+        "please use environment variable 'PYTHON_VLC_MODULE_PATH'"
+    )
 
 
 def get_plugin_dir():
@@ -29,9 +37,17 @@ def get_plugin_dir():
     if plugin_dir and os.path.exists(plugin_dir):
         return plugin_dir
     elif is_linux:
-        return join("/", "usr", "lib", "x86_64-linux-gnu", "vlc", "plugins")
+        path = join("/", "usr", "lib", "x86_64-linux-gnu", "vlc", "plugins")
     elif is_darwin:
-        return join("/", "Applications", "VLC.app", "Contents", "MacOS", "plugins")
+        path = join("/", "Applications", "VLC.app", "Contents", "MacOS", "plugins")
+    elif is_win:
+        path = join("C:\\", "", "Program Files", "VideoLAN", "VLC", "plugins")
+    if os.path.exists(path):
+        return path
+    raise FileNotFoundError(
+        "vlc plugins directory not found."
+        "please use environment variable 'PYTHON_VLC_MODULE_PATH'"
+    )
 
 
 def hook(hook_api):
@@ -44,25 +60,16 @@ def hook(hook_api):
     # Get common root
     common_root = commonpath([lib_file, plugin_dir])
 
-    if is_win:
+    if is_win or is_darwin:
         # Add libvlc binaries
         lib_files = glob(join(dirname(lib_file), DYLIB_PATTERN))
-        libvlc_binaries = []
+        lib_binaries = []
         for f in lib_files:
-            binary_tuple = (f, "vlc")
-            libvlc_binaries.append(binary_tuple)
-        hook_api.add_binaries(libvlc_binaries)
+            binary_tuple = (f, ".")
+            lib_binaries.append(binary_tuple)
+        hook_api.add_binaries(lib_binaries)
 
     if is_darwin:
-        # Add libvlc binaries
-        lib_files = glob(join(dirname(lib_file), DYLIB_PATTERN))
-        libvlc_binaries = []
-        for f in lib_files:
-            rel_dir = relpath(dirname(f), common_root)
-            binary_tuple = (f, ".")
-            libvlc_binaries.append(binary_tuple)
-        hook_api.add_binaries(libvlc_binaries)
-
         # Add plugin binaries
         module_files = glob(join(plugin_dir, DYLIB_PATTERN))
         plugin_binaries = []
@@ -73,6 +80,7 @@ def hook(hook_api):
         hook_api.add_binaries(plugin_binaries)
 
     if is_linux or is_win:
+        print("IS_LINUX_OR_IS_WIN")
         # Add plugin binaries
         plugin_src_files = []
         for root, _, __ in os.walk(plugin_dir):

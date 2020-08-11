@@ -220,10 +220,15 @@ class FreezeContextMac(BaseContext):
     def __enter__(self):
         self.icns_tmp_dir = tempfile.mkdtemp()
         generaged_icns = generate_icns(src_img=ICON_PNG, dst_dir=self.icns_tmp_dir)
-        self.command.append("--onedir")
-        self.command.append("--osx-bundle-identifier=com.uvp.videoplayer")
-        self.command.append(f"--icon={generaged_icns}")
-        self.command.append(f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}")
+        self.command.extend(
+            [
+                "--windowed",
+                "--onedir",
+                "--osx-bundle-identifier=com.uvp.videoplayer",
+                f"--icon={generaged_icns}",
+                f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
+            ]
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         plist_path = Path(
@@ -254,9 +259,14 @@ class FreezeContextLinux(BaseContext):
     def __enter__(self):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
-        self.command.append("--onefile")
-        self.command.append(f"--icon={generated_ico}")
-        self.command.append(f"--additional-hooks-dir={Path(BASE_DIR, 'hooks')}")
+        self.command.extend(
+            [
+                "--windowed",
+                "--onefile",
+                f"--icon={generated_ico}",
+                f"--additional-hooks-dir={Path(BASE_DIR, 'hooks')}",
+            ]
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.ico_tmp_dir, ignore_errors=True)
@@ -267,9 +277,15 @@ class FreezeContextWindows(BaseContext):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.dep_environ = DependencyEnvironment()
-        self.command.append("--onedir")
-        self.command.append(f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}")
-        self.command.append(f"--icon={generated_ico}")
+
+        self.command.extend(
+            [
+                "--noconsole",
+                "--onedir",
+                f"--icon={generated_ico}",
+                f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
+            ]
+        )
         # add vlc binary paths args to satisfy warnings during bundling with hooks
         self.command += [
             f"--paths={p}"
@@ -307,15 +323,13 @@ class FreezeContext:
 
 
 @cli.command()
-def freeze():
-    shutil.rmtree(os.path.join(BASE_DIR, "dist"), ignore_errors=True)
-    shutil.rmtree(os.path.join(BASE_DIR, "build"), ignore_errors=True)
+def freeze(console=False):
+
     delimiter = ";" if is_windows() else ":"
     base_command = [
         "--log-level=INFO",
         "--noconfirm",
         "--clean",
-        "--windowed",
         "--hidden-import=PyQt5.QtNetwork",
         "--hidden-import=PyQt5.QtCore",
         f"--name={BUILD_SETTINGS['app_name']}",
@@ -324,6 +338,8 @@ def freeze():
         f"--add-data={os.path.join(BASE_DIR, 'style')}{delimiter}style",
         f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}.",
     ]
+    shutil.rmtree(os.path.join(BASE_DIR, "dist"), ignore_errors=True)
+    shutil.rmtree(os.path.join(BASE_DIR, "build"), ignore_errors=True)
     with FreezeContext(base_command=base_command) as context:
         context.command.append(os.path.join(BASE_DIR, "app", "__main__.py"))
         PyInstaller.__main__.run(context.command)
@@ -433,7 +449,6 @@ def create_windows_installer():
         "dist",
         f"{BUILD_SETTINGS['app_name']}-v{BUILD_SETTINGS['version']}.exe",
     )
-    shutil.copy(Path(BASE_DIR, "nsis", "plugins", "ShellExecAsUser.dll"), bundle_dir)
     with open(installer_nsi, "w") as f:
         f.write(
             dedent(
@@ -537,8 +552,8 @@ def create_windows_installer():
         SectionEnd
 
         Function LaunchLink
-        !addplugindir "."
-        ShellExecAsUser::ShellExecAsUser "open" "$SMPROGRAMS\\{app_name}.lnk"
+        ;Use explorer.exe to launch with user permissions
+        Exec '"$WINDIR\\explorer.exe" "$SMPROGRAMS\\{app_name}.lnk"'
         FunctionEnd
         """
             )
