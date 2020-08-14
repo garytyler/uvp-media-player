@@ -14,7 +14,11 @@ elif is_darwin:
 
 def get_lib_file():
     lib_file = os.environ.get("PYTHON_VLC_LIB_PATH")
-    if lib_file and os.path.exists(lib_file):
+    if (
+        lib_file and os.path.exists(os.path.dirname(lib_file))
+        if is_linux
+        else os.path.exists(lib_file)
+    ):
         return lib_file
     elif is_linux:
         path = join("/", "usr", "lib", "x86_64-linux-gnu", "libvlc.so")
@@ -24,7 +28,7 @@ def get_lib_file():
         )
     elif is_win:
         path = join("C:\\", "Program Files", "VideoLAN", "VLC", "libvlc.dll")
-    if os.path.exists(path):
+    if os.path.exists(dirname(path)) if is_linux else os.path.exists(path):
         return path
     raise FileNotFoundError(
         "vlc plugins directory not found."
@@ -80,7 +84,6 @@ def hook(hook_api):
         hook_api.add_binaries(plugin_binaries)
 
     if is_linux or is_win:
-        print("IS_LINUX_OR_IS_WIN")
         # Add plugin binaries
         plugin_src_files = []
         for root, _, __ in os.walk(plugin_dir):
