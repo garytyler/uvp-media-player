@@ -1,7 +1,9 @@
 {
     "base": {
+        "name": "UVP Media Player",
         "version": "0.0.4",
-        "app_name": "SeeVR-Player",
-        "author": "UVP"
+        "organization": "UVP",
+        "author": "Gary Tyler",
+        "author_email": "mail@garytyler.com",
     }
 }

@@ -8,24 +8,11 @@ from . import _signals
 log = logging.getLogger(__name__)
 
 
-class QtVLCInstance:
-    _vlc_obj = None
-
-    def __new__(cls, args=[]):
-        args = [i for i in args if i.strip()]
-        if cls._vlc_obj:
-            return cls._vlc_obj
-        cls._vlc_obj = vlc.Instance(args)
-
-    def __init__(self, args=[]):
-        pass
-
-
 class QtVLCMediaPlayer(_signals.MediaPlayerSignals):
     _vlc_obj = None
 
     def __init__(self):
-        self._vlc_obj = vlc.MediaPlayer(QtVLCInstance())
+        self._vlc_obj = vlc.MediaPlayer()
         super().__init__(vlc_media_player=self._vlc_obj)
 
     def __getattr__(self, attribute):

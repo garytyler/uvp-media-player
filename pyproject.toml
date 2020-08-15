@@ -1,8 +1,8 @@
 [tool.poetry]
-name = "seevr-player"
+name = "UVP-Media-Player"
 version = "0.0.0"
 description = ""
-authors = ["Gary Tyler <mail@garytyler.com>"]
+authors = []
 
 [tool.poetry.dependencies]
 python = "^3.7"

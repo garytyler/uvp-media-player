@@ -1,14 +1,13 @@
-import ctypes
 import logging
 import os
 import sys
-from importlib import import_module
-from os import environ
 
 from PyQt5.QtWidgets import QApplication
 
 import config
-from utils import cached_property, platform
+import vlcqt
+from info import BuildInformation
+from utils import cached_property
 
 log = logging.getLogger(__name__)
 
@@ -22,42 +21,21 @@ class BaseAppContext:
 
     @cached_property
     def is_frozen(self):
-        result = getattr(sys, "frozen", False)
-        return result
-
-    @cached_property
-    def is_not_installed(self):
-        return True if os.environ.get("NOT_INSTALLED", False) else False
+        return hasattr(sys, "frozen") and hasattr(sys, "_MEIPASS")
 
     def get_resource(self, *path_parts):
-        if not self.is_frozen:
-            resources_dir = self.base_dir
-        elif self.is_not_installed:
-            resources_dir = (
-                os.path.join(os.path.dirname(sys.executable))
-                if not platform.is_linux
-                else self.base_dir
-            )
-        elif platform.is_linux:
-            resources_dir = os.path.join("/", "usr", "share", "seevr-player")
-        else:
-            resources_dir = os.path.join(os.path.dirname(sys.executable))
-        return os.path.join(resources_dir, *path_parts)
-
-    def get_frozen_resource(self, *path_parts):
-        if platform.is_linux:
-            resources_dir = os.path.join("/", "usr", "share", "seevr-player")
-        else:
-            resources_dir = os.path.join(os.path.dirname(sys.executable))
-        return os.path.join(resources_dir, *path_parts)
+        bundle_dir = getattr(
+            sys, "_MEIPASS", os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+        )
+        return os.path.join(bundle_dir, *path_parts)
 
 
 class AppContext(BaseAppContext):
     def __init__(self, args=[]):
         super().__init__()
         self.app = QApplication(args)
-        self.app.setOrganizationName("UVP")
-        self.app.setApplicationName("SeeVR-Player")
+        self.app.setOrganizationName(self.build_info["organization"])
+        self.app.setApplicationName(self.build_info["name"])
         self.init_logging()
         log.info(
             f"Launching: {self.app.organizationName()}/{self.app.applicationName()}"
@@ -78,15 +56,13 @@ class AppContext(BaseAppContext):
             ffprobe_cmd=self.ffprobe_cmd,
             stylesheet=self.stylesheet,
         )
+        window.load_media(sys.argv[1:])
 
-        if self.is_frozen:
-            media_paths = sys.argv[1:]
-        else:
-            build_script_run_args = environ.get("_BUILD_SCRIPT_RUN_ARGS", "").split(",")
-            media_paths = [i for i in build_script_run_args if i.strip()]
-
-        window.load_media(media_paths)
         return window
+
+    @cached_property
+    def build_info(self):
+        return BuildInformation(self.get_resource("build.json"))
 
     def init_logging(self):
         # Set player log file
@@ -114,61 +90,24 @@ class AppContext(BaseAppContext):
         config.state.load(settings)
 
     def init_vlcqt(self):
+        import vlc
+
         vlc_args = os.environ.get("VLC_ARGS", default="").split()
-        self.vlcqt.initialize(args=vlc_args)
-
-    @cached_property
-    def vlcqt(self):
-        if self.is_frozen:
-            if platform.is_linux:  # bundled vlc
-                for i in ["PYTHON_VLC_MODULE_PATH", "PYTHON_VLC_LIB_PATH"]:
-                    try:
-                        del os.environ[i]
-                    except KeyError:
-                        pass
-            elif platform.is_windows:  # bundled vlc
-                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dll")
-                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
-                # for windows/macOS w/ bundled vlc, load libvlccore into mem first
-                # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(self.get_frozen_resource("libvlccore.dll"))
-            elif platform.is_mac:
-                environ["PYTHON_VLC_LIB_PATH"] = self.get_resource("libvlc.dylib")
-                environ["PYTHON_VLC_MODULE_PATH"] = self.get_resource("plugins")
-                # for windows/macOS w/ bundled vlc, load libvlccore into mem first
-                # see python-vlc source: v3.0.7110, vlc.py, find_lib, line 178
-                ctypes.CDLL(self.get_resource("libvlccore.dylib"))
-            else:
-                for i in ["PYTHON_VLC_MODULE_PATH", "PYTHON_VLC_LIB_PATH"]:
-                    try:
-                        del os.environ[i]
-                    except KeyError:
-                        pass
-                log.warning(
-                    f"Platform unsupported: '{sys.platform}'"
-                    "If problems, try installing VLC."
-                )
-
-        return import_module(name="vlcqt")
+        vlc.Instance(vlc_args)
 
     @cached_property
     def ffprobe_cmd(self) -> str:
         """Return command to invoke ffprobe binary. If frozen, use path to binary."""
         if not self.is_frozen:
             return os.environ["FFPROBE_BINARY_PATH"]
-        return (
-            "ffprobe"
-            if platform.is_linux
-            else self.get_resource("ffprobe.exe" if platform.is_windows else "ffprobe")
-        )
+        return self.get_resource("ffprobe.exe" if platform.is_win else "ffprobe")
 
     @cached_property
     def media_player(self):
-        return self.vlcqt.MediaPlayer()
+        return vlcqt.MediaPlayer()
 
     @cached_property
     def stylesheet(self):
-
         qss_path = self.get_resource("style", "dark.qss")
         with open(qss_path) as stylesheet:
             return stylesheet.read()

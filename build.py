@@ -1,8 +1,6 @@
-import json
 import os
 import plistlib
 import shutil
-import sys
 import tempfile
 from pathlib import Path
 from subprocess import check_call
@@ -12,142 +10,22 @@ import PyInstaller.__main__
 import typer
 from PIL import Image
 
-
-class PlatformNotSupportedError(Exception):
-    def __str__(self):
-        return "Platform not supported."
-
-
-def is_mac():
-    return sys.platform == "darwin"
-
-
-def is_linux():
-    return sys.platform == "linux"
-
-
-def is_windows():
-    return sys.platform == "win32"
-
+from app.info import BuildInformation, platform
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-class BuildSettings(dict):
-    base = {
-        "app_name": None,
-        "version": None,
-        "description": None,
-        "author": None,
-        "author_email": None,
-        "url": None,
-        "depends": ["ffmpeg"],
-    }
-
-    def __init__(self):
-        self.file_path = os.path.join(BASE_DIR, "build.json")
-        self.update(self.base)
-        with open(self.file_path) as f:
-            data = json.loads(f.read())
-        self.update(data.get("base", {}))
-        if is_mac():
-            self.update(data.get("mac", {}))
-        elif is_linux():
-            self.update(data.get("linux", {}))
-        elif is_windows():
-            self.update(data.get("windows", {}))
-        else:
-            raise PlatformNotSupportedError
-
-    def __getitem__(self, key: str) -> str:
-        if key not in self:
-            raise ValueError(f"'{key}' is not a valid dependency environment variable")
-        else:
-            return super().__getitem__(key)
-
-    def __setitem__(self, key: str, value: str) -> None:
-        raise RuntimeError(f"Build configuration is read-only:'{self.file_path}'")
-
-
-BUILD_SETTINGS = BuildSettings()
+BUILD_INFO = BuildInformation(os.path.join(BASE_DIR, "build.json"))
+APP_NAME = BUILD_INFO["name"]
+APP_SLUG = BUILD_INFO["name"].replace(" ", "-")
+APP_VERSION = BUILD_INFO["version"]
 APP_MODULE = os.path.join(BASE_DIR, "app")
-FREEZE_DIR = os.path.join(BASE_DIR, "dist", BUILD_SETTINGS["app_name"])
+FREEZE_DIR = os.path.join(BASE_DIR, "dist", APP_NAME)
 ICON_PNG = Path(BASE_DIR, "icons", "icon.png")
-if is_mac():
+if platform.is_mac:
     ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024]
-elif is_linux():
+elif platform.is_linux:
     ICON_SIZES = [16, 24, 48, 96]
-elif is_windows():
+elif platform.is_win:
     ICON_SIZES = [16, 24, 32, 48, 256]
-
-
-class DependencyEnvironment(dict):
-    """Set/get dependency environment variables with helpful logs and exceptions."""
-
-    _dependency_keys = [
-        "PYTHON_VLC_LIB_PATH",
-        "PYTHON_VLC_MODULE_PATH",
-        "FFPROBE_BINARY_PATH",
-    ]
-
-    def __init__(self):
-        super().__init__({})
-        for key in self._dependency_keys:
-            value = os.environ.get(key)
-            if not value:
-                super().__setitem__(key, None)
-            elif not os.path.exists(value):
-                raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
-            else:
-                super().__setitem__(key, value)
-                print(f"Dependency source (user) - key={key}, value={value}")
-
-    def __setitem__(self, key: str, value: str) -> None:
-        if key not in self._dependency_keys:
-            raise ValueError(f"'{key}' is not a valid dependency environment variable")
-        elif not os.path.exists(value):
-            raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
-        else:
-            print(f"Dependency source (default) - key={key}, value={value}")
-            super().__setitem__(key, value)
-
-    def __getitem__(self, key: str) -> str:
-        if key not in self._dependency_keys:
-            raise ValueError(f"'{key}' is not a valid dependency environment variable")
-        else:
-            return super().__getitem__(key)
-
-
-def create_build_env(self):
-    freeze_proc_dir = tempfile.mkdtemp()
-
-    venv_path = os.path.join(freeze_proc_dir, "release_venv")
-    check_call([sys.executable, "-m", "venv", venv_path])
-
-    req_txt = os.path.join(freeze_proc_dir, "requirements.txt")
-    check_call(["poetry", "update"], shell=True)
-    check_call(
-        [
-            "poetry",
-            "export",
-            "--dev",
-            "--without-hashes",
-            "-f",
-            "requirements.txt",
-            ">",
-            req_txt,
-        ],
-        shell=True,
-    )
-
-    if is_windows():
-        release_python = os.path.join(venv_path, "Scripts", "python.exe")
-    else:
-        release_python = os.path.join(venv_path, "bin", "python")
-
-    check_call([release_python, "-m", "pip", "install", "-r", req_txt])
-    check_call([release_python, "-m", "pip", "install", "-r", req_txt])
-    return venv_path
 
 
 def generate_icns(src_img, dst_dir):
@@ -183,28 +61,8 @@ def generate_ico(src_img, dst_dir):
 cli = typer.Typer()
 
 
-@cli.command()
-def run():
-    os.environ["IS_DEVRUN"] = "1"
-    if is_linux() or is_windows():
-        for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
-            try:
-                del os.environ[i]
-            except KeyError:
-                pass
-
-    os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-    extra_args = sys.argv[2:]
-    for arg in extra_args:
-        sys.argv.remove(arg)
-    os.environ["_BUILD_SCRIPT_RUN_ARGS"] = ",".join(extra_args)
-
-    check_call([sys.executable, APP_MODULE])
-
-
 class BaseContext:
-    delimiter = ";" if is_windows() else ":"
+    delimiter = ";" if platform.is_win else ":"
 
     def __init__(self, base_command):
         self.command = base_command
@@ -226,25 +84,20 @@ class FreezeContextMac(BaseContext):
                 "--onedir",
                 "--osx-bundle-identifier=com.uvp.videoplayer",
                 f"--icon={generaged_icns}",
-                f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
             ]
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         plist_path = Path(
-            BASE_DIR,
-            "dist",
-            f"{BUILD_SETTINGS['app_name']}.app",
-            "Contents",
-            "Info.plist",
+            BASE_DIR, "dist", f"{APP_NAME}.app", "Contents", "Info.plist",
         )
         with open(plist_path, "rb") as f:
             plist_data = plistlib.load(f)
         plist_data.update(
             {
-                "CFBundleName": BUILD_SETTINGS["app_name"],
-                "CFBundleDisplayName": BUILD_SETTINGS["app_name"],
-                "CFBundleExecutable": BUILD_SETTINGS["app_name"],
+                "CFBundleName": APP_NAME,
+                "CFBundleDisplayName": APP_NAME,
+                "CFBundleExecutable": APP_SLUG,
                 "CFBundleIconFile": "icon.icns",
                 "LSBackgroundOnly": "0",
                 "NSPrincipalClass": "NSApplication",
@@ -259,14 +112,7 @@ class FreezeContextLinux(BaseContext):
     def __enter__(self):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
-        self.command.extend(
-            [
-                "--windowed",
-                "--onefile",
-                f"--icon={generated_ico}",
-                f"--additional-hooks-dir={Path(BASE_DIR, 'hooks')}",
-            ]
-        )
+        self.command.extend(["--windowed", "--onefile", f"--icon={generated_ico}"])
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.ico_tmp_dir, ignore_errors=True)
@@ -276,16 +122,7 @@ class FreezeContextWindows(BaseContext):
     def __enter__(self):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
-        self.dep_environ = DependencyEnvironment()
-
-        self.command.extend(
-            [
-                "--noconsole",
-                "--onedir",
-                f"--icon={generated_ico}",
-                f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks')}",
-            ]
-        )
+        self.command.extend(["--noconsole", "--onedir", f"--icon={generated_ico}"])
         # add vlc binary paths args to satisfy warnings during bundling with hooks
         self.command += [
             f"--paths={p}"
@@ -305,11 +142,11 @@ class FreezeContextWindows(BaseContext):
 
 class FreezeContext:
     def __init__(self, base_command):
-        if is_mac():
+        if platform.is_mac:
             self.context = FreezeContextMac(base_command=base_command)
-        elif is_linux():
+        elif platform.is_linux:
             self.context = FreezeContextLinux(base_command=base_command)
-        elif is_windows():
+        elif platform.is_win:
             self.context = FreezeContextWindows(base_command=base_command)
         else:
             raise EnvironmentError("Platform not supported.")
@@ -324,19 +161,18 @@ class FreezeContext:
 
 @cli.command()
 def freeze(console=False):
-
-    delimiter = ";" if is_windows() else ":"
+    delimiter = ";" if platform.is_win else ":"
     base_command = [
         "--log-level=INFO",
         "--noconfirm",
         "--clean",
-        "--hidden-import=PyQt5.QtNetwork",
-        "--hidden-import=PyQt5.QtCore",
-        f"--name={BUILD_SETTINGS['app_name']}",
-        f"--add-data={os.path.join(BASE_DIR, 'build.json')}{delimiter}.",
+        f"--name={APP_SLUG}",
+        f"--add-data={BUILD_INFO.json_path}{delimiter}.",
         f"--add-data={os.path.join(BASE_DIR, 'media')}{delimiter}media",
         f"--add-data={os.path.join(BASE_DIR, 'style')}{delimiter}style",
         f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}.",
+        f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks', 'analysis')}",
+        f"--runtime-hook={Path(BASE_DIR, 'hooks', 'runtime', 'hook-vlc-runtime.py')}",
     ]
     shutil.rmtree(os.path.join(BASE_DIR, "dist"), ignore_errors=True)
     shutil.rmtree(os.path.join(BASE_DIR, "build"), ignore_errors=True)
@@ -354,7 +190,7 @@ def create_mac_installer():
         import biplist
         import os.path
         application = defines.get(
-            "app", "{Path(BASE_DIR, "dist", f"{BUILD_SETTINGS['app_name']}.app")}"
+            "app", "{Path(BASE_DIR, "dist", f"{APP_SLUG}.app")}"
         )
         appname = os.path.basename(application)
         def icon_from_app(app_path):
@@ -426,29 +262,17 @@ def create_mac_installer():
     """
             )
         )
-    dst_dmg_name = f"{BUILD_SETTINGS['app_name']}-v{BUILD_SETTINGS['version']}.dmg"
+    dst_dmg_name = f"{APP_SLUG}-v{APP_VERSION}.dmg"
     dst_dmg_path = Path(BASE_DIR, "dist", dst_dmg_name)
-    check_call(
-        [
-            "dmgbuild",
-            f"-s={dmgbuild_settings}",
-            BUILD_SETTINGS["app_name"],
-            dst_dmg_path,
-        ]
-    )
+    check_call(["dmgbuild", f"-s={dmgbuild_settings}", APP_NAME, dst_dmg_path])
     os.remove(dmgbuild_settings)
 
 
 def create_windows_installer():
-    bundle_dir = Path(BASE_DIR, "dist", f"{BUILD_SETTINGS['app_name']}")
-    app_name = f"{BUILD_SETTINGS['app_name']}"
-    author = BUILD_SETTINGS["author"]
+    bundle_dir = Path(BASE_DIR, "dist", f"{APP_SLUG}")
+    author = BUILD_INFO["author"]
     installer_nsi = Path(bundle_dir, "Installer.nsi")
-    installer_exe = Path(
-        BASE_DIR,
-        "dist",
-        f"{BUILD_SETTINGS['app_name']}-v{BUILD_SETTINGS['version']}.exe",
-    )
+    installer_exe = Path(BASE_DIR, "dist", f"{APP_SLUG}-v{APP_VERSION}.exe")
     with open(installer_nsi, "w") as f:
         f.write(
             dedent(
@@ -472,9 +296,9 @@ def create_windows_installer():
         ;Do not use InstallDir at all so we can detect empty $InstDir!
         ${{If}} $InstDir == "" ; /D not used
             ${{If}} $MultiUser.InstallMode == "AllUsers"
-                StrCpy $InstDir "$PROGRAMFILES\\{app_name}"
+                StrCpy $InstDir "$PROGRAMFILES\\{APP_NAME}"
             ${{Else}}
-                StrCpy $InstDir "$LOCALAPPDATA\\{app_name}"
+                StrCpy $InstDir "$LOCALAPPDATA\\{APP_NAME}"
             ${{EndIf}}
         ${{EndIf}}
         FunctionEnd
@@ -486,7 +310,7 @@ def create_windows_installer():
         ;--------------------------------
         ;General
 
-        Name "{app_name}"
+        Name "{APP_NAME}"
         OutFile "{installer_exe}"
 
         ;--------------------------------
@@ -497,14 +321,14 @@ def create_windows_installer():
         ;--------------------------------
         ;Pages
 
-        !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the of {app_name}.$\\r$\\n$\\r$\\n$\\r$\\nClick Next to continue."
+        !define MUI_WELCOMEPAGE_TEXT "This wizard will guide you through the of {APP_NAME}.$\\r$\\n$\\r$\\n$\\r$\\nClick Next to continue."
         !insertmacro MUI_PAGE_WELCOME
         !insertmacro MUI_PAGE_DIRECTORY
         !insertmacro MUI_PAGE_INSTFILES
             !define MUI_FINISHPAGE_NOAUTOCLOSE
             !define MUI_FINISHPAGE_RUN
             !define MUI_FINISHPAGE_RUN_CHECKED
-            !define MUI_FINISHPAGE_RUN_TEXT "Run {app_name}"
+            !define MUI_FINISHPAGE_RUN_TEXT "Run {APP_NAME}"
             !define MUI_FINISHPAGE_RUN_FUNCTION "LaunchLink"
         !insertmacro MUI_PAGE_FINISH
 
@@ -520,14 +344,14 @@ def create_windows_installer():
         ;Installer Sections
 
         !define UNINST_KEY \
-            "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{app_name}"
+            "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\{APP_NAME}"
         Section
         SetOutPath "$InstDir"
-        File /r "..\\{app_name}\\*"
-        WriteRegStr SHCTX "Software\\{app_name}" "" $InstDir
+        File /r "..\\{APP_NAME}\\*"
+        WriteRegStr SHCTX "Software\\{APP_NAME}" "" $InstDir
         WriteUninstaller "$InstDir\\uninstall.exe"
-        CreateShortCut "$SMPROGRAMS\\{app_name}.lnk" "$InstDir\\{app_name}.exe"
-        WriteRegStr SHCTX "${{UNINST_KEY}}" "DisplayName" "{app_name}"
+        CreateShortCut "$SMPROGRAMS\\{APP_NAME}.lnk" "$InstDir\\{APP_NAME}.exe"
+        WriteRegStr SHCTX "${{UNINST_KEY}}" "DisplayName" "{APP_NAME}"
         WriteRegStr SHCTX "${{UNINST_KEY}}" "UninstallString" \
             "$\\"$InstDir\\uninstall.exe$\\" /$MultiUser.InstallMode"
         WriteRegStr SHCTX "${{UNINST_KEY}}" "QuietUninstallString" \
@@ -545,15 +369,15 @@ def create_windows_installer():
         Section "Uninstall"
 
         RMDir /r "$InstDir"
-        Delete "$SMPROGRAMS\\{app_name}.lnk"
-        DeleteRegKey /ifempty SHCTX "Software\\{app_name}"
+        Delete "$SMPROGRAMS\\{APP_NAME}.lnk"
+        DeleteRegKey /ifempty SHCTX "Software\\{APP_NAME}"
         DeleteRegKey SHCTX "${{UNINST_KEY}}"
 
         SectionEnd
 
         Function LaunchLink
         ;Use explorer.exe to launch with user permissions
-        Exec '"$WINDIR\\explorer.exe" "$SMPROGRAMS\\{app_name}.lnk"'
+        Exec '"$WINDIR\\explorer.exe" "$SMPROGRAMS\\{APP_NAME}.lnk"'
         FunctionEnd
         """
             )
@@ -562,43 +386,34 @@ def create_windows_installer():
 
 
 def create_linux_installer():
-    deb_dst_name = f"{BUILD_SETTINGS['app_name']}-v{BUILD_SETTINGS['version']}.deb"
+    deb_dst_name = f"{APP_SLUG.lower()}-v{APP_VERSION}.deb"
     deb_dst_path = Path(BASE_DIR, "dist", deb_dst_name)
     if deb_dst_path.exists():
         os.remove(deb_dst_path)
-    pkg_name = BUILD_SETTINGS["app_name"].lower()
-    cmd = [
+    pkg_name = APP_NAME.lower()
+    args = [
         "fpm",
         "--input-type=dir",
         "--log=info",
         f"--name={pkg_name}",
-        f"--version={BUILD_SETTINGS['version']}",
-        f"--vendor={BUILD_SETTINGS['author']}",
+        f"--version={APP_VERSION}",
+        f"--vendor={BUILD_INFO['author']}",
         "--output-type=deb",
         f"--package={deb_dst_path}",
-        "--no-deb-auto-config-files",
-        f'--deb-default={Path(BASE_DIR, "build.json")}',
     ]
-    if BUILD_SETTINGS["description"]:
-        cmd.append(f"--description={BUILD_SETTINGS['description']}")
-    if BUILD_SETTINGS["author_email"]:
-        cmd.append(
-            f"--maintainer={BUILD_SETTINGS['author']} <{BUILD_SETTINGS['author_email']}>"
+    if BUILD_INFO["description"]:
+        args.append(f"--description={BUILD_INFO['description']}")
+    if BUILD_INFO["author_email"]:
+        args.append(
+            f"--maintainer={BUILD_INFO['author']} <{BUILD_INFO['author_email']}>"
         )
-    if BUILD_SETTINGS["url"]:
-        cmd.append(f"--url={BUILD_SETTINGS['url']}")
-    for dependency in BUILD_SETTINGS["depends"]:
-        cmd.append(f"--depends={dependency}")
-    cmd.extend(
-        [
-            f'{Path(BASE_DIR, "dist", BUILD_SETTINGS["app_name"])}=/usr/bin/{pkg_name}',
-            f'{Path(BASE_DIR, "build.json")}=/usr/share/{pkg_name}/build.json',
-            f'{Path(BASE_DIR, "style")}=/usr/share/{pkg_name}',
-        ]
-    )
+    if BUILD_INFO["url"]:
+        args.append(f"--url={BUILD_INFO['url']}")
+    for dependency in BUILD_INFO["depends"]:
+        args.append(f"--depends={dependency}")
 
     try:
-        check_call(cmd)
+        check_call(args)
     except FileNotFoundError:
         raise FileNotFoundError(
             "fbs could not find executable 'fpm'. Please install fpm using the "
@@ -609,11 +424,11 @@ def create_linux_installer():
 
 @cli.command()
 def installer():
-    if is_mac():
+    if platform.is_mac:
         create_mac_installer()
-    elif is_windows():
+    elif platform.is_win:
         create_windows_installer()
-    elif is_linux():
+    elif platform.is_linux:
         create_linux_installer()
     else:
         raise PlatformNotSupportedError
