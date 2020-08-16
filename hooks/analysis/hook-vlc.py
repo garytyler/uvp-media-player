@@ -91,6 +91,6 @@ def hook(hook_api):
         plugin_binaries = []
         for f in plugin_src_files:
             rel_dir = relpath(dirname(f), common_root)
-            bin_tuple = (f, rel_dir)
+            bin_tuple = (f, rel_dir if is_win else ".")
             plugin_binaries.append(bin_tuple)
         hook_api.add_binaries(plugin_binaries)
