@@ -157,7 +157,12 @@ class FreezeContextLinux(BaseContext):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.command.extend(
-            [f"--name={APP_SLUG}", "--windowed", "--onefile", f"--icon={generated_ico}"]
+            [
+                f"--name={APP_SLUG.lower()}",
+                "--windowed",
+                "--onefile",
+                f"--icon={generated_ico}",
+            ]
         )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -310,7 +315,8 @@ def create_mac_installer():
     """
             )
         )
-    dst_dmg_name = f"{APP_SLUG}-v{APP_VERSION}.dmg"
+    arch, _ = platform.architecture()
+    dst_dmg_name = f"{APP_SLUG}-v{APP_VERSION}-macOS-{arch}.dmg"
     dst_dmg_path = Path(BASE_DIR, "dist", dst_dmg_name)
     check_call(["dmgbuild", f"-s={dmgbuild_settings}", APP_NAME, dst_dmg_path])
     os.remove(dmgbuild_settings)
@@ -320,7 +326,11 @@ def create_windows_installer():
     bundle_dir = Path(BASE_DIR, "dist", f"{APP_SLUG}")
     author = BUILD_INFO["author"]
     installer_nsi = Path(bundle_dir, "Installer.nsi")
-    installer_exe = Path(BASE_DIR, "dist", f"{APP_SLUG}-v{APP_VERSION}.exe")
+    platform.system()
+    arch, _ = platform.architecture()
+    system = platform.system()
+    installer_name = f"{APP_SLUG}-v{APP_VERSION}-{system}-{arch}.exe"
+    installer_exe = Path(BASE_DIR, "dist", installer_name)
     with open(installer_nsi, "w") as f:
         f.write(
             dedent(
@@ -434,16 +444,17 @@ def create_windows_installer():
 
 
 def create_linux_installer():
-    deb_dst_name = f"{APP_SLUG.lower()}-v{APP_VERSION}.deb"
+    dist, _, _ = platform.linux_distribution()
+    arch, _ = platform.architecture()
+    deb_dst_name = f"{APP_SLUG.lower()}-v{APP_VERSION}-{dist}-{arch}.deb"
     deb_dst_path = Path(BASE_DIR, "dist", deb_dst_name)
     if deb_dst_path.exists():
         os.remove(deb_dst_path)
-    pkg_name = APP_NAME.lower()
     args = [
         "fpm",
         "--input-type=dir",
         "--log=info",
-        f"--name={pkg_name}",
+        f"--name={APP_SLUG.lower()}",
         f"--version={APP_VERSION}",
         f"--vendor={BUILD_INFO['author']}",
         "--output-type=deb",
@@ -459,7 +470,9 @@ def create_linux_installer():
         args.append(f"--url={BUILD_INFO['url']}")
     for dependency in BUILD_INFO["depends"]:
         args.append(f"--depends={dependency}")
-
+    args.append(
+        f'{Path(BASE_DIR, "dist", APP_SLUG.lower())}=/usr/bin/{APP_SLUG.lower()}'
+    )
     try:
         check_call(args)
     except FileNotFoundError:
