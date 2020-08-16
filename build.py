@@ -123,6 +123,7 @@ class FreezeContextMac(BaseContext):
         generaged_icns = generate_icns(src_img=ICON_PNG, dst_dir=self.icns_tmp_dir)
         self.command.extend(
             [
+                f"--name={APP_NAME}",
                 "--windowed",
                 "--onedir",
                 "--osx-bundle-identifier=com.uvp.videoplayer",
@@ -140,7 +141,7 @@ class FreezeContextMac(BaseContext):
             {
                 "CFBundleName": APP_NAME,
                 "CFBundleDisplayName": APP_NAME,
-                "CFBundleExecutable": APP_SLUG,
+                "CFBundleExecutable": APP_NAME,
                 "CFBundleIconFile": "icon.icns",
                 "LSBackgroundOnly": "0",
                 "NSPrincipalClass": "NSApplication",
@@ -155,7 +156,9 @@ class FreezeContextLinux(BaseContext):
     def __enter__(self):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
-        self.command.extend(["--windowed", "--onefile", f"--icon={generated_ico}"])
+        self.command.extend(
+            [f"--name={APP_SLUG}", "--windowed", "--onefile", f"--icon={generated_ico}"]
+        )
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         shutil.rmtree(self.ico_tmp_dir, ignore_errors=True)
@@ -165,7 +168,9 @@ class FreezeContextWindows(BaseContext):
     def __enter__(self):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
-        self.command.extend(["--noconsole", "--onedir", f"--icon={generated_ico}"])
+        self.command.extend(
+            [f"--name={APP_SLUG}", "--noconsole", "--onedir", f"--icon={generated_ico}"]
+        )
         self.dep_environ = DependencyEnvironment()
         # add vlc binary paths args to satisfy warnings during bundling with hooks
         self.command += [
@@ -210,7 +215,6 @@ def freeze(console=False):
         "--log-level=INFO",
         "--noconfirm",
         "--clean",
-        f"--name={APP_SLUG}",
         f"--add-data={BUILD_INFO.json_path}{delimiter}.",
         f"--add-data={os.path.join(BASE_DIR, 'media')}{delimiter}media",
         f"--add-data={os.path.join(BASE_DIR, 'style')}{delimiter}style",
@@ -234,7 +238,7 @@ def create_mac_installer():
         import biplist
         import os.path
         application = defines.get(
-            "app", "{Path(BASE_DIR, "dist", f"{APP_SLUG}.app")}"
+            "app", "{Path(BASE_DIR, "dist", f"{APP_NAME}.app")}"
         )
         appname = os.path.basename(application)
         def icon_from_app(app_path):

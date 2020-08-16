@@ -14,11 +14,7 @@ elif is_darwin:
 
 def get_lib_file():
     lib_file = os.environ.get("PYTHON_VLC_LIB_PATH")
-    if (
-        lib_file and os.path.exists(os.path.dirname(lib_file))
-        if is_linux
-        else os.path.exists(lib_file)
-    ):
+    if lib_file and os.path.exists(lib_file):
         return lib_file
     elif is_linux:
         path = join("/", "usr", "lib", "x86_64-linux-gnu", "libvlc.so")
