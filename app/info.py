@@ -24,14 +24,14 @@ class _Platform:
 
     @cached_property
     def is_win(self):
-        return sys.platform == "win32"
+        return sys.platform.startswith("win")
 
 
 platform = _Platform()
 
 
 class BuildInformation(dict):
-    base = {
+    base: dict = {
         "name": None,
         "version": None,
         "description": None,
@@ -42,6 +42,7 @@ class BuildInformation(dict):
     }
 
     def __init__(self, json_path):
+        self.json_path = json_path
         self.update(self.base)
         with open(json_path, "r") as f:
             data = json.loads(f.read())
@@ -62,7 +63,7 @@ class BuildInformation(dict):
             return super().__getitem__(key)
 
     def __setitem__(self, key: str, value: str) -> None:
-        raise RuntimeError(f"Build info is read-only:'{self.file_path}'")
+        raise RuntimeError(f"Build info is read-only:'{self.json_path}'")
 
 
 class BaseAppContext:

@@ -2,11 +2,9 @@ import logging
 import os
 import sys
 
-from PyQt5.QtWidgets import QApplication
-
 import config
-import vlcqt
-from info import BuildInformation
+from info import BuildInformation, platform
+from PyQt5.QtWidgets import QApplication
 from utils import cached_property
 
 log = logging.getLogger(__name__)
@@ -41,7 +39,7 @@ class AppContext(BaseAppContext):
             f"Launching: {self.app.organizationName()}/{self.app.applicationName()}"
         )
         self.init_settings()
-        self.init_vlcqt()
+        self.init_vlc()
 
     def run(self):
         self.main_win.show()
@@ -89,7 +87,7 @@ class AppContext(BaseAppContext):
         log.info(f"Configuration file: {settings.fileName()}")
         config.state.load(settings)
 
-    def init_vlcqt(self):
+    def init_vlc(self):
         import vlc
 
         vlc_args = os.environ.get("VLC_ARGS", default="").split()
@@ -104,6 +102,8 @@ class AppContext(BaseAppContext):
 
     @cached_property
     def media_player(self):
+        import vlcqt
+
         return vlcqt.MediaPlayer()
 
     @cached_property

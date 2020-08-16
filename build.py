@@ -1,6 +1,7 @@
 import os
 import plistlib
 import shutil
+import sys
 import tempfile
 from pathlib import Path
 from subprocess import check_call
@@ -26,6 +27,11 @@ elif platform.is_linux:
     ICON_SIZES = [16, 24, 48, 96]
 elif platform.is_win:
     ICON_SIZES = [16, 24, 32, 48, 256]
+
+
+class PlatformNotSupportedError(Exception):
+    def __str__(self):
+        return f"Platform not supported: {sys.platform}"
 
 
 def generate_icns(src_img, dst_dir):
@@ -56,6 +62,43 @@ def generate_ico(src_img, dst_dir):
     sizes = [(i, i) for i in ICON_SIZES]
     img_data.save(ico_dst_path, format="ico", sizes=sizes)
     return ico_dst_path
+
+
+class DependencyEnvironment(dict):
+    """Set/get dependency environment variables with helpful logs and exceptions."""
+
+    _dependency_keys = [
+        "PYTHON_VLC_LIB_PATH",
+        "PYTHON_VLC_MODULE_PATH",
+        "FFPROBE_BINARY_PATH",
+    ]
+
+    def __init__(self):
+        super().__init__({})
+        for key in self._dependency_keys:
+            value = os.environ.get(key)
+            if not value:
+                super().__setitem__(key, None)
+            elif not os.path.exists(value):
+                raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
+            else:
+                super().__setitem__(key, value)
+                print(f"Dependency source (user) - key={key}, value={value}")
+
+    def __setitem__(self, key: str, value: str) -> None:
+        if key not in self._dependency_keys:
+            raise ValueError(f"'{key}' is not a valid dependency environment variable")
+        elif not os.path.exists(value):
+            raise FileNotFoundError(f"'{key}' value is non-existent path: {value}")
+        else:
+            print(f"Dependency source (default) - key={key}, value={value}")
+            super().__setitem__(key, value)
+
+    def __getitem__(self, key: str) -> str:
+        if key not in self._dependency_keys:
+            raise ValueError(f"'{key}' is not a valid dependency environment variable")
+        else:
+            return super().__getitem__(key)
 
 
 cli = typer.Typer()
@@ -123,6 +166,7 @@ class FreezeContextWindows(BaseContext):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.command.extend(["--noconsole", "--onedir", f"--icon={generated_ico}"])
+        self.dep_environ = DependencyEnvironment()
         # add vlc binary paths args to satisfy warnings during bundling with hooks
         self.command += [
             f"--paths={p}"
@@ -432,6 +476,17 @@ def installer():
         create_linux_installer()
     else:
         raise PlatformNotSupportedError
+
+
+@cli.command()
+def run():
+    os.chdir(BASE_DIR)
+    for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
+        try:
+            del os.environ[i]
+        except KeyError:
+            pass
+    check_call([sys.executable, APP_MODULE], env=os.environ)
 
 
 if __name__ == "__main__":
