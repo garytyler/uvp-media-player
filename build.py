@@ -1,4 +1,5 @@
 import os
+import platform
 import plistlib
 import shutil
 import sys
@@ -11,7 +12,22 @@ import PyInstaller.__main__
 import typer
 from PIL import Image
 
-from app.info import BuildInformation, platform
+from app.info import BuildInformation
+
+
+class PlatformNotSupportedError(Exception):
+    def __str__(self):
+        return f"Platform not supported: {sys.platform}"
+
+
+is_mac = sys.platform == "darwin"
+
+
+is_linux = sys.platform == "linux"
+
+
+is_win = sys.platform.startswith("win")
+
 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BUILD_INFO = BuildInformation(os.path.join(BASE_DIR, "build.json"))
@@ -21,17 +37,12 @@ APP_VERSION = BUILD_INFO["version"]
 APP_MODULE = os.path.join(BASE_DIR, "app")
 FREEZE_DIR = os.path.join(BASE_DIR, "dist", APP_NAME)
 ICON_PNG = Path(BASE_DIR, "icons", "icon.png")
-if platform.is_mac:
+if is_mac:
     ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024]
-elif platform.is_linux:
+elif is_linux:
     ICON_SIZES = [16, 24, 48, 96]
-elif platform.is_win:
+elif is_win:
     ICON_SIZES = [16, 24, 32, 48, 256]
-
-
-class PlatformNotSupportedError(Exception):
-    def __str__(self):
-        return f"Platform not supported: {sys.platform}"
 
 
 def generate_icns(src_img, dst_dir):
@@ -105,7 +116,7 @@ cli = typer.Typer()
 
 
 class BaseContext:
-    delimiter = ";" if platform.is_win else ":"
+    delimiter = ";" if is_win else ":"
 
     def __init__(self, base_command):
         self.command = base_command
@@ -196,11 +207,11 @@ class FreezeContextWindows(BaseContext):
 
 class FreezeContext:
     def __init__(self, base_command):
-        if platform.is_mac:
+        if is_mac:
             self.context = FreezeContextMac(base_command=base_command)
-        elif platform.is_linux:
+        elif is_linux:
             self.context = FreezeContextLinux(base_command=base_command)
-        elif platform.is_win:
+        elif is_win:
             self.context = FreezeContextWindows(base_command=base_command)
         else:
             raise EnvironmentError("Platform not supported.")
@@ -215,7 +226,7 @@ class FreezeContext:
 
 @cli.command()
 def freeze(console=False):
-    delimiter = ";" if platform.is_win else ":"
+    delimiter = ";" if is_win else ":"
     base_command = [
         "--log-level=INFO",
         "--noconfirm",
@@ -326,7 +337,6 @@ def create_windows_installer():
     bundle_dir = Path(BASE_DIR, "dist", f"{APP_SLUG}")
     author = BUILD_INFO["author"]
     installer_nsi = Path(bundle_dir, "Installer.nsi")
-    platform.system()
     arch, _ = platform.architecture()
     system = platform.system()
     installer_name = f"{APP_SLUG}-v{APP_VERSION}-{system}-{arch}.exe"
@@ -485,11 +495,11 @@ def create_linux_installer():
 
 @cli.command()
 def installer():
-    if platform.is_mac:
+    if is_mac:
         create_mac_installer()
-    elif platform.is_win:
+    elif is_win:
         create_windows_installer()
-    elif platform.is_linux:
+    elif is_linux:
         create_linux_installer()
     else:
         raise PlatformNotSupportedError

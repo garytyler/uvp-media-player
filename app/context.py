@@ -2,9 +2,10 @@ import logging
 import os
 import sys
 
-import config
-from info import BuildInformation, platform
 from PyQt5.QtWidgets import QApplication
+
+import config
+from info import BuildInformation
 from utils import cached_property
 
 log = logging.getLogger(__name__)
@@ -98,7 +99,9 @@ class AppContext(BaseAppContext):
         """Return command to invoke ffprobe binary. If frozen, use path to binary."""
         if not self.is_frozen:
             return os.environ["FFPROBE_BINARY_PATH"]
-        return self.get_resource("ffprobe.exe" if platform.is_win else "ffprobe")
+        return self.get_resource(
+            "ffprobe.exe" if sys.platform.startswith("win") else "ffprobe"
+        )
 
     @cached_property
     def media_player(self):
