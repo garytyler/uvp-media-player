@@ -169,7 +169,7 @@ class FreezeContextLinux(BaseContext):
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.command.extend(
             [
-                f"--name={APP_SLUG.lower()}",
+                f"--name={APP_SLUG}",
                 "--windowed",
                 "--onefile",
                 f"--icon={generated_ico}",
@@ -456,7 +456,7 @@ def create_windows_installer():
 def create_linux_installer():
     dist, _, _ = platform.linux_distribution()
     arch, _ = platform.architecture()
-    deb_dst_name = f"{APP_SLUG.lower()}-v{APP_VERSION}-{dist}-{arch}.deb"
+    deb_dst_name = f"{APP_SLUG}-v{APP_VERSION}-{dist}-{arch}.deb"
     deb_dst_path = Path(BASE_DIR, "dist", deb_dst_name)
     if deb_dst_path.exists():
         os.remove(deb_dst_path)
@@ -464,7 +464,7 @@ def create_linux_installer():
         "fpm",
         "--input-type=dir",
         "--log=info",
-        f"--name={APP_SLUG.lower()}",
+        f"--name={APP_SLUG}",
         f"--version={APP_VERSION}",
         f"--vendor={BUILD_INFO['author']}",
         "--output-type=deb",
@@ -480,14 +480,12 @@ def create_linux_installer():
         args.append(f"--url={BUILD_INFO['url']}")
     for dependency in BUILD_INFO["depends"]:
         args.append(f"--depends={dependency}")
-    args.append(
-        f'{Path(BASE_DIR, "dist", APP_SLUG.lower())}=/usr/bin/{APP_SLUG.lower()}'
-    )
+    args.append(f'{Path(BASE_DIR, "dist", APP_SLUG)}=/usr/bin/{APP_SLUG.lower()}')
     try:
         check_call(args)
     except FileNotFoundError:
         raise FileNotFoundError(
-            "fbs could not find executable 'fpm'. Please install fpm using the "
+            "Could not find executable 'fpm'. Please install fpm using the "
             "instructions at "
             "https://fpm.readthedocs.io/en/latest/installing.html."
         )

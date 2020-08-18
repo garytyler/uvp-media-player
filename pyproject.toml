@@ -6,8 +6,8 @@ authors = []
 
 [tool.poetry.dependencies]
 python = "^3.7"
+pyqt5 = "^5.15.0"
 PyQt5-sip = "12.8.0"
-pyqt5 = "^5.14"
 ffmpeg-python = "0.2.0"
 python-vlc = "^3.0"
 qtawesome = "0.7.2"
