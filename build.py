@@ -185,7 +185,7 @@ class FreezeContextWindows(BaseContext):
         self.ico_tmp_dir = tempfile.mkdtemp()
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.command.extend(
-            [f"--name={APP_SLUG}", "--noconsole", "--onedir", f"--icon={generated_ico}"]
+            [f"--name={APP_NAME}", "--noconsole", "--onedir", f"--icon={generated_ico}"]
         )
         self.dep_environ = DependencyEnvironment()
         # add vlc binary paths args to satisfy warnings during bundling with hooks
@@ -334,12 +334,12 @@ def create_mac_installer():
 
 
 def create_windows_installer():
-    bundle_dir = Path(BASE_DIR, "dist", f"{APP_SLUG}")
+    bundle_dir = Path(BASE_DIR, "dist", f"{APP_NAME}")
     author = BUILD_INFO["author"]
     installer_nsi = Path(bundle_dir, "Installer.nsi")
     arch, _ = platform.architecture()
     system = platform.system()
-    installer_name = f"{APP_SLUG}-v{APP_VERSION}-{system}-{arch}.exe"
+    installer_name = f"{APP_SLUG}-v{APP_VERSION}-{system}-{arch}-setup.exe"
     installer_exe = Path(BASE_DIR, "dist", installer_name)
     with open(installer_nsi, "w") as f:
         f.write(
