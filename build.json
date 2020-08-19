@@ -1,7 +1,7 @@
 {
     "base": {
         "name": "UVP Media Player",
-        "version": "0.0.4",
+        "version": "0.0.5",
         "organization": "UVP",
         "author": "Gary Tyler",
         "author_email": "mail@garytyler.com"
