@@ -1,32 +1,24 @@
 repos:
-  - repo: local
+  - repo: https://github.com/pre-commit/mirrors-isort
+    rev: "v5.6.4"
     hooks:
       - id: isort
-        name: isort
-        stages: [commit]
-        language: system
-        entry: isort
         types: [python]
 
+  - repo: https://github.com/python/black
+    rev: "20.8b1"
+    hooks:
       - id: black
-        name: black
-        stages: [commit]
-        language: system
-        entry: black
         types: [python]
 
+  - repo: https://gitlab.com/pycqa/flake8
+    rev: "3.8.4"
+    hooks:
       - id: flake8
-        name: flake8
-        stages: [commit]
-        language: system
-        entry: flake8
         types: [python]
-        exclude: setup.py
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: "v0.790"
+    hooks:
       - id: mypy
-        name: mypy
-        stages: [commit]
-        language: system
-        entry: mypy
         types: [python]
-        pass_filenames: false
