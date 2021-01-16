@@ -190,7 +190,8 @@ class FreezeContextLinux(BaseContext):
 
 class FreezeContextWindows(BaseContext):
     def __enter__(self):
-        self.ico_tmp_dir = tempfile.mkdtemp()
+        self.ico_tmp_dir = BASE_DIR / ".icons-temp"
+        os.makedirs(self.ico_tmp_dir, exist_ok=True)
         generated_ico = generate_ico(src_img=ICON_PNG, dst_dir=self.ico_tmp_dir)
         self.command.extend(
             [f"--name={APP_NAME}", "--noconsole", "--onedir", f"--icon={generated_ico}"]
@@ -245,29 +246,31 @@ def freeze(console=False):
         f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}.",
         f"--additional-hooks-dir={BASE_DIR / 'hooks' / 'analysis'}",
         f"--runtime-hook={BASE_DIR / 'hooks' / 'runtime' / 'hook-vlc-runtime.py'}",
+        "--exclude-module=tkinter",
     ]
     shutil.rmtree(BASE_DIR / "dist", ignore_errors=True)
     shutil.rmtree(BASE_DIR / "build", ignore_errors=True)
     with FreezeContext(base_command=base_command) as context:
-        context.command.append(BASE_DIR / "app" / "__main__.py")
+        context.command.append(str(BASE_DIR / "app" / "__main__.py"))
         PyInstaller.__main__.run(context.command)
 
 
-def create_mac_installer():
+def create_mac_installer() -> Path:
     dmgbuild_settings = tempfile.mkstemp()[1]
     with open(dmgbuild_settings, "w") as f:
         f.write(
             dedent(
                 f"""
-        import biplist
+        import plistlib
         import os.path
         application = defines.get(
-            "app", "{BASE_DIR / "dist" / f"{APP_NAME}.app"}"
+            "app", "{str(BASE_DIR / "dist" / f"{APP_NAME}.app")}"
         )
         appname = os.path.basename(application)
         def icon_from_app(app_path):
             plist_path = os.path.join(app_path, "Contents", "Info.plist")
-            plist = biplist.readPlist(plist_path)
+            with open(plist_path, 'rb') as f:
+                plist = plistlib.loads(f.read())
             icon_name = plist["CFBundleIconFile"]
             icon_root, icon_ext = os.path.splitext(icon_name)
             if not icon_ext:
@@ -337,11 +340,12 @@ def create_mac_installer():
     arch, _ = platform.architecture()
     dst_dmg_name = f"{APP_SLUG}-v{APP_VERSION}-macOS-{arch}.dmg"
     dst_dmg_path = BASE_DIR / "dist" / dst_dmg_name
-    check_call(["dmgbuild", f"-s={dmgbuild_settings}", APP_NAME, dst_dmg_path])
+    check_call(["dmgbuild", f"-s={dmgbuild_settings}", APP_NAME, str(dst_dmg_path)])
     os.remove(dmgbuild_settings)
+    return dst_dmg_path
 
 
-def create_windows_installer():
+def create_windows_installer() -> Path:
     bundle_dir = BASE_DIR / "dist" / f"{APP_NAME}"
     author = BUILD_INFO["author"]
     installer_nsi = bundle_dir / "Installer.nsi"
@@ -459,13 +463,11 @@ def create_windows_installer():
             )
         )
     check_call(["makensis", str(installer_nsi)])
+    return installer_exe
 
 
-def create_linux_installer():
-    if os.system("cat /etc/debian_version"):
-        distribution = "Debian"
-    else:
-        raise RuntimeError("Build only on Debian system")
+def create_linux_installer() -> Path:
+    distribution = "Debian"
     arch, _ = platform.architecture()
     target_name = f"{APP_SLUG}-v{APP_VERSION}-{distribution}-{arch}.deb"
     target_path = BASE_DIR / "dist" / target_name
@@ -491,7 +493,7 @@ def create_linux_installer():
         args.append(f"--url={BUILD_INFO['url']}")
     for dependency in BUILD_INFO["depends"]:
         args.append(f"--depends={dependency}")
-    args.append(f'{BASE_DIR / "dist" / APP_SLUG}=/usr/bin/{APP_SLUG.lower()}')
+    args.append(f'{str(BASE_DIR / "dist" / APP_SLUG)}=/usr/bin/{APP_SLUG.lower()}')
     try:
         check_call(args)
     except FileNotFoundError:
@@ -500,46 +502,52 @@ def create_linux_installer():
             "instructions at "
             "https://fpm.readthedocs.io/en/latest/installing.html."
         )
+    return target_path
 
 
 @cli.command()
 def installer():
     if is_mac:
-        create_mac_installer()
+        installer_path = create_mac_installer()
     elif is_win:
-        create_windows_installer()
+        installer_path = create_windows_installer()
     elif is_linux:
-        create_linux_installer()
+        installer_path = create_linux_installer()
     else:
         raise PlatformNotSupportedError
+    print(installer_path)
 
 
 def get_ffprobe_binary_path():
     ffprobe_version = "4.2.1"
     if is_mac:
-        src_file_name = f"ffprobe-{ffprobe_version}-osx-64.zip"
-        dst_file_path = DOWNLOADS_DIR / f"ffprobe-{ffprobe_version}-osx-64"
+        zip_file_name = Path(f"ffprobe-{ffprobe_version}-osx-64.zip")
+        dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
+        bin_file_path = dst_dir_path / "ffprobe"
     elif is_win:
-        src_file_name = f"ffprobe-{ffprobe_version}-win-64.zip"
-        dst_file_path = DOWNLOADS_DIR / f"ffprobe-{ffprobe_version}-win-64.exe"
+        zip_file_name = Path(f"ffprobe-{ffprobe_version}-win-64.zip")
+        dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
+        bin_file_path = dst_dir_path / "ffprobe.exe"
     elif is_linux:
-        src_file_name = f"ffprobe-{ffprobe_version}-linux-64.zip"
-        dst_file_path = DOWNLOADS_DIR / f"ffprobe-{ffprobe_version}-linux-64"
+        zip_file_name = Path(f"ffprobe-{ffprobe_version}-linux-64.zip")
+        dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
+        bin_file_path = dst_dir_path / "ffprobe"
     else:
         raise PlatformNotSupportedError
-    if not dst_file_path.exists():
+    if not bin_file_path.exists():
+        shutil.rmtree(dst_dir_path, ignore_errors=True)
         os.makedirs(DOWNLOADS_DIR, exist_ok=True)
         source_url = (
             "https://github.com/vot/ffbinaries-prebuilt/releases/download"
             f"/v{ffprobe_version}"
-            f"/{src_file_name}"
+            f"/{zip_file_name}"
         )
         response = httpx.get(source_url)
         response.raise_for_status()
         with ZipFile(BytesIO(response.content)) as z:
-            z.extractall(dst_file_path)
-            os.chmod(dst_file_path / "ffprobe", 755)
-    return dst_file_path / "ffprobe"
+            z.extractall(dst_dir_path)
+            os.chmod(bin_file_path, 777)  # TODO: Tighten
+    return bin_file_path
 
 
 @cli.command()
