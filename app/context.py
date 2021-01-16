@@ -2,10 +2,9 @@ import logging
 import os
 import sys
 
-from PyQt5.QtWidgets import QApplication
-
 import config
 from info import BuildInformation
+from PyQt5.QtWidgets import QApplication
 from utils import cached_property
 
 log = logging.getLogger(__name__)

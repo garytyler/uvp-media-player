@@ -6,7 +6,13 @@ from utils import cached_property
 
 class MediaPlayerAdjustmentSlider(QtWidgets.QSlider):
     def __init__(
-        self, name, min_value, max_value, tick_interval, media_player, parent=None,
+        self,
+        name,
+        min_value,
+        max_value,
+        tick_interval,
+        media_player,
+        parent=None,
     ):
         super().__init__(parent=parent)
         self.name = name

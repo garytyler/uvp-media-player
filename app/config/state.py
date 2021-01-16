@@ -24,7 +24,9 @@ class _State:
 
     def __getattr__(self, key):
         value = self.settings.value(
-            key, defaultValue=SCHEMA[key]["default"], type=SCHEMA[key]["type"],
+            key,
+            defaultValue=SCHEMA[key]["default"],
+            type=SCHEMA[key]["type"],
         )
         options = SCHEMA[key].get("options")
         if options and value not in options:

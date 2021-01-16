@@ -1,18 +1,6 @@
 import logging
 from typing import Tuple
 
-from PyQt5 import QtGui, QtWidgets
-from PyQt5.QtCore import QSize, Qt, pyqtSignal
-from PyQt5.QtWidgets import (
-    QApplication,
-    QGridLayout,
-    QMainWindow,
-    QShortcut,
-    QSizePolicy,
-    QStatusBar,
-    QWidget,
-)
-
 from adjustments import OpenMediaPlayerAdjustmentsWindowAction
 from base.docking import DockableWidget, ToolBar
 from client.configure import OpenClientSettingsDialogAction
@@ -42,6 +30,17 @@ from playlist.files import OpenMediaMenu
 from playlist.player import MediaListPlayer
 from playlist.view import DockablePlaylist, PlaylistWidget
 from preferences import OpenMediaPlayerPreferencesWindowAction
+from PyQt5 import QtGui, QtWidgets
+from PyQt5.QtCore import QSize, Qt, pyqtSignal
+from PyQt5.QtWidgets import (
+    QApplication,
+    QGridLayout,
+    QMainWindow,
+    QShortcut,
+    QSizePolicy,
+    QStatusBar,
+    QWidget,
+)
 
 log = logging.getLogger(__name__)
 

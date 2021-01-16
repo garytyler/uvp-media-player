@@ -20,7 +20,13 @@ def get_lib_file():
         path = join("/", "usr", "lib", "x86_64-linux-gnu", "libvlc.so")
     elif is_darwin:
         path = join(
-            "/", "Applications", "VLC.app", "Contents", "MacOS", "lib", "libvlc.dylib",
+            "/",
+            "Applications",
+            "VLC.app",
+            "Contents",
+            "MacOS",
+            "lib",
+            "libvlc.dylib",
         )
     elif is_win:
         path = join("C:\\", "Program Files", "VideoLAN", "VLC", "libvlc.dll")

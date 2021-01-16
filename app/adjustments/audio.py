@@ -183,7 +183,10 @@ class AudioEqualizerSliderGroupWithPresets(AudioEqualizerSliderGroup):
         input_label = "Preset Name:"
         while True:
             name, approved = input_dialog.getText(
-                self, "Create Preset", input_label, text=self.preset_box.currentText(),
+                self,
+                "Create Preset",
+                input_label,
+                text=self.preset_box.currentText(),
             )
             if not approved:
                 break

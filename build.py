@@ -144,7 +144,11 @@ class FreezeContextMac(BaseContext):
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         plist_path = Path(
-            BASE_DIR, "dist", f"{APP_NAME}.app", "Contents", "Info.plist",
+            BASE_DIR,
+            "dist",
+            f"{APP_NAME}.app",
+            "Contents",
+            "Info.plist",
         )
         with open(plist_path, "rb") as f:
             plist_data = plistlib.load(f)
