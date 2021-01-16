@@ -253,6 +253,7 @@ $RECYCLE.BIN/
 .iconset
 !nsis/plugins/*
 meta.json
+.downloads
 
 # Ignore pipenv configuration - use poetry instead.
 Pipfile

@@ -4,10 +4,13 @@ import plistlib
 import shutil
 import sys
 import tempfile
+from io import BytesIO
 from pathlib import Path
 from subprocess import check_call
 from textwrap import dedent
+from zipfile import ZipFile
 
+import httpx
 import PyInstaller.__main__
 import typer
 from PIL import Image
@@ -29,13 +32,14 @@ is_linux = sys.platform == "linux"
 is_win = sys.platform.startswith("win")
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-BUILD_INFO = BuildInformation(os.path.join(BASE_DIR, "build.json"))
+BASE_DIR = Path(__file__).parent
+BUILD_INFO = BuildInformation(BASE_DIR / "build.json")
 APP_NAME = BUILD_INFO["name"]
 APP_SLUG = BUILD_INFO["name"].replace(" ", "-")
 APP_VERSION = BUILD_INFO["version"]
-APP_MODULE = os.path.join(BASE_DIR, "app")
-FREEZE_DIR = os.path.join(BASE_DIR, "dist", APP_NAME)
+APP_MODULE = BASE_DIR / "app"
+DOWNLOADS_DIR = Path(BASE_DIR, ".downloads")
+FREEZE_DIR = BASE_DIR / "dist" / APP_NAME
 ICON_PNG = Path(BASE_DIR, "icons", "icon.png")
 if is_mac:
     ICON_SIZES = [16, 32, 64, 128, 256, 512, 1024]
@@ -236,16 +240,16 @@ def freeze(console=False):
         "--noconfirm",
         "--clean",
         f"--add-data={BUILD_INFO.json_path}{delimiter}.",
-        f"--add-data={os.path.join(BASE_DIR, 'media')}{delimiter}media",
-        f"--add-data={os.path.join(BASE_DIR, 'style')}{delimiter}style",
+        f"--add-data={BASE_DIR / 'media'}{delimiter}media",
+        f"--add-data={BASE_DIR / 'style'}{delimiter}style",
         f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}.",
-        f"--additional-hooks-dir={os.path.join(BASE_DIR, 'hooks', 'analysis')}",
-        f"--runtime-hook={Path(BASE_DIR, 'hooks', 'runtime', 'hook-vlc-runtime.py')}",
+        f"--additional-hooks-dir={BASE_DIR / 'hooks' / 'analysis'}",
+        f"--runtime-hook={BASE_DIR / 'hooks' / 'runtime' / 'hook-vlc-runtime.py'}",
     ]
-    shutil.rmtree(os.path.join(BASE_DIR, "dist"), ignore_errors=True)
-    shutil.rmtree(os.path.join(BASE_DIR, "build"), ignore_errors=True)
+    shutil.rmtree(BASE_DIR / "dist", ignore_errors=True)
+    shutil.rmtree(BASE_DIR / "build", ignore_errors=True)
     with FreezeContext(base_command=base_command) as context:
-        context.command.append(os.path.join(BASE_DIR, "app", "__main__.py"))
+        context.command.append(BASE_DIR / "app" / "__main__.py")
         PyInstaller.__main__.run(context.command)
 
 
@@ -258,7 +262,7 @@ def create_mac_installer():
         import biplist
         import os.path
         application = defines.get(
-            "app", "{Path(BASE_DIR, "dist", f"{APP_NAME}.app")}"
+            "app", "{BASE_DIR / "dist" / f"{APP_NAME}.app"}"
         )
         appname = os.path.basename(application)
         def icon_from_app(app_path):
@@ -332,19 +336,19 @@ def create_mac_installer():
         )
     arch, _ = platform.architecture()
     dst_dmg_name = f"{APP_SLUG}-v{APP_VERSION}-macOS-{arch}.dmg"
-    dst_dmg_path = Path(BASE_DIR, "dist", dst_dmg_name)
+    dst_dmg_path = BASE_DIR / "dist" / dst_dmg_name
     check_call(["dmgbuild", f"-s={dmgbuild_settings}", APP_NAME, dst_dmg_path])
     os.remove(dmgbuild_settings)
 
 
 def create_windows_installer():
-    bundle_dir = Path(BASE_DIR, "dist", f"{APP_NAME}")
+    bundle_dir = BASE_DIR / "dist" / f"{APP_NAME}"
     author = BUILD_INFO["author"]
-    installer_nsi = Path(bundle_dir, "Installer.nsi")
+    installer_nsi = bundle_dir / "Installer.nsi"
     arch, _ = platform.architecture()
     system = platform.system()
     installer_name = f"{APP_SLUG}-v{APP_VERSION}-{system}-{arch}-setup.exe"
-    installer_exe = Path(BASE_DIR, "dist", installer_name)
+    installer_exe = BASE_DIR / "dist" / installer_name
     with open(installer_nsi, "w") as f:
         f.write(
             dedent(
@@ -464,7 +468,7 @@ def create_linux_installer():
         raise RuntimeError("Build only on Debian system")
     arch, _ = platform.architecture()
     target_name = f"{APP_SLUG}-v{APP_VERSION}-{distribution}-{arch}.deb"
-    target_path = Path(BASE_DIR, "dist", target_name)
+    target_path = BASE_DIR / "dist" / target_name
     if target_path.exists():
         os.remove(target_path)
     args = [
@@ -487,7 +491,7 @@ def create_linux_installer():
         args.append(f"--url={BUILD_INFO['url']}")
     for dependency in BUILD_INFO["depends"]:
         args.append(f"--depends={dependency}")
-    args.append(f'{Path(BASE_DIR, "dist", APP_SLUG)}=/usr/bin/{APP_SLUG.lower()}')
+    args.append(f'{BASE_DIR / "dist" / APP_SLUG}=/usr/bin/{APP_SLUG.lower()}')
     try:
         check_call(args)
     except FileNotFoundError:
@@ -510,6 +514,34 @@ def installer():
         raise PlatformNotSupportedError
 
 
+def get_ffprobe_binary_path():
+    ffprobe_version = "4.2.1"
+    if is_mac:
+        src_file_name = f"ffprobe-{ffprobe_version}-osx-64.zip"
+        dst_file_path = DOWNLOADS_DIR / f"ffprobe-{ffprobe_version}-osx-64"
+    elif is_win:
+        src_file_name = f"ffprobe-{ffprobe_version}-win-64.zip"
+        dst_file_path = DOWNLOADS_DIR / f"ffprobe-{ffprobe_version}-win-64.exe"
+    elif is_linux:
+        src_file_name = f"ffprobe-{ffprobe_version}-linux-64.zip"
+        dst_file_path = DOWNLOADS_DIR / f"ffprobe-{ffprobe_version}-linux-64"
+    else:
+        raise PlatformNotSupportedError
+    if not dst_file_path.exists():
+        os.makedirs(DOWNLOADS_DIR, exist_ok=True)
+        source_url = (
+            "https://github.com/vot/ffbinaries-prebuilt/releases/download"
+            f"/v{ffprobe_version}"
+            f"/{src_file_name}"
+        )
+        response = httpx.get(source_url)
+        response.raise_for_status()
+        with ZipFile(BytesIO(response.content)) as z:
+            z.extractall(dst_file_path)
+            os.chmod(dst_file_path / "ffprobe", 755)
+    return dst_file_path / "ffprobe"
+
+
 @cli.command()
 def run():
     os.chdir(BASE_DIR)
@@ -522,4 +554,8 @@ def run():
 
 
 if __name__ == "__main__":
+    if not os.environ.get("FFPROBE_BINARY_PATH"):
+        ffprobe_binary_path = get_ffprobe_binary_path()
+        if ffprobe_binary_path:
+            os.environ["FFPROBE_BINARY_PATH"] = str(ffprobe_binary_path)
     cli()
