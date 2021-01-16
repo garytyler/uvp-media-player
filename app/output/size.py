@@ -26,8 +26,8 @@ class FrameSizeManager(QObject):
             width, height = media_item.size()
             self.update_frame_size(height=height, width=width)
 
-    def set_scale(self, scale) -> float:
-        config.state.view_scale = scale
+    def set_scale(self, scale):
+        config.state.view_scale = scale  # type: ignore
         self.update_frame_size(scale=scale)
 
     def update_frame_size(self, width=None, height=None, scale=None):

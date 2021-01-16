@@ -101,7 +101,7 @@ class VolumePopupAction(QAction):
         self.icons = icons.get("volume_button")
         self.vol_widget = VolumePopupWidget(parent=parent, vol_mngr=self.vol_mngr)
 
-        self.update_icon(config.state.volume)
+        self.update_icon(config.state.volume)  # type: ignore
 
         self.triggered.connect(self.vol_widget.popup)
         self.vol_mngr.volumechanged.connect(self.update_icon)

@@ -56,7 +56,7 @@ class ViewpointManager(QObject):
         else:
             self.trigger_redraw()
 
-    def _update_viewpoint(self, viewpoint: vlcqt.VideoViewpoint):
+    def _update_viewpoint(self, viewpoint):
         """Update given viewpoint in player"""
         errorcode = self.mp.video_update_viewpoint(
             p_viewpoint=viewpoint, b_absolute=True

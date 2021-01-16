@@ -88,10 +88,10 @@ class PlaylistModel(QStandardItemModel):
         if role == Qt.DisplayRole:
             media_item = self.item(index.row(), 0)
             probe = media_item.data(MediaItem.ProbeRole)
-            key = config.state.meta_tags[index.column()]
+            key = config.state.meta_tags[index.column()]  # type: ignore
             return probe["format"]["tags"].get(key, None)
         elif role == (Qt.ToolTipRole):
-            return config.state.meta_tags[index.column()]
+            return config.state.meta_tags[index.column()]  # type: ignore
         else:
             item = self.item(index.row(), 0)
             return item.data(role)
