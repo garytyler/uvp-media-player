@@ -454,12 +454,15 @@ def create_windows_installer():
 
 
 def create_linux_installer():
-    dist, _, _ = platform.linux_distribution()
+    if os.system("cat /etc/debian_version"):
+        distribution = "Debian"
+    else:
+        raise RuntimeError("Build only on Debian system")
     arch, _ = platform.architecture()
-    deb_dst_name = f"{APP_SLUG}-v{APP_VERSION}-{dist}-{arch}.deb"
-    deb_dst_path = Path(BASE_DIR, "dist", deb_dst_name)
-    if deb_dst_path.exists():
-        os.remove(deb_dst_path)
+    target_name = f"{APP_SLUG}-v{APP_VERSION}-{distribution}-{arch}.deb"
+    target_path = Path(BASE_DIR, "dist", target_name)
+    if target_path.exists():
+        os.remove(target_path)
     args = [
         "fpm",
         "--input-type=dir",
@@ -468,7 +471,7 @@ def create_linux_installer():
         f"--version={APP_VERSION}",
         f"--vendor={BUILD_INFO['author']}",
         "--output-type=deb",
-        f"--package={deb_dst_path}",
+        f"--package={target_path}",
     ]
     if BUILD_INFO["description"]:
         args.append(f"--description={BUILD_INFO['description']}")
