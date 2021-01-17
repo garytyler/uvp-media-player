@@ -49,14 +49,13 @@ class MainWindow(QMainWindow):
     initialized = pyqtSignal()
     centralwidgetresized = pyqtSignal()
 
-    def __init__(self, media_player, ffprobe_cmd, stylesheet, flags=None):
+    def __init__(self, media_player, stylesheet, flags=None):
         QMainWindow.__init__(self, flags)
         self._window_state = None
         self.qapp = QApplication.instance()
         initialize_style(self.qapp, stylesheet)
 
         self.media_player = media_player
-        self.ffprobe_cmd = ffprobe_cmd
 
         self.setDockNestingEnabled(True)
 
@@ -136,7 +135,6 @@ class MainWindow(QMainWindow):
         self.playlist_widget = PlaylistWidget(
             listplayer=self.listplayer,
             play_ctrls=self.play_actions,
-            ffprobe_cmd=self.ffprobe_cmd,
             parent=self,
         )
         self.dockable_playlist = DockablePlaylist(

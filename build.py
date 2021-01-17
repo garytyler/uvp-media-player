@@ -8,6 +8,7 @@ from io import BytesIO
 from pathlib import Path
 from subprocess import check_call
 from textwrap import dedent
+from typing import Union
 from zipfile import ZipFile
 
 import httpx
@@ -49,6 +50,11 @@ elif is_win:
     ICON_SIZES = [16, 24, 32, 48, 256]
 
 
+def add_to_path(p: Union[str, Path]):
+    delim = ";" if is_win else ":"
+    os.environ["PATH"] = f'{str(p)}{delim}{os.environ["PATH"]}'
+
+
 def generate_icns(src_img, dst_dir):
     src_img_stem = Path(src_img).stem
     src_img_ext = Path(src_img).suffix
@@ -85,7 +91,6 @@ class DependencyEnvironment(dict):
     _dependency_keys = [
         "PYTHON_VLC_LIB_PATH",
         "PYTHON_VLC_MODULE_PATH",
-        "FFPROBE_BINARY_PATH",
     ]
 
     def __init__(self):
@@ -243,7 +248,7 @@ def freeze(console=False):
         f"--add-data={BUILD_INFO.json_path}{delimiter}.",
         f"--add-data={BASE_DIR / 'media'}{delimiter}media",
         f"--add-data={BASE_DIR / 'style'}{delimiter}style",
-        f"--add-binary={os.environ['FFPROBE_BINARY_PATH']}{delimiter}.",
+        f"--add-binary={get_ffprobe_binary_path()}{delimiter}.",
         f"--additional-hooks-dir={BASE_DIR / 'hooks' / 'analysis'}",
         f"--runtime-hook={BASE_DIR / 'hooks' / 'runtime' / 'hook-vlc-runtime.py'}",
         "--exclude-module=tkinter",
@@ -518,22 +523,18 @@ def installer():
     print(installer_path)
 
 
-def get_ffprobe_binary_path():
+def get_ffprobe_binary_path() -> Path:
     ffprobe_version = "4.2.1"
     if is_mac:
         zip_file_name = Path(f"ffprobe-{ffprobe_version}-osx-64.zip")
-        dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
-        bin_file_path = dst_dir_path / "ffprobe"
     elif is_win:
         zip_file_name = Path(f"ffprobe-{ffprobe_version}-win-64.zip")
-        dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
-        bin_file_path = dst_dir_path / "ffprobe.exe"
     elif is_linux:
         zip_file_name = Path(f"ffprobe-{ffprobe_version}-linux-64.zip")
-        dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
-        bin_file_path = dst_dir_path / "ffprobe"
     else:
         raise PlatformNotSupportedError
+    dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
+    bin_file_path = dst_dir_path / ("ffprobe.exe" if is_win else "ffprobe")
     if not bin_file_path.exists():
         shutil.rmtree(dst_dir_path, ignore_errors=True)
         os.makedirs(DOWNLOADS_DIR, exist_ok=True)
@@ -546,7 +547,8 @@ def get_ffprobe_binary_path():
         response.raise_for_status()
         with ZipFile(BytesIO(response.content)) as z:
             z.extractall(dst_dir_path)
-            os.chmod(bin_file_path, 777)  # TODO: Tighten
+    os.chmod(bin_file_path, 0o775)
+    add_to_path(dst_dir_path.resolve())
     return bin_file_path
 
 
@@ -562,8 +564,4 @@ def run():
 
 
 if __name__ == "__main__":
-    if not os.environ.get("FFPROBE_BINARY_PATH"):
-        ffprobe_binary_path = get_ffprobe_binary_path()
-        if ffprobe_binary_path:
-            os.environ["FFPROBE_BINARY_PATH"] = str(ffprobe_binary_path)
     cli()

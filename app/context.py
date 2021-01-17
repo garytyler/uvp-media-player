@@ -51,7 +51,6 @@ class AppContext(BaseAppContext):
 
         window = MainWindow(
             media_player=self.media_player,
-            ffprobe_cmd=self.ffprobe_cmd,
             stylesheet=self.stylesheet,
         )
         window.load_media(sys.argv[1:])
@@ -92,15 +91,6 @@ class AppContext(BaseAppContext):
 
         vlc_args = os.environ.get("VLC_ARGS", default="").split()
         vlc.Instance(vlc_args)
-
-    @cached_property
-    def ffprobe_cmd(self) -> str:
-        """Return command to invoke ffprobe binary. If frozen, use path to binary."""
-        if not self.is_frozen:
-            return os.environ["FFPROBE_BINARY_PATH"]
-        return self.get_resource(
-            "ffprobe.exe" if sys.platform.startswith("win") else "ffprobe"
-        )
 
     @cached_property
     def media_player(self):

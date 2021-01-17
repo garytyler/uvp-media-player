@@ -19,10 +19,10 @@ class MediaItem(QStandardItem):
     def __str__(self):
         return self.title()
 
-    def __init__(self, path: str, ffprobe_cmd: str):
+    def __init__(self, path: str):
         super().__init__()
         # Check probe values
-        probe = ffmpeg_probe(path, cmd=ffprobe_cmd)
+        probe = ffmpeg_probe(path)
         try:
             title = probe["format"]["tags"]["title"]
         except KeyError:
