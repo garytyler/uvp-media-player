@@ -1,7 +1,8 @@
 import sys
 
-from config import SCHEMA
 from PyQt5.QtCore import QSettings
+
+from app.config import SCHEMA
 
 
 class _State:

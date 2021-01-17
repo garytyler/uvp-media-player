@@ -1,35 +1,6 @@
 import logging
 from typing import Tuple
 
-from adjustments import OpenMediaPlayerAdjustmentsWindowAction
-from base.docking import DockableWidget, ToolBar
-from client.configure import OpenClientSettingsDialogAction
-from client.connect import ConnectStatusLabel, ConnectWideButtonBuilder
-from client.controller import IOController
-from client.socks import AutoReconnectSocket
-from gui.ontop import AlwaysOnTopAction
-from gui.style import initialize_style
-from output.frame import MediaPlayerContentFrame
-from output.fullscreen import FullscreenManager, FullscreenMenu, FullscreenStatusLabel
-from output.orientation import OrientationStatusLabel, ViewpointManager
-from output.playback import (
-    FrameResolutionTimeSlider,
-    LoopModeManager,
-    PlayActions,
-    PlaybackModeAction,
-)
-from output.size import (
-    FrameSizeManager,
-    FrameZoomMenu,
-    ZoomControlManager,
-    ZoomInAction,
-    ZoomOutAction,
-)
-from output.sound import VolumeManager, VolumePopupButton
-from playlist.files import OpenMediaMenu
-from playlist.player import MediaListPlayer
-from playlist.view import DockablePlaylist, PlaylistWidget
-from preferences import OpenMediaPlayerPreferencesWindowAction
 from PyQt5 import QtGui, QtWidgets
 from PyQt5.QtCore import QSize, Qt, pyqtSignal
 from PyQt5.QtWidgets import (
@@ -41,6 +12,36 @@ from PyQt5.QtWidgets import (
     QStatusBar,
     QWidget,
 )
+
+from .adjustments import OpenMediaPlayerAdjustmentsWindowAction
+from .base.docking import DockableWidget, ToolBar
+from .client.configure import OpenClientSettingsDialogAction
+from .client.connect import ConnectStatusLabel, ConnectWideButtonBuilder
+from .client.controller import IOController
+from .client.socks import AutoReconnectSocket
+from .gui.ontop import AlwaysOnTopAction
+from .gui.style import initialize_style
+from .output.frame import MediaPlayerContentFrame
+from .output.fullscreen import FullscreenManager, FullscreenMenu, FullscreenStatusLabel
+from .output.orientation import OrientationStatusLabel, ViewpointManager
+from .output.playback import (
+    FrameResolutionTimeSlider,
+    LoopModeManager,
+    PlayActions,
+    PlaybackModeAction,
+)
+from .output.size import (
+    FrameSizeManager,
+    FrameZoomMenu,
+    ZoomControlManager,
+    ZoomInAction,
+    ZoomOutAction,
+)
+from .output.sound import VolumeManager, VolumePopupButton
+from .playlist.files import OpenMediaMenu
+from .playlist.player import MediaListPlayer
+from .playlist.view import DockablePlaylist, PlaylistWidget
+from .preferences import OpenMediaPlayerPreferencesWindowAction
 
 log = logging.getLogger(__name__)
 

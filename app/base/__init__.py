@@ -1,4 +1,4 @@
-from . import buttons  # noqa:F401
-from . import docking  # noqa:F401
-from . import modal  # noqa:F401
-from . import popup  # noqa:F401
+from app.base import buttons  # noqa:F401
+from app.base import docking  # noqa:F401
+from app.base import modal  # noqa:F401
+from app.base import popup  # noqa:F401

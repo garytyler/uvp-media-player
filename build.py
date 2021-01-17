@@ -39,7 +39,7 @@ APP_NAME = BUILD_INFO["name"]
 APP_SLUG = BUILD_INFO["name"].replace(" ", "-")
 APP_VERSION = BUILD_INFO["version"]
 APP_MODULE = BASE_DIR / "app"
-DOWNLOADS_DIR = Path(BASE_DIR, ".downloads")
+THIRD_PARTY_BIN_DIR = Path(BASE_DIR, ".tempbin")
 FREEZE_DIR = BASE_DIR / "dist" / APP_NAME
 ICON_PNG = Path(BASE_DIR, "icons", "icon.png")
 if is_mac:
@@ -240,6 +240,7 @@ class FreezeContext:
 
 @cli.command()
 def freeze(console=False):
+    add_to_path(get_ffprobe_binary_path().resolve())
     delimiter = ";" if is_win else ":"
     base_command = [
         "--log-level=INFO",
@@ -520,7 +521,7 @@ def installer():
         installer_path = create_linux_installer()
     else:
         raise PlatformNotSupportedError
-    print(installer_path)
+    print(f"Installer created at: {installer_path}")
 
 
 def get_ffprobe_binary_path() -> Path:
@@ -533,11 +534,11 @@ def get_ffprobe_binary_path() -> Path:
         zip_file_name = Path(f"ffprobe-{ffprobe_version}-linux-64.zip")
     else:
         raise PlatformNotSupportedError
-    dst_dir_path = DOWNLOADS_DIR / zip_file_name.with_suffix("")
+    dst_dir_path = THIRD_PARTY_BIN_DIR / zip_file_name.with_suffix("")
     bin_file_path = dst_dir_path / ("ffprobe.exe" if is_win else "ffprobe")
     if not bin_file_path.exists():
         shutil.rmtree(dst_dir_path, ignore_errors=True)
-        os.makedirs(DOWNLOADS_DIR, exist_ok=True)
+        os.makedirs(THIRD_PARTY_BIN_DIR, exist_ok=True)
         source_url = (
             "https://github.com/vot/ffbinaries-prebuilt/releases/download"
             f"/v{ffprobe_version}"
@@ -548,19 +549,21 @@ def get_ffprobe_binary_path() -> Path:
         with ZipFile(BytesIO(response.content)) as z:
             z.extractall(dst_dir_path)
     os.chmod(bin_file_path, 0o775)
-    add_to_path(dst_dir_path.resolve())
     return bin_file_path
 
 
 @cli.command()
 def run():
-    os.chdir(BASE_DIR)
     for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
         try:
             del os.environ[i]
         except KeyError:
             pass
-    check_call([sys.executable, APP_MODULE], env=os.environ)
+    os.chdir(BASE_DIR)
+    add_to_path(get_ffprobe_binary_path().parent.resolve())
+    import app.__main__
+
+    app.__main__.main()
 
 
 if __name__ == "__main__":

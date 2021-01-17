@@ -1,10 +1,11 @@
 import logging
 
-import config
-from gui import icons
-from playlist.model import MediaItem
 from PyQt5.QtCore import QObject, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QSlider
+
+from app import config
+from app.gui import icons
+from app.playlist.model import MediaItem
 
 log = logging.getLogger(__name__)
 

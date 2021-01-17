@@ -1,8 +1,8 @@
-import gui
-from base.popup import PopupWindowAction, PopupWindowWidget
 from PyQt5 import QtWidgets
 
-from . import audio, image
+from app import gui  # type: ignore
+from app.adjustments import audio, image
+from app.base.popup import PopupWindowAction, PopupWindowWidget
 
 
 class MediaPlayerAdjustmentsWindow(PopupWindowWidget):

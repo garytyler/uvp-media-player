@@ -1,4 +1,3 @@
-from gui import icons
 from PyQt5.QtCore import QSize, Qt
 from PyQt5.QtGui import QPainter
 from PyQt5.QtWidgets import (
@@ -14,6 +13,8 @@ from PyQt5.QtWidgets import (
     QToolButton,
     QWidget,
 )
+
+from app.gui import icons
 
 
 class ToolBar(QToolBar):

@@ -2,10 +2,12 @@ import logging
 import os
 import sys
 
-import config
-from info import BuildInformation
 from PyQt5.QtWidgets import QApplication
-from utils import cached_property
+
+from app import config
+
+from .info import BuildInformation
+from .utils import cached_property
 
 log = logging.getLogger(__name__)
 
@@ -47,7 +49,7 @@ class AppContext(BaseAppContext):
 
     @cached_property
     def main_win(self):
-        from mainwindow import MainWindow
+        from .mainwindow import MainWindow
 
         window = MainWindow(
             media_player=self.media_player,
@@ -94,7 +96,7 @@ class AppContext(BaseAppContext):
 
     @cached_property
     def media_player(self):
-        import vlcqt
+        from app import vlcqt
 
         return vlcqt.MediaPlayer()
 

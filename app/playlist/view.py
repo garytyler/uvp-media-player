@@ -1,10 +1,5 @@
 import logging
 
-from base.docking import DockableWidget
-from base.popup import PopupWindowAction, PopupWindowWidget
-from gui import icons
-from playlist import files
-from playlist.model import MediaItem, PlaylistModel
 from PyQt5 import QtGui
 from PyQt5.QtCore import QModelIndex, QPoint, Qt, pyqtSlot
 from PyQt5.QtGui import QKeySequence
@@ -19,6 +14,13 @@ from PyQt5.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
+
+from app.base.docking import DockableWidget
+from app.base.popup import PopupWindowAction, PopupWindowWidget
+from app.gui import icons
+from app.playlist.model import MediaItem, PlaylistModel
+
+from . import files
 
 log = logging.getLogger(__name__)
 

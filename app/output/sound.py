@@ -1,11 +1,11 @@
 import logging
 
-import config
-import vlcqt
-from base.popup import PopupControlWidget
-from gui import icons
 from PyQt5.QtCore import QObject, pyqtSignal
 from PyQt5.QtWidgets import QAction, QHBoxLayout, QSlider, QToolButton
+
+from app import config, vlcqt
+from app.base.popup import PopupControlWidget
+from app.gui import icons
 
 log = logging.getLogger(__name__)
 

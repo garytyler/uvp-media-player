@@ -1,8 +1,9 @@
 import logging
 
-import config
-from playlist.model import MediaItem
 from PyQt5.QtCore import QModelIndex, QObject, Qt, QTimer, pyqtSignal, pyqtSlot
+
+from app import config
+from app.playlist.model import MediaItem
 
 log = logging.getLogger(__name__)
 

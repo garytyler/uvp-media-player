@@ -1,11 +1,12 @@
 import logging
 from os.path import basename
 
-import config
 from ffmpeg import probe as ffmpeg_probe
 from PyQt5.QtCore import QModelIndex, Qt, pyqtSignal
 from PyQt5.QtGui import QStandardItem, QStandardItemModel
-from utils import fraction_string_to_float
+
+from app import config
+from app.utils import fraction_string_to_float
 
 log = logging.getLogger(__name__)
 

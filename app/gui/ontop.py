@@ -1,7 +1,8 @@
-import config
-from gui import icons
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction
+
+from app import config
+from app.gui import icons
 
 
 def get_always_on_top(window):

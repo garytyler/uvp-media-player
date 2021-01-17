@@ -2,10 +2,10 @@ import copy
 import logging
 import re
 
-import config
-import vlcqt
 from PyQt5 import QtCore, QtWidgets
-from utils import cached_property
+
+from app import config, vlcqt
+from app.utils import cached_property
 
 from ._base import MediaPlayerAdjustmentSlider, MediaPlayerAdjustmentSliderGroup
 

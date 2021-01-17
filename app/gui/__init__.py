@@ -1,1 +1,1 @@
-from . import icons  # noqa:F401
+from app.gui import icons  # noqa:F401

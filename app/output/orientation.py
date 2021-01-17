@@ -1,12 +1,13 @@
 import logging
 from itertools import cycle
 
-import vlcqt
-from gui import fonts, icons
-from output.status import IconStatusLabel
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QStatusBar
+
+from app import vlcqt
+from app.gui import fonts, icons
+from app.output.status import IconStatusLabel
 
 log = logging.getLogger(__name__)
 

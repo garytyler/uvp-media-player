@@ -1,10 +1,11 @@
 import logging
 
-import config
-from base.popup import PopupMenuAction
-from gui import icons
 from PyQt5.QtCore import QObject, QSize, Qt, pyqtSignal, pyqtSlot
 from PyQt5.QtWidgets import QAction, QActionGroup, QMenu, QToolButton
+
+from app import config
+from app.base.popup import PopupMenuAction
+from app.gui import icons
 
 log = logging.getLogger(__name__)
 

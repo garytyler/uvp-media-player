@@ -255,6 +255,7 @@ $RECYCLE.BIN/
 meta.json
 .downloads
 .icons-temp
+.tempbin
 
 # Ignore pipenv configuration - use poetry instead.
 Pipfile

@@ -1,12 +1,13 @@
 import logging
 from typing import List
 
-import config
-from gui import icons
-from output.status import IconStatusLabel
 from PyQt5 import QtCore, QtNetwork
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QToolButton, QWidgetAction
+
+from app import config
+from app.gui import icons
+from app.output.status import IconStatusLabel
 
 log = logging.getLogger(__name__)
 

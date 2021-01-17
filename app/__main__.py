@@ -1,6 +1,6 @@
 import sys
 
-from context import AppContext
+from app.context import AppContext
 
 
 def main():

@@ -1,7 +1,6 @@
-import base
-import config
-import gui
 from PyQt5 import QtWidgets
+
+from app import base, config, gui
 
 from .about import AboutTextLabel
 

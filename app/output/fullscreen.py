@@ -1,13 +1,15 @@
 import logging
 import os
 
-from gui import icons
-from output import frame
-from output.status import IconStatusLabel
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import QObject, pyqtSignal, pyqtSlot
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction, QActionGroup, QApplication, QMenu
+
+from app.gui import icons
+from app.output.status import IconStatusLabel
+
+from .frame import BaseContentFrame
 
 log = logging.getLogger(__name__)
 
@@ -37,7 +39,7 @@ class FullscreenManager(QObject):
         self.fullscreenstarted.emit(action)
 
         # Set a temp frame with a notification in empty window space
-        temp_frame = frame.BaseContentFrame()
+        temp_frame = BaseContentFrame()
         temp_frame.setLayout(QtWidgets.QVBoxLayout())
         temp_label = QtWidgets.QLabel(
             f"""- Fullscreen Mode -{os.linesep}{qscreen_description_string(qscreen)}"""

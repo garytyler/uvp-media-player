@@ -2,10 +2,11 @@ import logging
 import os
 from typing import Union
 
-import vlcqt
-from gui import icons
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QAction, QFileDialog, QMenu
+
+from app import vlcqt
+from app.gui import icons
 
 log = logging.getLogger(__name__)
 

@@ -1,8 +1,9 @@
 import logging
 from ctypes.util import find_library
 
-import vlcqt
 from PyQt5 import QtWidgets
+
+from app import vlcqt
 
 log = logging.getLogger(__name__)
 
