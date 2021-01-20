@@ -4,14 +4,15 @@ on: [push]
 
 jobs:
   build:
-    runs-on: ${{ matrix.platform }}
+    runs-on: ${{matrix.platform}}
     strategy:
       matrix:
         platform: [ubuntu-18.04, macos-10.15, windows-2019]
     env:
       VLC_VERSION: 3.0.11
-      POETRY_VIRTUALENVS_CREATE: false
-
+      POETRY_VERSION: 1.1.4
+      POETRY_VIRTUALENVS_IN_PROJECT: true
+    continue-on-error: false
     steps:
       - uses: actions/checkout@v2
 
@@ -20,49 +21,97 @@ jobs:
         with:
           python-version: 3.9
 
-      - name: Set up Poetry
-        uses: abatilo/actions-poetry@v2.0.0
-        with:
-          poetry-version: 1.1.4
+      - name: Install Poetry
+        run: pip install poetry==${{env.POETRY_VERSION}}
 
-      - name: Set up Ruby
+      - name: Load cached python virtual environment
+        uses: actions/cache@v2
+        env:
+          cache-name: cache-venv
+        with:
+          path: ./.venv
+          key: ${{runner.os}}-${{env.cache-name}}-${{hashFiles('poetry.lock')}}
+          restore-keys: |
+            ${{runner.os}}-build-${{env.cache-name}}-
+            ${{runner.os}}-build-
+            ${{runner.os}}-
+
+      - name: Install Dependencies
+        run: poetry install
+        if: steps.cache.outputs.cache-hit != 'true'
+
+      - name: Install VLC (for Linux)
+        if: runner.os == 'Linux'
+        run: sudo apt-get -qq install vlc
+
+      - name: Install VLC (for macOS)
+        if: runner.os == 'macOS'
+        shell: bash
+        run: ./.github/scripts/install-vlc-mac.sh
+
+      - name: Install VLC (for Windows)
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: ./.github/scripts/install-vlc-win.ps1
+
+      - name: Install Xvfb Dependencies on Linux
+        if: runner.os == 'Linux'
+        run: >
+          sudo apt-get -qq install
+          libxkbcommon-x11-0
+          libxcb-icccm4
+          libxcb-image0
+          libxcb-keysyms1
+          libxcb-randr0
+          libxcb-render-util0
+          libxcb-xinerama0
+          libxcb-xfixes0
+
+      - name: Run Tests
+        env:
+          DISPLAY: ":99.0"
+        run: poetry run pytest --cov=app --cov-report=xml:coverage-${{runner.os}}.xml
+
+      - name: Upload coverage artifacts
+        uses: actions/upload-artifact@v2
+        with:
+          name: coverage
+          path: ./coverage-${{runner.os}}.xml
+
+      - name: Set up Ruby (for Linux)
         if: runner.os == 'Linux'
         uses: actions/setup-ruby@v1
         with:
           ruby-version: 2.6
-
-      - name: Build for Linux
+      - name: Install fpm (for Linux)
         if: runner.os == 'Linux'
         run: |
-          sudo apt-get -qq install build-essential
-          sudo apt-get -qq install vlc
-          poetry install
-          python build.py freeze
           gem install --no-document fpm
-          python build.py installer
-
-      - name: Build for macOS
-        if: runner.os == 'macOS'
+      - name: Build (${{runner.os}})
         run: |
-          bash ./scripts/install-vlc-mac.sh
-          poetry install
-          python build.py freeze
-          python build.py installer
-
-      - name: Build for Windows
-        if: runner.os == 'Windows'
-        run: |
-          powershell ./scripts/install-vlc-win.ps1
-          poetry install
-          python build.py freeze
-          choco install nsis
-          python build.py installer
-
-      - name: Upload ${{ matrix.platform }} installer
+          poetry run python build.py freeze
+          poetry run python build.py installer
+      - name: Upload ${{runner.os}} installer
         uses: actions/upload-artifact@v2
         with:
-          name: installer-${{ matrix.platform }}
+          name: installer-${{runner.os}}
           path: |
             dist/*.deb
             dist/*.dmg
             dist/*.exe
+
+  upload-coverage-reports:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download test coverage
+        uses: actions/download-artifact@v2
+        with:
+          name: coverage
+          path: ./coverage
+      - name: Upload Test Coverage
+        uses: codecov/codecov-action@v1
+        with:
+          token: ${{secrets.CODECOV_TOKEN}}
+          directory: ./coverage
+          fail_ci_if_error: true
