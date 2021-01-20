@@ -1,27 +1,39 @@
+from pathlib import Path
+
 import pytest
-from main import AppWindow
+
+from build import add_to_path, get_ffprobe_binary_path
+
+
+def pytest_configure():
+    add_to_path(get_ffprobe_binary_path().parent.resolve())
 
 
 @pytest.fixture
-def appwin(qtbot):
-    return AppWindow()
+def context():
+    import app.__main__
+
+    yield app.__main__.AppContext()
 
 
 @pytest.fixture
-def play_action(appwin):
-    return appwin.play_actions.play
+def app(context):
+    yield context.app
 
 
 @pytest.fixture
-def play_button(appwin, play_action):
-    return appwin.pb_ctrls_middle_toolbar.widgetForAction(play_action)
+def main_win(qtbot, context):
+    qtbot.addWidget(context.main_win)
+    context.main_win.show()
+    qtbot.waitUntil(lambda: context.main_win.isVisible())
+    yield context.main_win
 
 
 @pytest.fixture
-def listplayer(appwin):
-    return appwin.playlist_widget.listplayer
+def rootdir(pytestconfig):
+    return Path(pytestconfig.rootdir)
 
 
 @pytest.fixture
-def playlist_view(appwin):
-    return appwin.playlist_widget.view
+def media_dir(rootdir):
+    return rootdir / "media"

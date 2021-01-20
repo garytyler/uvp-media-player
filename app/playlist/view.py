@@ -70,6 +70,8 @@ class PlaylistView(QTableView):
         self.status_bar = status_bar
         self.play_ctrls = play_ctrls
 
+        self.setObjectName("playlist-view")
+
         self.setSelectionBehavior(self.SelectRows)
         self.setDragDropMode(self.InternalMove)
         self.setDragDropOverwriteMode(False)

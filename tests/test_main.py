@@ -1,9 +1,15 @@
-from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QWidget
 
 
-def test_main_load_media(qtbot, appwin, play_button, playlist_view):
-    appwin.load_media("media/360vid_5sec.mp4")
-    qtbot.addWidget(appwin)
-    qtbot.mouseClick(play_button, Qt.LeftButton)
-    qtbot.waitSignal(appwin.listplayer.mediachanged, timeout=5000)
-    assert playlist_view.model().item(0)
+def test_play_on_load(qtbot, main_win, media_dir):
+    playlist_view = main_win.findChild(QWidget, "playlist-view")
+    time_slider = main_win.findChild(QWidget, "main-time-slider")
+    main_win.load_media(str(media_dir / "360vid_5sec.mp4"))
+    qtbot.waitUntil(lambda: playlist_view.model().rowCount() > 0)
+    time_at_load = time_slider.value()
+    qtbot.wait(500)
+    time_check_1 = time_slider.value()
+    qtbot.wait(500)
+    time_check_2 = time_slider.value()
+    assert time_check_1 and time_check_2
+    assert time_at_load != time_check_1 != time_check_2

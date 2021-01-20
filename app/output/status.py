@@ -45,7 +45,7 @@ class IconStatusLabel(QWidget):
         self.layout().insertWidget(1, self.text_lbl, 1)
 
         self.icon_lbl = QLabel(parent=self)
-        self.icon_size = self.parent().sizeHint().height() * 0.9
+        self.icon_size = int(self.parent().sizeHint().height() * 0.9)
         self.layout().insertWidget(0, self.icon_lbl, stretch=0, alignment=Qt.AlignLeft)
 
     def set_status(self, text, mode, state, elide_mode=Qt.ElideRight):

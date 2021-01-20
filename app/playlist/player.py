@@ -173,4 +173,4 @@ class MediaListPlayer(_ListPlayer):
     def on_mediachanged(self, media_item: MediaItem):
         media_info = media_item.info()
         media_fps = media_info["avg_frame_rate"]
-        self.timer.setInterval(media_fps)
+        self.timer.setInterval(int(media_fps))

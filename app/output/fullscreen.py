@@ -53,7 +53,6 @@ class FullscreenManager(QObject):
 
     def stop(self):
         if not self._is_fullscreen:
-            log.error("Stop Fullscreen requested but fullscreen mode not active.")
             return
         self.main_content_frame.stop_fullscreen()
         self._is_fullscreen = False

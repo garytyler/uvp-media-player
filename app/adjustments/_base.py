@@ -18,8 +18,8 @@ class MediaPlayerAdjustmentSlider(QtWidgets.QSlider):
         self.name = name
         self.mp = media_player
         self.setToolTip(name)
-        self.setMinimum(config.schema[self.config_key()]["min"] * 100)
-        self.setMaximum(config.schema[self.config_key()]["max"] * 100)
+        self.setMinimum(int(config.schema[self.config_key()]["min"] * 100))
+        self.setMaximum(int(config.schema[self.config_key()]["max"] * 100))
         self.setTickInterval(tick_interval * 100)
 
         self.valueChanged.connect(lambda v: self._set_model_state(v))

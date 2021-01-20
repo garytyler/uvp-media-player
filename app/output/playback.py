@@ -40,12 +40,12 @@ class PlaybackModeAction(QAction):
     def __init__(self, parent, loop_mode_mngr):
         super().__init__(parent=parent)
         self.loop_mode_mngr = loop_mode_mngr
-
         self.icons = {
             "off": icons.get("loop_mode_off"),
             "one": icons.get("loop_mode_one"),
             "all": icons.get("loop_mode_all"),
         }
+        self.setObjectName("playback-mode-action")
         self.setText("Toggle Playback Mode")
         self.setToolTip("Toggle Playback Mode")
         self.setIconText("Playback Mode")
@@ -75,6 +75,7 @@ class PlayActions(QActionGroup):
             parent=parent, listplayer=listplayer, media_player=media_player
         )
         self.next = NextMediaAction(parent=parent, listplayer=listplayer)
+        self.setObjectName("play-actions-group")
         self.addAction(self.prev)
         self.addAction(self.play_pause)
         self.addAction(self.next)
@@ -92,6 +93,7 @@ class PlayPauseAction(QAction):
         self.listplayer = listplayer
         self.mp = media_player
 
+        self.setObjectName("play-pause-action")
         self.setToolTip("Play/Pause")
         self.setCheckable(True)
         self.setIcon(icons.get("play_pause"))
@@ -122,7 +124,7 @@ class PreviousMediaAction(QAction):
     def __init__(self, parent, listplayer):
         super().__init__(parent=parent)
         self.listplayer = listplayer
-
+        self.setObjectName("previous-media-action")
         self.setToolTip("Previous Media")
         self.setIcon(icons.get("previous_media"))
 
@@ -136,6 +138,7 @@ class PreviousMediaAction(QAction):
 class NextMediaAction(QAction):
     def __init__(self, parent, listplayer):
         super().__init__(parent=parent)
+        self.setObjectName("next-media-action")
         self.setToolTip("Next Media")
         self.setIcon(icons.get("next_media"))
         self.listplayer = listplayer
@@ -199,16 +202,16 @@ class FrameResolutionTimeSlider(QSlider):
             num_frames = self.media_info["nb_frames"]
             pos_incr = self.length / num_frames
             self.curr_pos = getattr(self, "curr_pos", self.mp.get_position()) + pos_incr
-        self.setValue(self.curr_pos)
+        self.setValue(int(self.curr_pos))
 
     def conform_to_media(self, media_item):
         self.media_info = media_item.info()
-        self.set_length(self.media_info["nb_frames"])
+        self.set_length(int(self.media_info["nb_frames"]))
 
     def setValue(self, value):
         if self.mouse_down:
             return
-        super().setValue(value)
+        super().setValue(int(value))
 
     def mousePressEvent(self, e):
         if e.button() != Qt.LeftButton:
@@ -218,7 +221,7 @@ class FrameResolutionTimeSlider(QSlider):
         self.mp.positionchanged.disconnect()
         as_proportion, as_slider_val = self.get_mouse_pos(e)
         self.mp.set_position(as_proportion)
-        super().setValue(as_slider_val)
+        super().setValue(int(as_slider_val))
         self.mp_pos = as_proportion
 
     def mouseMoveEvent(self, e):
@@ -226,7 +229,7 @@ class FrameResolutionTimeSlider(QSlider):
         as_proportion, as_slider_val = self.get_mouse_pos(e)
         self.mp.set_position(as_proportion)
         self.mp_pos = as_proportion
-        super().setValue(as_slider_val)
+        super().setValue(int(as_slider_val))
 
     def mouseReleaseEvent(self, e):
         if e.button() != Qt.LeftButton:

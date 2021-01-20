@@ -80,6 +80,7 @@ class OpenFileAction(QAction):
         super().__init__(parent=parent)
         self.parent = parent
         self.playlist_widget = playlist_widget
+        self.setObjectName("open-single-file-action")
         self.setIcon(icons.get("open_file"))
         self.setText("Open file")
         self.setShortcut("Ctrl+O")
@@ -101,6 +102,7 @@ class OpenMultipleAction(QAction):
         super().__init__(parent=parent)
         self.parent = parent
         self.playlist_widget = playlist_widget
+        self.setObjectName("open-multiple-files-action")
         self.setIcon(icons.get("open_multiple"))
         self.setText("Open Multiple Files")
         self.setShortcut("Ctrl+M")
@@ -122,6 +124,7 @@ class OpenMediaMenu(QMenu):
         super().__init__(parent=parent)
         self.parent = parent
         self.playlist_widget = playlist_widget
+        self.setObjectName("open-media-menu")
         self.setIcon(icons.get("open_file_menu"))
         self.setTitle("Open Media")
         self.addAction(OpenMultipleAction(parent=self, playlist_widget=playlist_widget))
