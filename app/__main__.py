@@ -3,11 +3,11 @@ import sys
 from app.context import AppContext
 
 
-def main():
-    app_context = AppContext()
-    app = app_context.run()
-    sys.exit(app)
+def run(*args, **kwargs):
+    context = AppContext(*args, **kwargs)
+    context.main_win.show()
+    sys.exit(context.app.exec_())
 
 
 if __name__ == "__main__":
-    main()
+    run(files=sys.argv[1:])

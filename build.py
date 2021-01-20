@@ -8,7 +8,7 @@ from io import BytesIO
 from pathlib import Path
 from subprocess import check_call
 from textwrap import dedent
-from typing import Union
+from typing import List, Union
 from zipfile import ZipFile
 
 import httpx
@@ -553,7 +553,8 @@ def get_ffprobe_binary_path() -> Path:
 
 
 @cli.command()
-def run():
+# @cli.argument("filename", type=click.Path(exists=True))
+def run(files: List[Path] = typer.Argument(None)):
     for i in ["PYTHON_VLC_LIB_PATH", "PYTHON_VLC_MODULE_PATH"]:
         try:
             del os.environ[i]
@@ -563,7 +564,7 @@ def run():
     add_to_path(get_ffprobe_binary_path().parent.resolve())
     import app.__main__
 
-    app.__main__.main()
+    app.__main__.run(files)
 
 
 if __name__ == "__main__":

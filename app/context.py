@@ -1,6 +1,7 @@
 import logging
 import os
 import sys
+from typing import List
 
 from PyQt5.QtWidgets import QApplication
 
@@ -31,9 +32,14 @@ class BaseAppContext:
 
 
 class AppContext(BaseAppContext):
-    def __init__(self, args=[]):
+    def __init__(
+        self,
+        files: List = [],
+        qtargs: List = [],
+    ):
         super().__init__()
-        self.app = QApplication(args)
+        self.files = files
+        self.app = QApplication(qtargs)
         self.app.setOrganizationName(self.build_info["organization"])
         self.app.setApplicationName(self.build_info["name"])
         self.init_logging()
@@ -43,10 +49,6 @@ class AppContext(BaseAppContext):
         self.init_settings()
         self.init_vlc()
 
-    def run(self):
-        self.main_win.show()
-        return self.app.exec_()
-
     @cached_property
     def main_win(self):
         from .mainwindow import MainWindow
@@ -55,7 +57,8 @@ class AppContext(BaseAppContext):
             media_player=self.media_player,
             stylesheet=self.stylesheet,
         )
-        window.load_media(sys.argv[1:])
+        if self.files:
+            window.load_media(self.files)
 
         return window
 
