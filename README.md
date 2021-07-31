@@ -2,10 +2,12 @@
 <h1>UVP Media Player</h1>
 <h3>Urban Video Project's cross-platform immersive media player</h3>
 <i><a href="https://www.lightwork.org/uvp">Urban Video Project</a> is a program of <a href="https://www.lightwork.org">Light Work</a> in partnership with the <a href="https://everson.org">Everson Museum of Art.</a></i>
-<hr style="height:1px">
+<h1></h1>
 </div>
 
-UVP Media Player is purpose-built for use with it's accompanying web app to enable live/in-person audience interaction with immersive media/360 video presentations via audience members' mobile devices. In addition, most features also support standard 2D video playback.
+# Overview
+
+UVP Media Player is purpose-built for use with it's accompanying [web app](https://github.com/garytyler/uvp-app) to enable live/in-person audience interaction with immersive media/360 video presentations via audience members' mobile devices. In addition, most features also support standard 2D video playback.
 
 # Install
 
