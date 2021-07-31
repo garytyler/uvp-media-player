@@ -9,7 +9,7 @@ jobs:
       matrix:
         platform: [ubuntu-18.04, macos-10.15, windows-2019]
     env:
-      VLC_VERSION: 3.0.11
+      VLC_VERSION: 3.0.16
       POETRY_VERSION: 1.1.4
       POETRY_VIRTUALENVS_IN_PROJECT: true
     continue-on-error: false
@@ -42,7 +42,7 @@ jobs:
 
       - name: Install VLC (for Linux)
         if: runner.os == 'Linux'
-        run: sudo apt-get -qq install vlc
+        run: sudo apt-get update && sudo apt-get -qq install vlc
 
       - name: Install VLC (for macOS)
         if: runner.os == 'macOS'
@@ -57,7 +57,7 @@ jobs:
       - name: Install Xvfb Dependencies on Linux
         if: runner.os == 'Linux'
         run: >
-          sudo apt-get -qq install
+          sudo apt-get update && sudo apt-get -qq install
           libxkbcommon-x11-0
           libxcb-icccm4
           libxcb-image0
