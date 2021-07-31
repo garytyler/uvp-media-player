@@ -7,7 +7,7 @@
 
 # Overview
 
-UVP Media Player is purpose-built for use with it's accompanying [web app](https://github.com/garytyler/uvp-app) to enable live/in-person audience interaction with immersive media/360 video presentations via audience members' mobile devices. In addition, most features also support standard 2D video playback.
+UVP Media Player is purpose-built for use with it's accompanying [web app](https://github.com/garytyler/uvp-web) to enable live/in-person audience interaction with immersive media/360 video presentations via audience members' mobile devices. In addition, most features also support standard 2D video playback.
 
 # Install
 
