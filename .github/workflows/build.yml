@@ -83,14 +83,17 @@ jobs:
         uses: actions/setup-ruby@v1
         with:
           ruby-version: 2.6
+
       - name: Install fpm (for Linux)
         if: runner.os == 'Linux'
         run: |
           gem install --no-document fpm
+
       - name: Build (${{runner.os}})
         run: |
           poetry run python build.py freeze
           poetry run python build.py installer
+
       - name: Upload ${{runner.os}} installer
         uses: actions/upload-artifact@v2
         with:
@@ -100,18 +103,10 @@ jobs:
             dist/*.dmg
             dist/*.exe
 
-  upload-coverage-reports:
-    needs: build
-    runs-on: ubuntu-latest
-    steps:
-      - name: Download test coverage
-        uses: actions/download-artifact@v2
-        with:
-          name: coverage
-          path: ./coverage
       - name: Upload Test Coverage
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v2
         with:
           token: ${{secrets.CODECOV_TOKEN}}
-          directory: ./coverage
+          files: coverage-${{runner.os}}.xml
+          flags: ${{runner.os}}
           fail_ci_if_error: true

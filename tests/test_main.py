@@ -8,8 +8,6 @@ def test_play_on_load(qtbot, main_win, media_dir):
     qtbot.waitUntil(lambda: playlist_view.model().rowCount() > 0)
     time_at_load = time_slider.value()
     qtbot.wait(500)
-    time_check_1 = time_slider.value()
-    qtbot.wait(500)
-    time_check_2 = time_slider.value()
-    assert time_check_1 and time_check_2
-    assert time_at_load != time_check_1 != time_check_2
+    time_check = time_slider.value()
+    assert time_check
+    assert time_at_load != time_check
